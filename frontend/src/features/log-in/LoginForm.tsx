@@ -39,8 +39,8 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <div className="text-center">
-        <h2 className="mt-6 text-3xl font-extrabold text-gray-900">KED OS</h2>
+      <div className="flex justify-center">
+        <img src="/icon.svg" alt="RideShare" className="w-10 h-10" />
       </div>
       <Card>
         <CardHeader className="text-center">
