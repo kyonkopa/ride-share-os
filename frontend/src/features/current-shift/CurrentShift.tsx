@@ -10,21 +10,21 @@ import { useShift } from "@/hooks/useShift"
 import { Clock, Play, Square } from "lucide-react"
 import { useEffect, useState } from "react"
 import { ClockOutForm } from "@/components/ClockOutForm"
-import { useVehicles } from "../clock-in/useVehicles"
 import { getShiftDuration } from "@/utils/dateUtils"
+import type { VehicleFragmentFragment } from "@/codegen/graphql"
 
 interface CurrentShiftProps {
   onClockIn?: () => void
+  vehicles: VehicleFragmentFragment[]
 }
 
-export function CurrentShift({ onClockIn }: CurrentShiftProps) {
-  const { data: vehiclesData } = useVehicles()
+export function CurrentShift({ onClockIn, vehicles }: CurrentShiftProps) {
   const { currentShift, clockInShiftEvent } = useShift()
   const [showClockOut, setShowClockOut] = useState(false)
 
   const onClockOutClick = () => setShowClockOut(true)
   const currentVehicle = currentShift
-    ? vehiclesData?.vehicles?.find((v) => v.id === currentShift.vehicle.id)
+    ? vehicles?.find((v) => v.id === currentShift.vehicle.id)
     : null
 
   const formatTime = (timestamp: number) => {

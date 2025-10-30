@@ -30,11 +30,14 @@ import {
 } from "@/features/clock-in/useClockInMutation"
 import { Spinner } from "./ui/spinner"
 import { useNotification } from "@/hooks/useNotification"
-import type { ShiftAssignment, Vehicle } from "@/codegen/graphql"
+import type {
+  ShiftAssignment,
+  VehicleFragmentFragment,
+} from "@/codegen/graphql"
 import { Alert, AlertDescription } from "./ui/alert"
 
 interface ClockInFormProps {
-  vehicles: Vehicle[]
+  vehicles: VehicleFragmentFragment[]
   onClockInSuccess?: () => void
   open: boolean
   onOpenChange: (open: boolean) => void

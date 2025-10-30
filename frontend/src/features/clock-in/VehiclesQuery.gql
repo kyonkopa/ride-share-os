@@ -1,16 +1,20 @@
 query VehiclesQuery {
   vehicles {
-    id
-    globalId
-    make
-    model
-    licensePlate
-    yearOfManufacture
-    displayName
-    latestOdometer
-    latestRange
-    telematicsSource
-    createdAt
-    updatedAt
+    ...VehicleFragment
   }
+}
+
+fragment VehicleFragment on Vehicle {
+  id
+  globalId
+  make
+  model
+  licensePlate
+  yearOfManufacture
+  displayName
+  latestOdometer
+  latestRange
+  telematicsSource
+  createdAt
+  updatedAt
 }

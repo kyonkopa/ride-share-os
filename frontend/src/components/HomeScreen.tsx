@@ -14,6 +14,8 @@ import {
   parseGraphQLDateTime,
 } from "@/utils/dateUtils"
 import type { ShiftAssignment } from "@/codegen/graphql"
+import { getFragmentData } from "@/codegen"
+import { VehicleFragmentFragmentDoc } from "@/codegen/graphql"
 
 interface HomeScreenProps {
   children?: React.ReactNode
@@ -21,7 +23,13 @@ interface HomeScreenProps {
 
 export function HomeScreen({ children }: HomeScreenProps) {
   const { data: vehiclesData } = useVehicles()
-  const vehicles = useMemo(() => vehiclesData?.vehicles || [], [vehiclesData])
+  const vehicles = useMemo(
+    () =>
+      vehiclesData?.vehicles.map((vehicle) =>
+        getFragmentData(VehicleFragmentFragmentDoc, vehicle)
+      ) || [],
+    [vehiclesData]
+  )
 
   const { currentShift } = useShift()
   const [showClockIn, setShowClockIn] = useState(false)
@@ -79,8 +87,6 @@ export function HomeScreen({ children }: HomeScreenProps) {
   // Get today's shifts when the user is a driver
   useEffect(() => {
     if (user?.driver) {
-      console.log("calling getTodayShifts")
-
       getTodayShifts()
     }
   }, [user?.driver, getTodayShifts])
@@ -94,7 +100,7 @@ export function HomeScreen({ children }: HomeScreenProps) {
         <StatusBadge isOnline={!!currentShift} />
 
         {/* Current Shift Status */}
-        <CurrentShift onClockIn={onClockIn} />
+        <CurrentShift onClockIn={onClockIn} vehicles={vehicles} />
 
         {/* Today's Summary */}
         <Card>

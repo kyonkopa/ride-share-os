@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/dialog"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import {
   Clock,
   Car,
@@ -17,15 +17,16 @@ import {
   FileText,
   AlertTriangle,
   BarChart3,
-} from "lucide-react";
-import type { Shift, Vehicle } from "@/types/shift";
+} from "lucide-react"
+import type { Shift } from "@/types/shift"
+import type { VehicleFragmentFragment } from "@/codegen/graphql"
 
 interface ShiftDetailsDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  selectedDate: Date | null;
-  shifts: Shift[];
-  vehicles: Vehicle[];
+  isOpen: boolean
+  onClose: () => void
+  selectedDate: Date | null
+  shifts: Shift[]
+  vehicles: VehicleFragmentFragment[]
 }
 
 export function ShiftDetailsDrawer({
@@ -35,14 +36,14 @@ export function ShiftDetailsDrawer({
   shifts,
   vehicles,
 }: ShiftDetailsDrawerProps) {
-  if (!selectedDate) return null;
+  if (!selectedDate) return null
 
   const formatTime = (timestamp: number) => {
     return new Date(timestamp).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
-    });
-  };
+    })
+  }
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
@@ -50,61 +51,61 @@ export function ShiftDetailsDrawer({
       year: "numeric",
       month: "long",
       day: "numeric",
-    });
-  };
+    })
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-GH", {
       style: "currency",
       currency: "GHS",
-    }).format(amount);
-  };
+    }).format(amount)
+  }
 
   const formatDuration = (startTime: number, endTime?: number) => {
-    const duration = (endTime || Date.now()) - startTime;
-    const hours = Math.floor(duration / (1000 * 60 * 60));
-    const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}m`;
-  };
+    const duration = (endTime || Date.now()) - startTime
+    const hours = Math.floor(duration / (1000 * 60 * 60))
+    const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60))
+    return `${hours}h ${minutes}m`
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-100 text-green-800 border-green-200"
       case "active":
-        return "bg-blue-100 text-blue-800 border-blue-200";
+        return "bg-blue-100 text-blue-800 border-blue-200"
       case "cancelled":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-red-100 text-red-800 border-red-200"
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-gray-100 text-gray-800 border-gray-200"
     }
-  };
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return "🟢";
+        return "🟢"
       case "active":
-        return "🔵";
+        return "🔵"
       case "cancelled":
-        return "🔴";
+        return "🔴"
       default:
-        return "⚪️";
+        return "⚪️"
     }
-  };
+  }
 
   // Filter shifts for the selected date
   const dayShifts = shifts.filter((shift) => {
-    const shiftDate = new Date(shift.startTime);
-    const selectedDateStart = new Date(selectedDate);
-    selectedDateStart.setHours(0, 0, 0, 0);
-    const selectedDateEnd = new Date(selectedDate);
-    selectedDateEnd.setHours(23, 59, 59, 999);
+    const shiftDate = new Date(shift.startTime)
+    const selectedDateStart = new Date(selectedDate)
+    selectedDateStart.setHours(0, 0, 0, 0)
+    const selectedDateEnd = new Date(selectedDate)
+    selectedDateEnd.setHours(23, 59, 59, 999)
 
-    return shiftDate >= selectedDateStart && shiftDate <= selectedDateEnd;
-  });
+    return shiftDate >= selectedDateStart && shiftDate <= selectedDateEnd
+  })
 
-  const hasShifts = dayShifts.length > 0;
+  const hasShifts = dayShifts.length > 0
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -126,7 +127,7 @@ export function ShiftDetailsDrawer({
         {hasShifts ? (
           <div className="space-y-4">
             {dayShifts.map((shift, index) => {
-              const vehicle = vehicles.find((v) => v.id === shift.vehicleId);
+              const vehicle = vehicles.find((v) => v.id === shift.vehicleId)
 
               return (
                 <Card key={shift.id}>
@@ -295,7 +296,7 @@ export function ShiftDetailsDrawer({
                         className="flex-1"
                         onClick={() => {
                           // TODO: Implement report issue functionality
-                          console.log("Report issue for shift:", shift.id);
+                          console.log("Report issue for shift:", shift.id)
                         }}
                       >
                         <AlertTriangle className="h-4 w-4 mr-2" />
@@ -307,7 +308,7 @@ export function ShiftDetailsDrawer({
                         className="flex-1"
                         onClick={() => {
                           // TODO: Implement trip summary functionality
-                          console.log("View trip summary for shift:", shift.id);
+                          console.log("View trip summary for shift:", shift.id)
                         }}
                       >
                         <BarChart3 className="h-4 w-4 mr-2" />
@@ -316,7 +317,7 @@ export function ShiftDetailsDrawer({
                     </div>
                   </CardContent>
                 </Card>
-              );
+              )
             })}
           </div>
         ) : (
@@ -338,5 +339,5 @@ export function ShiftDetailsDrawer({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

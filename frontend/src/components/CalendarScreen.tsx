@@ -1,34 +1,35 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { ShiftDetailsDrawer } from "./ShiftDetailsDrawer";
-import type { Shift, Vehicle } from "@/types/shift";
+} from "@/components/ui/card"
+import { Calendar } from "@/components/ui/calendar"
+import { ShiftDetailsDrawer } from "./ShiftDetailsDrawer"
+import type { Shift } from "@/types/shift"
+import type { VehicleFragmentFragment } from "@/codegen/graphql"
 
 interface CalendarScreenProps {
-  shifts: Shift[];
-  vehicles: Vehicle[];
+  shifts: Shift[]
+  vehicles: VehicleFragmentFragment[]
 }
 
 export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   // Calculate attendance summary for the current month
   const attendanceSummary = useMemo(() => {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
     const monthShifts = shifts.filter((shift) => {
-      const shiftDate = new Date(shift.startTime);
-      return shiftDate >= monthStart && shiftDate <= monthEnd;
-    });
+      const shiftDate = new Date(shift.startTime)
+      return shiftDate >= monthStart && shiftDate <= monthEnd
+    })
 
     const workedDays = new Set(
       monthShifts
@@ -36,21 +37,21 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
           (shift) => shift.status === "completed" || shift.status === "active"
         )
         .map((shift) => new Date(shift.startTime).getDate())
-    ).size;
+    ).size
 
     const upcomingDays = new Set(
       monthShifts
         .filter((shift) => shift.status === "upcoming")
         .map((shift) => new Date(shift.startTime).getDate())
-    ).size;
+    ).size
 
-    const totalDays = monthEnd.getDate();
-    const missedDays = totalDays - workedDays - upcomingDays;
-    const attendanceRate = Math.round((workedDays / totalDays) * 100);
+    const totalDays = monthEnd.getDate()
+    const missedDays = totalDays - workedDays - upcomingDays
+    const attendanceRate = Math.round((workedDays / totalDays) * 100)
 
     const totalRevenue = monthShifts
       .filter((shift) => shift.revenue)
-      .reduce((acc, shift) => acc + (shift.revenue || 0), 0);
+      .reduce((acc, shift) => acc + (shift.revenue || 0), 0)
 
     return {
       workedDays,
@@ -58,54 +59,54 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
       upcomingDays,
       attendanceRate,
       totalRevenue,
-    };
-  }, [shifts]);
+    }
+  }, [shifts])
 
   // Get shifts for a specific date
   const getShiftsForDate = useCallback(
     (date: Date) => {
-      const dayStart = new Date(date);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(date);
-      dayEnd.setHours(23, 59, 59, 999);
+      const dayStart = new Date(date)
+      dayStart.setHours(0, 0, 0, 0)
+      const dayEnd = new Date(date)
+      dayEnd.setHours(23, 59, 59, 999)
 
       return shifts.filter((shift) => {
-        const shiftDate = new Date(shift.startTime);
-        return shiftDate >= dayStart && shiftDate <= dayEnd;
-      });
+        const shiftDate = new Date(shift.startTime)
+        return shiftDate >= dayStart && shiftDate <= dayEnd
+      })
     },
     [shifts]
-  );
+  )
 
   // Custom day modifier to add status indicators
   const modifiers = useMemo(() => {
-    const workedDates: Date[] = [];
-    const missedDates: Date[] = [];
-    const upcomingDates: Date[] = [];
+    const workedDates: Date[] = []
+    const missedDates: Date[] = []
+    const upcomingDates: Date[] = []
 
     // Get all dates in the current month
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
     for (
       let d = new Date(monthStart);
       d <= monthEnd;
       d.setDate(d.getDate() + 1)
     ) {
-      const dayShifts = getShiftsForDate(d);
+      const dayShifts = getShiftsForDate(d)
       if (dayShifts.length > 0) {
         const hasWorked = dayShifts.some(
           (shift) => shift.status === "completed" || shift.status === "active"
-        );
+        )
         const hasUpcoming = dayShifts.some(
           (shift) => shift.status === "upcoming"
-        );
+        )
 
         if (hasWorked) {
-          workedDates.push(new Date(d));
+          workedDates.push(new Date(d))
         } else if (hasUpcoming) {
-          upcomingDates.push(new Date(d));
+          upcomingDates.push(new Date(d))
         }
       }
     }
@@ -114,22 +115,22 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
       worked: workedDates,
       missed: missedDates,
       upcoming: upcomingDates,
-    };
-  }, [getShiftsForDate]);
+    }
+  }, [getShiftsForDate])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-GH", {
       style: "currency",
       currency: "GHS",
-    }).format(amount);
-  };
+    }).format(amount)
+  }
 
   const handleDateSelect = (date: Date | undefined) => {
-    setSelectedDate(date);
+    setSelectedDate(date)
     if (date) {
-      setIsDrawerOpen(true);
+      setIsDrawerOpen(true)
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -240,5 +241,5 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
         vehicles={vehicles}
       />
     </div>
-  );
+  )
 }

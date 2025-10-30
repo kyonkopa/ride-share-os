@@ -1,0 +1,9 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="64" fill="#3B82F6"/>
+  <path d="M128 192C128 166.4 149.4 144 175 144H337C362.6 144 384 166.4 384 192V320C384 345.6 362.6 368 337 368H175C149.4 368 128 345.6 128 320V192Z" fill="white"/>
+  <circle cx="160" cy="256" r="16" fill="#3B82F6"/>
+  <circle cx="352" cy="256" r="16" fill="#3B82F6"/>
+  <rect x="144" y="320" width="224" height="32" rx="16" fill="#3B82F6"/>
+  <path d="M96 256C96 238.3 110.3 224 128 224H384C401.7 224 416 238.3 416 256C416 273.7 401.7 288 384 288H128C110.3 288 96 273.7 96 256Z" fill="white"/>
+  <text x="256" y="420" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold">KED</text>
+</svg>

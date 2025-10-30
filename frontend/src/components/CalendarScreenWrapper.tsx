@@ -1,8 +1,14 @@
-import { CalendarScreen } from "./CalendarScreen";
-import { useShift } from "../hooks/useShift";
+import { CalendarScreen } from "./CalendarScreen"
+import { useVehicles } from "@/features/clock-in/useVehicles"
+import { getFragmentData } from "@/codegen"
+import { VehicleFragmentFragmentDoc } from "@/codegen/graphql"
 
 export default function CalendarScreenWrapper() {
-  const { shifts, vehicles } = useShift();
+  const { data: vehiclesData } = useVehicles()
+  const vehicles =
+    vehiclesData?.vehicles.map((vehicle) =>
+      getFragmentData(VehicleFragmentFragmentDoc, vehicle)
+    ) || []
 
-  return <CalendarScreen shifts={shifts} vehicles={vehicles} />;
+  return <CalendarScreen shifts={[]} vehicles={vehicles} />
 }
