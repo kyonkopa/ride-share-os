@@ -1,1 +1,1 @@
-web: cd backend && bundle exec rails server -p $PORT -e production
+web: cd backend && bundle exec puma -C config/puma.rb

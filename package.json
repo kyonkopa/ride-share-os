@@ -6,7 +6,9 @@
   "scripts": {
     "postinstall": "cd frontend && yarn install && yarn build",
     "start": "cd backend && bundle exec rails server -p $PORT -e production",
-    "prepare": "husky"
+    "prepare": "husky",
+    "dev": "cd frontend && yarn dev",
+    "serve": "cd backend && rails s"
   },
   "engines": {
     "node": ">=18.0.0",
