@@ -1,0 +1,54 @@
+query TodayShiftsQuery {
+  todayShifts {
+    id
+    globalId
+    city
+    startTime
+    actualStartTime
+    endTime
+    actualEndTime
+    status
+    recurrenceRule
+    driver {
+      id
+      globalId
+      fullName
+      email
+      phoneNumber
+      createdAt
+    }
+    vehicle {
+      id
+      globalId
+      licensePlate
+      model
+      make
+      yearOfManufacture
+      latestOdometer
+      displayName
+      latestRange
+      telematicsSource
+    }
+    shiftEvents {
+      id
+      globalId
+      eventType
+      odometer
+      vehicleRange
+      gpsLat
+      gpsLon
+      notes
+      createdAt
+    }
+    revenueRecords {
+      id
+      globalId
+      totalRevenue
+      totalProfit
+      reconciled
+      createdAt
+    }
+    createdAt
+    updatedAt
+  }
+}

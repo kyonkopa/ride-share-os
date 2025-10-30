@@ -1,0 +1,48 @@
+{
+  "name": "ked-transport-services-os",
+  "description": "KED Transport Services OS - Full Stack Application",
+  "repository": "https://github.com/your-username/ked-transport-services-os",
+  "logo": "https://via.placeholder.com/150x150/4F46E5/FFFFFF?text=KED",
+  "keywords": [
+    "rails",
+    "react",
+    "typescript",
+    "graphql",
+    "transport",
+    "logistics"
+  ],
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    },
+    {
+      "url": "heroku/ruby"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini"
+    }
+  ],
+  "env": {
+    "RAILS_ENV": {
+      "description": "Rails environment",
+      "value": "production"
+    },
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    },
+    "RAILS_MASTER_KEY": {
+      "description": "Rails master key for credentials",
+      "generator": "secret"
+    }
+  }
+}

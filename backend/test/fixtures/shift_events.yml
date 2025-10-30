@@ -1,0 +1,42 @@
+# == Schema Information
+#
+# Table name: shift_events
+#
+#  id                  :integer          not null, primary key
+#  shift_assignment_id :integer          not null
+#  event_type          :integer          not null
+#  odometer            :integer
+#  vehicle_range       :integer
+#  gps_lat             :decimal(10, 6)
+#  gps_lon             :decimal(10, 6)
+#  notes               :text
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#
+# Indexes
+#
+#  index_shift_events_on_event_type           (event_type)
+#  index_shift_events_on_shift_assignment_id  (shift_assignment_id)
+#
+
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  shift_assignment: one
+  event_type: 1
+  timestamp: 2025-10-22 09:07:42
+  odometer: 1
+  vehicle_range: 1
+  gps_lat: 9.99
+  gps_lon: 9.99
+  notes: MyText
+
+two:
+  shift_assignment: two
+  event_type: 1
+  timestamp: 2025-10-22 09:07:42
+  odometer: 1
+  vehicle_range: 1
+  gps_lat: 9.99
+  gps_lon: 9.99
+  notes: MyText

@@ -1,0 +1,93 @@
+inherit_gem: { rubocop-rails-omakase: rubocop.yml }
+plugins:
+  - rubocop-graphql
+  - rubocop-rspec_rails
+  - rubocop-performance
+  - rubocop-rspec
+  - rubocop-factory_bot
+
+AllCops:
+  NewCops: enable
+  DisabledByDefault: false
+  Exclude:
+    - config/**/*
+    - db/migrate/*
+    - lib/tasks/auto_annotate_models.rake
+
+Layout/SpaceInsideArrayLiteralBrackets:
+  Enabled: true
+  EnforcedStyle: no_space
+
+Layout/IndentationWidth:
+  Width: 2
+
+Layout/AccessModifierIndentation:
+  EnforcedStyle: outdent
+
+Layout/IndentationConsistency:
+  Enabled: true
+
+Layout/TrailingWhitespace:
+  Enabled: true
+
+Layout/MultilineMethodCallBraceLayout:
+  Enabled: true
+
+Layout/HashAlignment:
+  Enabled: true
+
+Layout/BlockAlignment:
+  Enabled: true
+
+Layout/EndAlignment:
+  Enabled: true
+
+Layout/MultilineMethodCallIndentation:
+  Enabled: true
+
+Layout/LineLength:
+  Enabled: true
+  Max: 250
+
+Layout/FirstMethodArgumentLineBreak:
+  Enabled: true
+
+Layout/ArgumentAlignment:
+  Enabled: true
+
+Layout/FirstArgumentIndentation:
+  Enabled: true
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+GraphQL/FieldDescription:
+  Enabled: false
+
+GraphQL/ExtractType:
+  Enabled: false
+
+GraphQL/ExtractInputType:
+  Enabled: false
+
+RSpec/MultipleExpectations:
+  Max: 5
+
+RSpec/ExampleLength:
+  Max: 100
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
+
+RSpec/NestedGroups:
+  Max: 4
+
+GraphQL/ObjectDescription:
+  Enabled: false
+
+Rails/UniqueValidationWithoutIndex:
+  Enabled: true
+
+Style/HashSyntax:
+  EnforcedShorthandSyntax: always
+  Enabled: true

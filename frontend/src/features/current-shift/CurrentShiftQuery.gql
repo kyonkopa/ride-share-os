@@ -1,0 +1,36 @@
+query CurrentShiftQuery {
+  currentShift {
+    ...CurrentShiftFragment
+  }
+}
+
+fragment CurrentShiftFragment on ShiftAssignment {
+  id
+  status
+  city
+  startTime
+  endTime
+  driver {
+    id
+    fullName
+    email
+  }
+  vehicle {
+    id
+    licensePlate
+    model
+    yearOfManufacture
+    latestOdometer
+    latestRange
+  }
+  shiftEvents {
+    id
+    eventType
+    odometer
+    vehicleRange
+    gpsLat
+    gpsLon
+    notes
+    createdAt
+  }
+}

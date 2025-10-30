@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  full_name: MyString
+  dob: 2025-10-22
+  email: MyString
+  verified: false
+
+two:
+  full_name: MyString
+  dob: 2025-10-22
+  email: MyString
+  verified: false

@@ -1,0 +1,26 @@
+mutation CreateSessionMutation($input: CreateSessionInput!) {
+  createSession(input: $input) {
+    user {
+      id
+      email
+      firstName
+      lastName
+      fullName
+      driver {
+        id
+        fullName
+      }
+    }
+    authToken {
+      accessToken
+      refreshToken
+      tokenType
+      expiresIn
+    }
+    errors {
+      message
+      code
+      field
+    }
+  }
+}

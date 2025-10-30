@@ -1,0 +1,16 @@
+query VehiclesQuery {
+  vehicles {
+    id
+    globalId
+    make
+    model
+    licensePlate
+    yearOfManufacture
+    displayName
+    latestOdometer
+    latestRange
+    telematicsSource
+    createdAt
+    updatedAt
+  }
+}

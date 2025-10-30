@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  city: 1
+  driver: one
+  vehicle: one
+  start_time: 2025-10-22 09:07:34
+  end_time: 2025-10-22 09:07:34
+  recurrence_rule: MyString
+  status: 1
+
+two:
+  city: 1
+  driver: two
+  vehicle: two
+  start_time: 2025-10-22 09:07:34
+  end_time: 2025-10-22 09:07:34
+  recurrence_rule: MyString
+  status: 1

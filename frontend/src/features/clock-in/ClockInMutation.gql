@@ -1,0 +1,31 @@
+mutation ClockInMutation($input: ClockInInput!) {
+  clockIn(input: $input) {
+    shiftEvent {
+      id
+      eventType
+      odometer
+      vehicleRange
+      gpsLat
+      gpsLon
+      notes
+      shiftAssignment {
+        id
+        status
+        driver {
+          id
+          fullName
+        }
+        vehicle {
+          id
+          licensePlate
+          model
+        }
+      }
+    }
+    errors {
+      message
+      field
+      code
+    }
+  }
+}

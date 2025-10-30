@@ -1,0 +1,14 @@
+{
+  "name": "ked-transport-services-os",
+  "version": "1.0.0",
+  "description": "KED Transport Services OS - Full Stack Application",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "postinstall": "cd frontend && npm install",
+    "start": "cd backend && bundle exec rails server -p $PORT -e production"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  shift_assignment: one
+  driver: one
+  total_revenue: 9.99
+  total_profit: 9.99
+  reconciled: false
+
+two:
+  shift_assignment: two
+  driver: two
+  total_revenue: 9.99
+  total_profit: 9.99
+  reconciled: false
