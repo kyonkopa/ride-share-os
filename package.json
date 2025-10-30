@@ -4,6 +4,7 @@
   "private": true,
   "description": "KED Transport Services OS - Full Stack Application",
   "scripts": {
+    "postinstall": "cd frontend && yarn install --production=false && yarn build && cp -r dist/* ../backend/public/",
     "start": "cd backend && bundle exec rails server -p $PORT -e production",
     "prepare": "husky",
     "dev": "cd frontend && yarn dev",
