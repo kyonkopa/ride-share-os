@@ -5,10 +5,20 @@
   "description": "KED Transport Services OS - Full Stack Application",
   "scripts": {
     "postinstall": "cd frontend && yarn install && yarn build",
-    "start": "cd backend && bundle exec rails server -p $PORT -e production"
+    "start": "cd backend && bundle exec rails server -p $PORT -e production",
+    "prepare": "husky"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6"
+  },
+  "lint-staged": {
+    "frontend/src/**/*.{ts,tsx}": [
+      "yarn --cwd frontend eslint --fix"
+    ]
   }
 }
