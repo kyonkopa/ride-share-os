@@ -84,7 +84,7 @@ The deployment process automatically:
 
 1. **Build fails**: Check that all dependencies are properly installed
 2. **Database errors**: Ensure PostgreSQL addon is added and migrations are run
-3. **CORS errors**: Check CORS configuration in `backend/config/initializers/cors.rb`
+3. **CORS errors**: Check CORS configuration in `config/initializers/cors.rb`
 4. **Static files not loading**: Ensure frontend build completed successfully
 
 ### Logs
