@@ -8,8 +8,7 @@
     "start": "cd backend && bundle exec rails server -p $PORT -e production",
     "prepare": "husky",
     "dev": "cd frontend && yarn dev",
-    "serve": "cd backend && rails s",
-    "build": "cd frontend && yarn build"
+    "serve": "cd backend && rails s"
   },
   "engines": {
     "node": ">=18.0.0",
