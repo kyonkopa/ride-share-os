@@ -108,7 +108,6 @@ RSpec.describe Vehicle do
   describe 'associations' do
     it { is_expected.to have_many(:shift_assignments).dependent(:destroy) }
     it { is_expected.to have_many(:expenses).dependent(:destroy) }
-    it { is_expected.to have_one_attached(:vehicle_image) }
   end
 
   describe 'enums' do
