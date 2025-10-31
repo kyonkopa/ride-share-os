@@ -13,8 +13,7 @@ module Mutations
     field :auth_token, Types::AuthTokenType, null: true
     field :user, Types::UserType, null: true
 
-    def execute(**args)
-      input = args[:input]
+    def execute(input:)
       @user = User.find_for_authentication(email: input[:email])
 
       if user.nil?
@@ -22,8 +21,6 @@ module Mutations
       elsif !user.valid_password?(input[:password])
         return handle_failed_login
       end
-
-      validate_login_scope(input[:login_scope])
 
       user.unlock_access!
       sign_in(user)
@@ -38,17 +35,6 @@ module Mutations
     end
 
     private
-
-    def validate_login_scope(login_scope)
-      case login_scope
-      when "staff"
-        # For now, we'll allow all users to access staff scope
-        # error!("Access denied.") unless user.can?(:staff)
-      when "user"
-        # For now, we'll allow all users to access user scope
-        # error!("Access denied.") if user.can?(:staff)
-      end
-    end
 
     def handle_failed_login
       increment_failed_attempts
