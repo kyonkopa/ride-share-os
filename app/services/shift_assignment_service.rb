@@ -1,4 +1,4 @@
-require 'ice_cube'
+require "ice_cube"
 
 class ShiftAssignmentService
   class << self
@@ -13,23 +13,23 @@ class ShiftAssignmentService
     # @raise [StandardError] If driver is not active or assignment fails
     def assign_shifts(driver:, schedule:, start_date:, end_date:, city: :accra)
       validate_driver_active!(driver)
-      
+
       occurrences = generate_schedule_occurrences(schedule, start_date, end_date)
       created_assignments = []
-      
+
       occurrences.each do |occurrence_date|
         # Skip if assignment already exists for this driver and date
         next if existing_assignment?(driver, occurrence_date)
-        
+
         assignment = create_shift_assignment(
-          driver: driver,
+          driver:,
           date: occurrence_date,
-          city: city
+          city:
         )
-        
+
         created_assignments << assignment
       end
-      
+
       created_assignments
     rescue ActiveRecord::RecordInvalid => e
       raise StandardError, "Failed to assign shifts: #{e.message}"
@@ -55,27 +55,27 @@ class ShiftAssignmentService
       schedule = IceCube::Schedule.new(start_date) do |s|
         s.add_recurrence_rule IceCube::Rule.daily.count(days)
       end
-      
+
       schedule.occurrences(start_date + days.days).map(&:to_date)
     end
 
     def existing_assignment?(driver, date)
       ShiftAssignment.exists?(
-        driver: driver,
+        driver:,
         start_time: date.beginning_of_day..date.end_of_day
       )
     end
 
     def create_shift_assignment(driver:, date:, city:)
-      # Default shift times (8 AM to 5 PM)
+      # Default shift times (8 AM to 9 PM)
       start_time = date.beginning_of_day + 8.hours
-      end_time = date.beginning_of_day + 17.hours
-      
+      end_time = date.beginning_of_day + 21.hours
+
       ShiftAssignment.create!(
-        driver: driver,
-        city: city,
-        start_time: start_time,
-        end_time: end_time,
+        driver:,
+        city:,
+        start_time:,
+        end_time:,
         status: :scheduled,
         vehicle_id: nil # Vehicle can be assigned later
       )

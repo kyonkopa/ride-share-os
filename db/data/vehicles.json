@@ -2,19 +2,22 @@
   {
     "make": "Dongfeng",
     "model": "Aeolus E70",
-    "year": 2023,
-    "licensePlate": "GN 6714-25"
+    "year": 2019,
+    "licensePlate": "GN 6714-25",
+    "imagePath": "dongfeng_aeolus_e70.webp"
   },
   {
     "make": "Dongfeng",
     "model": "Aeolus E70",
-    "year": 2023,
-    "licensePlate": "GN 6776-25"
+    "year": 2019,
+    "licensePlate": "GN 6776-25",
+    "imagePath": "dongfeng_aeolus_e70.webp"
   },
   {
     "make": "Dongfeng",
     "model": "Nammi",
     "year": 2023,
-    "licensePlate": "GN 6882-25"
+    "licensePlate": "GN 6882-25",
+    "imagePath": "dongfeng_nammi.jpg"
   }
 ]

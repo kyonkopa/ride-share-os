@@ -38,12 +38,13 @@ RSpec.describe Mutations::ClockOut do
   let(:variables) do
     {
       input: {
-        shiftAssignmentId: shift_assignment.id,
         odometer: 51000,
         vehicleRange: 250,
         gpsLat: 5.6037,
         gpsLon: -0.1870,
-        notes: "Ending shift"
+        notes: "Ending shift",
+        revenue: 500.0,
+        earnings: 300.0
       }
     }
   end
@@ -64,7 +65,7 @@ RSpec.describe Mutations::ClockOut do
         .and_return({
           shiftEvent: {
             id: /ShiftEvent:[a-zA-Z0-9]+/,
-            eventType: 1, # clock_out enum value
+            eventType: "clock_out",
             odometer: 51000,
             vehicleRange: 250,
             gpsLat: 5.6037,
@@ -89,7 +90,9 @@ RSpec.describe Mutations::ClockOut do
         {
           input: {
             odometer: 51000,
-            notes: "Auto-found active shift"
+            notes: "Auto-found active shift",
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
       end
@@ -102,7 +105,7 @@ RSpec.describe Mutations::ClockOut do
           .and_return({
             shiftEvent: {
               id: /ShiftEvent:[a-zA-Z0-9]+/,
-              eventType: 1,
+              eventType: "clock_out",
               odometer: 51000,
               notes: "Auto-found active shift",
               shiftAssignment: {
@@ -118,7 +121,8 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            shiftAssignmentId: shift_assignment.id
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
       end
@@ -131,7 +135,7 @@ RSpec.describe Mutations::ClockOut do
           .and_return({
             shiftEvent: {
               id: /ShiftEvent:[a-zA-Z0-9]+/,
-              eventType: 1,
+              eventType: "clock_out",
               odometer: nil,
               vehicleRange: nil,
               gpsLat: nil,
@@ -152,9 +156,15 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            shiftAssignmentId: 99999
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
+      end
+
+      before do
+        # Make sure there are no active shifts
+        ShiftAssignment.update_all(status: :completed)
       end
 
       it 'returns an error' do
@@ -169,7 +179,9 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            odometer: 51000
+            odometer: 51000,
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
       end
@@ -193,26 +205,41 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            shiftAssignmentId: other_shift.id
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
       end
 
       before do
         create(:shift_event, :clock_in, shift_assignment: other_shift)
+        # Make sure the current user's driver has no active shifts
+        ShiftAssignment.where(driver:).update_all(status: :completed)
+        # Make sure there are no clock-in events for the current driver's shifts
+        ShiftAssignment.where(driver:).each { |sa| sa.shift_events.destroy_all }
       end
 
-      it 'returns a permission denied error' do
+      it 'returns a shift assignment not found error (since user has no active shifts)' do
+        # Since clockOut auto-finds the first active shift for the current user's driver,
+        # and there are none, it will return SHIFT_ASSIGNMENT_NOT_FOUND instead of PERMISSION_DENIED
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
           .with_context(context)
-          .with_mutation_error([{ "message" => "You don't have permission to clock out of this shift", "field" => nil, "code" => "PERMISSION_DENIED" }])
+          .with_mutation_error([{ "message" => "Shift assignment not found", "field" => "shift_assignment_id", "code" => "SHIFT_ASSIGNMENT_NOT_FOUND" }])
       end
     end
 
     context 'when user has no driver profile' do
       let(:user_without_driver) { create(:user, :confirmed) }
       let(:context) { { current_user: user_without_driver } }
+      let(:variables) do
+        {
+          input: {
+            revenue: 500.0,
+            earnings: 300.0
+          }
+        }
+      end
 
       it 'returns a no driver profile error' do
         expect(mutation).to execute_as_graphql
@@ -225,6 +252,15 @@ RSpec.describe Mutations::ClockOut do
     context 'when already clocked out' do
       before do
         create(:shift_event, :clock_out, shift_assignment:)
+      end
+
+      let(:variables) do
+        {
+          input: {
+            revenue: 500.0,
+            earnings: 300.0
+          }
+        }
       end
 
       it 'returns an already clocked out error' do
@@ -240,9 +276,16 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            shiftAssignmentId: scheduled_shift.id
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
+      end
+
+      before do
+        # Remove clock-in event and make scheduled shift active
+        shift_assignment.shift_events.destroy_all
+        shift_assignment.update!(status: :active)
       end
 
       it 'returns a not clocked in error' do
@@ -259,8 +302,9 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            shiftAssignmentId: shift_assignment.id,
-            odometer: -100
+            odometer: -100,
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
       end
@@ -277,9 +321,10 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            shiftAssignmentId: shift_assignment.id,
             gpsLat: 95.0, # Invalid latitude
-            gpsLon: 185.0 # Invalid longitude
+            gpsLon: 185.0, # Invalid longitude
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
       end
@@ -299,8 +344,9 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            shiftAssignmentId: shift_assignment.id,
-            vehicleRange: -50
+            vehicleRange: -50,
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
       end
@@ -317,6 +363,14 @@ RSpec.describe Mutations::ClockOut do
   describe 'authentication' do
     context 'when user is not authenticated' do
       let(:context) { {} }
+      let(:variables) do
+        {
+          input: {
+            revenue: 500.0,
+            earnings: 300.0
+          }
+        }
+      end
 
       it 'returns an authentication error' do
         expect(mutation).to execute_as_graphql
@@ -332,9 +386,10 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            shiftAssignmentId: shift_assignment.id,
             odometer: 52000, # Higher than clock-in odometer
-            vehicleRange: 200 # Lower than clock-in range
+            vehicleRange: 200, # Lower than clock-in range
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
       end
@@ -357,10 +412,11 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            shiftAssignmentId: shift_assignment.id,
             gpsLat: 5.6500, # Different location
             gpsLon: -0.2000,
-            notes: "Ending shift at different location"
+            notes: "Ending shift at different location",
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
       end
@@ -382,7 +438,7 @@ RSpec.describe Mutations::ClockOut do
 
     context 'when multiple active shifts exist' do
       let(:another_shift) { create(:shift_assignment, :active, driver:, vehicle:) }
-      
+
       before do
         create(:shift_event, :clock_in, shift_assignment: another_shift)
       end
@@ -390,7 +446,8 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            # No shift_assignment_id provided - should find the first active shift
+            revenue: 500.0,
+            earnings: 300.0
           }
         }
       end

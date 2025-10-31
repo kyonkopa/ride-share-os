@@ -31,6 +31,7 @@ export function useShift(): useShiftReturn {
   }, [currentShiftData])
 
   const clockInShiftEvent = useMemo(() => {
+    // find the last clock in shift event
     return currentShift?.shiftEvents?.find(
       (event) => event.eventType === ShiftEventTypeEnum.ClockIn
     ) as ShiftEvent | undefined

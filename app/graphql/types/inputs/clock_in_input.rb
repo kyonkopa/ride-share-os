@@ -11,7 +11,6 @@ module Types
       argument :odometer, Integer, required: false, description: "Current odometer reading"
       argument :shift_assignment_id, Integer, required: false, description: "ID of the shift assignment to clock into (optional - will auto-find active shift if not provided)"
       argument :vehicle_range, Integer, required: false, description: "Current vehicle range"
-      argument :vehicle_id, ID, required: true, description: "ID of the vehicle to clock in to"
     end
   end
 end

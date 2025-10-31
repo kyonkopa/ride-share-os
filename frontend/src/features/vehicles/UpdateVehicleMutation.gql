@@ -1,0 +1,12 @@
+mutation UpdateVehicleMutation($input: UpdateVehicleInput!, $vehicleId: ID!) {
+  updateVehicle(input: $input, vehicleId: $vehicleId) {
+    vehicle {
+      ...VehicleFragment
+    }
+    errors {
+      message
+      field
+      code
+    }
+  }
+}

@@ -12,6 +12,7 @@
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  make                 :string          not null
+#  vehicle_image_path   :string
 #
 # Indexes
 #
@@ -37,4 +38,8 @@ class Vehicle < ApplicationRecord
   validates :latest_odometer, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :latest_range, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :telematics_source, presence: true
+
+  def in_use?
+    shift_assignments.active.any?
+  end
 end

@@ -10,11 +10,8 @@ module Queries
       return [] unless current_user&.driver
 
       driver = current_user.driver
-      today = Date.current
 
-      driver.shift_assignments
-            .where(start_time: today.beginning_of_day..today.end_of_day)
-            .order(:start_time)
+      driver.shift_assignments.scheduled_today.order(start_time: :asc)
     end
   end
 end

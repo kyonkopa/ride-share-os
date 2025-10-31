@@ -3,13 +3,12 @@ import { Outlet } from "react-router"
 
 interface LayoutProps {
   currentPath?: string
-  onNavigate?: (path: string) => void
 }
 
-export function Layout({ currentPath, onNavigate }: LayoutProps) {
+export function Layout({ currentPath }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar currentPath={currentPath} onNavigate={onNavigate} />
+      <Sidebar currentPath={currentPath} />
 
       {/* Main Content Area */}
       <div className="md:ml-80 min-h-screen">

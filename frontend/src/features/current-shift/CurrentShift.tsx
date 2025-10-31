@@ -6,9 +6,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useShift } from "@/hooks/useShift"
 import { Clock, Play, Square } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { ClockOutForm } from "@/components/ClockOutForm"
 import { getShiftDuration } from "@/utils/dateUtils"
 import type { VehicleFragmentFragment } from "@/codegen/graphql"
@@ -21,8 +31,13 @@ interface CurrentShiftProps {
 export function CurrentShift({ onClockIn, vehicles }: CurrentShiftProps) {
   const { currentShift, clockInShiftEvent } = useShift()
   const [showClockOut, setShowClockOut] = useState(false)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
-  const onClockOutClick = () => setShowClockOut(true)
+  const onClockOutClick = () => setShowConfirmDialog(true)
+  const onConfirmClockOut = () => {
+    setShowConfirmDialog(false)
+    setShowClockOut(true)
+  }
   const currentVehicle = currentShift
     ? vehicles?.find((v) => v.id === currentShift.vehicle.id)
     : null
@@ -33,10 +48,6 @@ export function CurrentShift({ onClockIn, vehicles }: CurrentShiftProps) {
       minute: "2-digit",
     })
   }
-
-  useEffect(() => {
-    console.log({ currentShift })
-  }, [currentShift])
 
   if (currentShift && clockInShiftEvent) {
     return (
@@ -96,6 +107,30 @@ export function CurrentShift({ onClockIn, vehicles }: CurrentShiftProps) {
             </Button>
           </CardContent>
         </Card>
+
+        <AlertDialog
+          open={showConfirmDialog}
+          onOpenChange={setShowConfirmDialog}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Clock Out</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to clock out? You'll need to fill in your
+                final odometer reading, range, and other shift details.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={onConfirmClockOut}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Confirm
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <ClockOutForm
           clockInShiftEvent={clockInShiftEvent}

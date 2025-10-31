@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useMutation } from "../../hooks/useMutation"
 import {
   ClockInMutationDocument,
+  CurrentShiftQueryDocument,
   type ClockInMutationMutation,
   type Error,
 } from "../../codegen/graphql"
@@ -35,6 +36,11 @@ export const useClockInMutation = ({
         setErrors([])
         onSuccess?.(data)
       },
+      refetchQueries: [
+        {
+          query: CurrentShiftQueryDocument,
+        },
+      ],
     }
   )
 
@@ -47,12 +53,12 @@ export const useClockInMutation = ({
       gpsLat: data.location.latitude,
       gpsLon: data.location.longitude,
       notes: data.notes || undefined,
-      vehicleId: data.vehicleId,
     }
 
     await clockIn({
       variables: {
         input,
+        vehicleId: data.vehicleId,
       },
     })
   }

@@ -10,8 +10,8 @@ RSpec.describe Mutations::ClockIn do
 
   let(:mutation) do
     <<~GQL
-      mutation ClockIn($input: ClockInInput!) {
-        clockIn(input: $input) {
+      mutation ClockIn($input: ClockInInput!, $vehicleId: ID!) {
+        clockIn(input: $input, vehicleId: $vehicleId) {
           shiftEvent {
             id
             eventType
@@ -44,7 +44,8 @@ RSpec.describe Mutations::ClockIn do
         gpsLat: 5.6037,
         gpsLon: -0.1870,
         notes: "Starting shift"
-      }
+      },
+      vehicleId: vehicle.global_id
     }
   end
 
@@ -59,7 +60,7 @@ RSpec.describe Mutations::ClockIn do
         .and_return({
           shiftEvent: {
             id: /ShiftEvent:[a-zA-Z0-9]+/,
-            eventType: 0, # clock_in enum value
+            eventType: "clock_in",
             odometer: 50000,
             vehicleRange: 300,
             gpsLat: 5.6037,
@@ -73,9 +74,16 @@ RSpec.describe Mutations::ClockIn do
           errors: []
         }.with_indifferent_access)
         .with_effects do
-          expect(shift_assignment.reload.status).to eq('active')
-          expect(shift_assignment.shift_events.count).to eq(1)
-          expect(shift_assignment.shift_events.first.event_type).to eq('clock_in')
+          aggregate_failures do
+            expect(shift_assignment.reload.status).to eq('active')
+            expect(shift_assignment.shift_events.count).to eq(1)
+            expect(shift_assignment.shift_events.first.event_type).to eq('clock_in')
+            expect(shift_assignment.vehicle).to eq(vehicle)
+
+            vehicle.reload
+            expect(vehicle.latest_odometer).to eq(50000)
+            expect(vehicle.latest_range).to eq(300)
+          end
         end
     end
 
@@ -85,8 +93,10 @@ RSpec.describe Mutations::ClockIn do
         {
           input: {
             odometer: 50000,
+            vehicleRange: 300,
             notes: "Auto-found shift"
-          }
+          },
+          vehicleId: vehicle.global_id
         }
       end
 
@@ -102,7 +112,7 @@ RSpec.describe Mutations::ClockIn do
           .and_return({
             shiftEvent: {
               id: /ShiftEvent:[a-zA-Z0-9]+/,
-              eventType: 0,
+              eventType: "clock_in",
               odometer: 50000,
               notes: "Auto-found shift",
               shiftAssignment: {
@@ -121,7 +131,8 @@ RSpec.describe Mutations::ClockIn do
         {
           input: {
             shiftAssignmentId: 99999
-          }
+          },
+          vehicleId: vehicle.global_id
         }
       end
 
@@ -140,7 +151,8 @@ RSpec.describe Mutations::ClockIn do
         {
           input: {
             shiftAssignmentId: other_shift.id
-          }
+          },
+          vehicleId: vehicle.global_id
         }
       end
 
@@ -178,12 +190,29 @@ RSpec.describe Mutations::ClockIn do
       end
     end
 
+    context 'when vehicle is already in use' do
+      let(:other_driver) { create(:driver) }
+      let(:other_shift) { create(:shift_assignment, :active, driver: other_driver, vehicle:) }
+
+      before do
+        other_shift # create the active shift that makes vehicle in use
+      end
+
+      it 'returns a vehicle in use error' do
+        expect(mutation).to execute_as_graphql
+          .with_variables(variables)
+          .with_context(context)
+          .with_mutation_error([{ "message" => "Vehicle is already in use", "field" => nil, "code" => "VEHICLE_IN_USE" }])
+      end
+    end
+
     context 'when no active shift found and no shift_assignment_id provided' do
       let(:variables) do
         {
           input: {
             odometer: 50000
-          }
+          },
+          vehicleId: vehicle.global_id
         }
       end
 
@@ -203,7 +232,8 @@ RSpec.describe Mutations::ClockIn do
           input: {
             shiftAssignmentId: shift_assignment.id,
             odometer: -100
-          }
+          },
+          vehicleId: vehicle.global_id
         }
       end
 
@@ -222,7 +252,8 @@ RSpec.describe Mutations::ClockIn do
             shiftAssignmentId: shift_assignment.id,
             gpsLat: 95.0, # Invalid latitude
             gpsLon: 185.0 # Invalid longitude
-          }
+          },
+          vehicleId: vehicle.global_id
         }
       end
 
@@ -243,7 +274,8 @@ RSpec.describe Mutations::ClockIn do
           input: {
             shiftAssignmentId: shift_assignment.id,
             vehicleRange: -50
-          }
+          },
+          vehicleId: vehicle.global_id
         }
       end
 

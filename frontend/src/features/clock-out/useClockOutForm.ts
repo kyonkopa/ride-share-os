@@ -2,6 +2,8 @@ import { useState } from "react"
 import { useMutation } from "../../hooks/useMutation"
 import {
   ClockOutMutationDocument,
+  CurrentShiftQueryDocument,
+  TodaysShiftEventsQueryDocument,
   type ClockOutInput,
   type ClockOutMutationMutation,
   type ClockOutMutationMutationVariables,
@@ -40,6 +42,14 @@ export const useClockOutForm = ({
       setErrors([])
       onSuccess?.(data)
     },
+    refetchQueries: [
+      {
+        query: CurrentShiftQueryDocument,
+      },
+      {
+        query: TodaysShiftEventsQueryDocument,
+      },
+    ],
   })
 
   const onSubmit = async (data: ClockOutFormData) => {

@@ -54,10 +54,12 @@ class ShiftAssignment < ApplicationRecord
   validates :status, presence: true
   validate :end_time_after_start_time
 
+  scope :scheduled_today, -> { where(start_time: Date.current.beginning_of_day..Date.current.end_of_day) }
+
   def actual_start_time
     shift_events.find_by(event_type: "clock_in")&.created_at
   end
-  
+
   def actual_end_time
     shift_events.find_by(event_type: "clock_out")&.created_at
   end

@@ -1,0 +1,22 @@
+query TodaysShiftEventsQuery {
+  todaysShiftEvents {
+    id
+    globalId
+    eventType
+    odometer
+    vehicleRange
+    gpsLat
+    gpsLon
+    notes
+    createdAt
+    shiftAssignment {
+      id
+      globalId
+      vehicle {
+        id
+        displayName
+        licensePlate
+      }
+    }
+  }
+}

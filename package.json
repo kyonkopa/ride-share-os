@@ -7,7 +7,8 @@
     "postinstall": "cd frontend && yarn install --production=false && yarn build && cp -r dist/* ../public/",
     "prepare": "is-ci || husky",
     "dev": "cd frontend && yarn dev",
-    "serve": "rails s"
+    "serve": "rails s",
+    "codegen": "cd frontend && yarn codegen"
   },
   "engines": {
     "node": ">=18.0.0",

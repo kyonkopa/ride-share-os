@@ -5,17 +5,17 @@ module Mutations
     description "Clock in to a shift assignment"
 
     argument :input, Types::Inputs::ClockInInput, required: true, description: "Input for clocking in"
+    argument :vehicle_id, ID, required: true, description: "ID of the vehicle to clock in to", loads: Types::VehicleType
 
     field :shift_event, Types::ShiftEventType, null: true
 
-    def execute(input:)
+    def execute(vehicle:, input:)
       error!("You do not have a driver profile", code: "NO_DRIVER_PROFILE") if current_user.driver.blank?
-      validate_vehicle_exists!(input[:vehicle_id])
 
       shift_assignment = if input[:shift_assignment_id]
          ShiftAssignment.find_by(id: input[:shift_assignment_id])
       else
-        current_user.driver.shift_assignments.scheduled.first
+        current_user.driver.shift_assignments.scheduled_today.first
       end
 
       if shift_assignment.nil?
@@ -33,6 +33,11 @@ module Mutations
         return empty_response
       end
 
+      if vehicle_in_use?(vehicle)
+        error!("Vehicle is already in use", code: "VEHICLE_IN_USE")
+        return empty_response
+      end
+
       shift_event = shift_assignment.shift_events.create!(
         event_type: :clock_in,
         odometer: input[:odometer],
@@ -42,7 +47,8 @@ module Mutations
         notes: input[:notes]
       )
 
-      shift_assignment.update!(status: :active, vehicle_id: input[:vehicle_id].to_i)
+      shift_assignment.update!(status: :active, vehicle:)
+      vehicle.update!(latest_odometer: input[:odometer], latest_range: input[:vehicle_range])
 
       { shift_event: }
     end
@@ -57,11 +63,8 @@ module Mutations
       shift_assignment.shift_events.exists?(event_type: :clock_in)
     end
 
-    def validate_vehicle_exists!(vehicle_id)
-      unless Vehicle.exists?(id: vehicle_id)
-        error!("Vehicle not found", code: "VEHICLE_NOT_FOUND", field: "vehicle_id")
-        return empty_response
-      end
+    def vehicle_in_use?(vehicle)
+      vehicle.in_use?
     end
   end
 end

@@ -1,5 +1,5 @@
-mutation ClockInMutation($input: ClockInInput!) {
-  clockIn(input: $input) {
+mutation ClockInMutation($input: ClockInInput!, $vehicleId: ID!) {
+  clockIn(input: $input, vehicleId: $vehicleId) {
     shiftEvent {
       id
       eventType

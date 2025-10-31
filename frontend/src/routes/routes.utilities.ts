@@ -5,9 +5,10 @@ export const Routes = {
   // Protected routes
   home: "/",
   calendar: "/calendar",
+  vehicles: "/vehicles",
 
   // Admin routes (if needed in the future)
   adminDashboard: "/admin/dashboard",
-} as const;
+} as const
 
-export type RouteKey = keyof typeof Routes;
+export type RouteKey = keyof typeof Routes

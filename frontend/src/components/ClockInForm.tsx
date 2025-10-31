@@ -200,7 +200,7 @@ export function ClockInForm({
               </Select>
               {selectedVehicle && (
                 <p className="text-sm text-muted-foreground">
-                  Battery capacity: FAKE_BATTERY_CAPACITY kWh
+                  Battery capacity: {selectedVehicle.latestRange} km
                 </p>
               )}
             </div>

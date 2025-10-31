@@ -17,10 +17,10 @@ class BackendSchema < GraphQL::Schema
   end
 
   # Union and Interface Resolution
-  def self.resolve_type(abstract_type, obj, ctx)
-    # TODO: Implement this method
-    # to return the correct GraphQL object type for `obj`
-    raise(GraphQL::RequiredImplementationMissingError)
+  def self.resolve_type(type_definition, obj, ctx)
+    return nil if obj.nil?
+
+    type_definition
   end
 
   # Limit the size of incoming queries:

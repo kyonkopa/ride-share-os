@@ -11,15 +11,16 @@ import {
   LogOut,
   Menu,
   X,
+  Car,
 } from "lucide-react"
 import { useAuthStore } from "@/stores/AuthStore"
+import { Link } from "react-router-dom"
 
 interface SidebarProps {
   currentPath?: string
-  onNavigate?: (path: string) => void
 }
 
-export function Sidebar({ currentPath = "/", onNavigate }: SidebarProps) {
+export function Sidebar({ currentPath = "/" }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(true)
 
   const menuItems = [
@@ -59,6 +60,13 @@ export function Sidebar({ currentPath = "/", onNavigate }: SidebarProps) {
       enabled: false,
     },
     {
+      id: "vehicles",
+      label: "Vehicles",
+      icon: Car,
+      path: "/vehicles",
+      enabled: true,
+    },
+    {
       id: "profile",
       label: "Profile",
       icon: User,
@@ -87,12 +95,12 @@ export function Sidebar({ currentPath = "/", onNavigate }: SidebarProps) {
   const { clearStorage } = useAuthStore()
 
   const handleItemClick = (path: string) => {
+    // Collapse sidebar on mobile when an item is clicked
+    if (window.innerWidth < 768) {
+      setIsCollapsed(true)
+    }
     if (path === "/logout") {
       clearStorage()
-    }
-
-    if (onNavigate) {
-      onNavigate(path)
     }
   }
 
@@ -161,11 +169,16 @@ export function Sidebar({ currentPath = "/", onNavigate }: SidebarProps) {
                       w-full justify-start h-12 px-4 rounded-md
                       ${isActive ? "bg-secondary" : ""}
                     `}
-                    onClick={() => handleItemClick(item.path)}
                     disabled={!item.enabled}
+                    onClick={() => handleItemClick(item.path)}
                   >
-                    <Icon className="h-6 w-6 mr-4" />
-                    <span className="text-xl font-medium">{item.label}</span>
+                    <Link
+                      to={item.path}
+                      className="w-full flex items-center justify-start"
+                    >
+                      <Icon className="h-6 w-6 mr-4" />
+                      <span className="text-xl font-medium">{item.label}</span>
+                    </Link>
                   </Button>
                 )
               })}

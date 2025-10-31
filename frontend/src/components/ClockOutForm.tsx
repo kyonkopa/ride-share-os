@@ -178,7 +178,7 @@ export function ClockOutForm({
                 placeholder="Enter final odometer reading"
                 required
               />
-              {!!formData.odometer && currentShift.vehicle.latestOdometer && (
+              {!!formData.odometer && !!currentShift.vehicle.latestOdometer && (
                 <p className="text-sm text-muted-foreground">
                   Distance driven:{" "}
                   {formData.odometer - (clockInShiftEvent?.odometer ?? 0)} km
@@ -280,7 +280,12 @@ export function ClockOutForm({
               type="submit"
               className="w-full"
               disabled={
-                loading || !location || !formData.odometer || !formData.range
+                loading ||
+                !location ||
+                !formData.odometer ||
+                !formData.range ||
+                !formData.earnings ||
+                !formData.revenue
               }
             >
               {loading && <Spinner />}
