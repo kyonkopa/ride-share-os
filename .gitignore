@@ -25,6 +25,10 @@
 /public/packs
 /public/packs-test
 /public/packs-manifest.json
+/public/index.html
+/public/manifest.json
+/public/icon.svg
+/public/sw.js
 
 # Credentials / keys
 /config/master.key
