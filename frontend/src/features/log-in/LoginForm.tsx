@@ -42,7 +42,7 @@ export function LoginForm({
       <div className="flex justify-center">
         <img src="/icon.svg" alt="RideShare" className="w-10 h-10" />
       </div>
-      <Card>
+      <Card className="mx-4">
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
@@ -92,7 +92,7 @@ export function LoginForm({
                 />
               </Field>
               <Field>
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading} size="lg">
                   {loading ? "Signing in..." : "Login"}
                 </Button>
                 <FieldDescription className="text-center">
