@@ -11,7 +11,7 @@ import type { Location } from "@/types/shift"
 export interface ClockInFormData {
   vehicleId: string
   odometer: number
-  range: number // in kilometers
+  range?: number // in kilometers (optional)
   location: Location
   notes?: string
 }
@@ -49,7 +49,7 @@ export const useClockInMutation = ({
 
     const input = {
       odometer: Math.round(data.odometer),
-      vehicleRange: Math.round(data.range),
+      ...(data.range !== undefined && { vehicleRange: Math.round(data.range) }),
       gpsLat: data.location.latitude,
       gpsLon: data.location.longitude,
       notes: data.notes || undefined,

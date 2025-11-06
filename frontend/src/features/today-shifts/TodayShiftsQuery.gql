@@ -8,7 +8,6 @@ query TodayShiftsQuery {
     endTime
     actualEndTime
     status
-    recurrenceRule
     driver {
       id
       globalId

@@ -1,0 +1,21 @@
+query MyShiftAssignmentsQuery(
+  $startDate: ISO8601Date!
+  $endDate: ISO8601Date!
+) {
+  myShiftAssignments(startDate: $startDate, endDate: $endDate) {
+    id
+    city
+    startTime
+    endTime
+    status
+    driver {
+      id
+    }
+    vehicle {
+      id
+      displayName
+    }
+    createdAt
+    updatedAt
+  }
+}

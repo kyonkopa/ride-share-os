@@ -21,16 +21,16 @@ FactoryBot.define do
       status { :missed }
     end
 
+    trait :paused do
+      status { :paused }
+    end
+
     trait :in_kumasi do
       city { :kumasi }
     end
 
     trait :in_takoradi do
       city { :takoradi }
-    end
-
-    trait :with_recurrence do
-      recurrence_rule { "FREQ=DAILY;INTERVAL=1" }
     end
   end
 end

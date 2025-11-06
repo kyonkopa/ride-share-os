@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback } from "react"
+import { DateTime } from "luxon"
+import { Check, X } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -6,13 +8,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Calendar } from "@/components/ui/calendar"
+import { Calendar, CalendarDayButton } from "@/components/ui/calendar"
 import { ShiftDetailsDrawer } from "./ShiftDetailsDrawer"
-import type { Shift } from "@/types/shift"
-import type { VehicleFragmentFragment } from "@/codegen/graphql"
+import type {
+  ShiftAssignment,
+  VehicleFragmentFragment,
+} from "@/codegen/graphql"
+import { ShiftStatusEnum } from "@/codegen/graphql"
 
 interface CalendarScreenProps {
-  shifts: Shift[]
+  shifts: ShiftAssignment[]
   vehicles: VehicleFragmentFragment[]
 }
 
@@ -22,36 +27,52 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
 
   // Calculate attendance summary for the current month
   const attendanceSummary = useMemo(() => {
-    const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const now = DateTime.now()
+    const monthStart = now.startOf("month")
+    const monthEnd = now.endOf("month")
 
     const monthShifts = shifts.filter((shift) => {
-      const shiftDate = new Date(shift.startTime)
+      const shiftDate = DateTime.fromISO(shift.startTime)
       return shiftDate >= monthStart && shiftDate <= monthEnd
     })
 
     const workedDays = new Set(
       monthShifts
         .filter(
-          (shift) => shift.status === "completed" || shift.status === "active"
+          (shift) =>
+            shift.status === ShiftStatusEnum.Completed ||
+            shift.status === ShiftStatusEnum.Active ||
+            shift.status === ShiftStatusEnum.Paused
         )
-        .map((shift) => new Date(shift.startTime).getDate())
+        .map((shift) => DateTime.fromISO(shift.startTime).day)
     ).size
 
     const upcomingDays = new Set(
       monthShifts
-        .filter((shift) => shift.status === "upcoming")
-        .map((shift) => new Date(shift.startTime).getDate())
+        .filter((shift) => shift.status === ShiftStatusEnum.Scheduled)
+        .map((shift) => DateTime.fromISO(shift.startTime).day)
     ).size
 
-    const totalDays = monthEnd.getDate()
-    const missedDays = totalDays - workedDays - upcomingDays
-    const attendanceRate = Math.round((workedDays / totalDays) * 100)
+    const missedDays = new Set(
+      monthShifts
+        .filter((shift) => shift.status === ShiftStatusEnum.Missed)
+        .map((shift) => DateTime.fromISO(shift.startTime).day)
+    ).size
 
-    const totalRevenue = monthShifts
-      .filter((shift) => shift.revenue)
-      .reduce((acc, shift) => acc + (shift.revenue || 0), 0)
+    // Get the number of days since the start of the month rounded up
+    const daysUntil = Math.ceil(now.diff(monthStart, "days").days)
+
+    console.log("daysUntil", daysUntil)
+
+    const attendanceRate = Math.round((workedDays / daysUntil) * 100)
+
+    const totalRevenue = monthShifts.reduce((acc, shift) => {
+      const revenue = shift.revenueRecords?.reduce(
+        (sum, record) => sum + (record.totalRevenue || 0),
+        0
+      )
+      return acc + (revenue || 0)
+    }, 0)
 
     return {
       workedDays,
@@ -62,16 +83,15 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
     }
   }, [shifts])
 
-  // Get shifts for a specific date
-  const getShiftsForDate = useCallback(
+  // Get the shift for a specific date (there is only one shift per date if any)
+  const getShiftForDate = useCallback(
     (date: Date) => {
-      const dayStart = new Date(date)
-      dayStart.setHours(0, 0, 0, 0)
-      const dayEnd = new Date(date)
-      dayEnd.setHours(23, 59, 59, 999)
+      const dateTime = DateTime.fromJSDate(date)
+      const dayStart = dateTime.startOf("day")
+      const dayEnd = dateTime.endOf("day")
 
-      return shifts.filter((shift) => {
-        const shiftDate = new Date(shift.startTime)
+      return shifts.find((shift) => {
+        const shiftDate = DateTime.fromISO(shift.startTime)
         return shiftDate >= dayStart && shiftDate <= dayEnd
       })
     },
@@ -80,50 +100,40 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
 
   // Custom day modifier to add status indicators
   const modifiers = useMemo(() => {
-    const workedDates: Date[] = []
-    const missedDates: Date[] = []
-    const upcomingDates: Date[] = []
+    const workedDates: DateTime[] = []
+    const missedDates: DateTime[] = []
+    const upcomingDates: DateTime[] = []
 
     // Get all dates in the current month
-    const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const now = DateTime.now()
+    const monthStart = now.startOf("month")
+    const monthEnd = now.endOf("month")
 
-    for (
-      let d = new Date(monthStart);
-      d <= monthEnd;
-      d.setDate(d.getDate() + 1)
-    ) {
-      const dayShifts = getShiftsForDate(d)
-      if (dayShifts.length > 0) {
-        const hasWorked = dayShifts.some(
-          (shift) => shift.status === "completed" || shift.status === "active"
-        )
-        const hasUpcoming = dayShifts.some(
-          (shift) => shift.status === "upcoming"
-        )
-
-        if (hasWorked) {
-          workedDates.push(new Date(d))
-        } else if (hasUpcoming) {
-          upcomingDates.push(new Date(d))
+    let currentDate = monthStart
+    while (currentDate <= monthEnd) {
+      const shift = getShiftForDate(currentDate.toJSDate())
+      if (shift) {
+        if (
+          shift.status === ShiftStatusEnum.Completed ||
+          shift.status === ShiftStatusEnum.Active ||
+          shift.status === ShiftStatusEnum.Paused
+        ) {
+          workedDates.push(currentDate)
+        } else if (shift.status === ShiftStatusEnum.Missed) {
+          missedDates.push(currentDate)
+        } else if (shift.status === ShiftStatusEnum.Scheduled) {
+          upcomingDates.push(currentDate)
         }
       }
+      currentDate = currentDate.plus({ days: 1 })
     }
 
     return {
-      worked: workedDates,
-      missed: missedDates,
-      upcoming: upcomingDates,
+      worked: workedDates.map((date) => date.toJSDate()),
+      missed: missedDates.map((date) => date.toJSDate()),
+      upcoming: upcomingDates.map((date) => date.toJSDate()),
     }
-  }, [getShiftsForDate])
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-GH", {
-      style: "currency",
-      currency: "GHS",
-    }).format(amount)
-  }
+  }, [getShiftForDate])
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date)
@@ -162,11 +172,38 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
               onSelect={handleDateSelect}
               modifiers={modifiers}
               modifiersClassNames={{
-                worked: "bg-green-100 text-green-800 hover:bg-green-200",
-                missed: "bg-red-100 text-red-800 hover:bg-red-200",
-                upcoming: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+                worked: "text-green-800",
+                missed: "text-red-800",
+                upcoming: "text-blue-800",
               }}
-              className="rounded-md border"
+              components={{
+                DayButton: ({ children, modifiers, day, ...props }) => {
+                  const isWorked = modifiers.worked
+                  const isMissed = modifiers.missed
+                  const isDisabled = modifiers.disabled
+
+                  return (
+                    <CalendarDayButton
+                      modifiers={modifiers}
+                      day={day}
+                      {...props}
+                    >
+                      {children}
+                      {isWorked && (
+                        <Check className="absolute bottom-1 right-1 h-3 w-3 text-green-600" />
+                      )}
+                      {isMissed && (
+                        <X className="absolute bottom-1 right-1 h-3 w-3 text-red-600" />
+                      )}
+
+                      {isDisabled && (
+                        <X className="absolute bottom-1 right-1 h-3 w-3 text-gray-600" />
+                      )}
+                    </CalendarDayButton>
+                  )
+                },
+              }}
+              className="rounded-md border [--cell-size:--spacing(10)] md:[--cell-size:--spacing(12)]"
             />
           </div>
 
@@ -221,12 +258,6 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
                 {attendanceSummary.attendanceRate}%
               </p>
               <p className="text-sm text-muted-foreground">Attendance Rate</p>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(attendanceSummary.totalRevenue)}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Revenue</p>
             </div>
           </div>
         </CardContent>

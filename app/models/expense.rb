@@ -3,12 +3,12 @@
 # Table name: expenses
 #
 #  id                   :integer         not null primary key
-#  driver_id            :integer        
-#  vehicle_id           :integer        
+#  driver_id            :integer
+#  vehicle_id           :integer
 #  amount               :decimal         not null
 #  category             :string          not null
 #  date                 :date            not null
-#  receipt_key          :string         
+#  receipt_key          :string
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #

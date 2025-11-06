@@ -221,7 +221,7 @@ RSpec.describe Vehicle do
 
   describe 'default values' do
     it 'has default latest_odometer of 0 when not explicitly set' do
-      vehicle = Vehicle.new(
+      vehicle = described_class.new(
         license_plate: 'ABC123',
         make: 'Toyota',
         model: 'Camry',
@@ -234,7 +234,7 @@ RSpec.describe Vehicle do
     end
 
     it 'has default latest_range of 0 when not explicitly set' do
-      vehicle = Vehicle.new(
+      vehicle = described_class.new(
         license_plate: 'XYZ789',
         make: 'Honda',
         model: 'Civic',

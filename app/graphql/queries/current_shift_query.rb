@@ -9,7 +9,7 @@ module Queries
     def resolve
       return nil unless current_user&.driver
 
-      current_user.driver.shift_assignments.active.first
+      current_user.driver.shift_assignments.active_or_paused.first
     end
   end
 end

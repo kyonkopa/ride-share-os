@@ -1,0 +1,26 @@
+mutation PauseShiftMutation {
+  pauseShift {
+    shiftEvent {
+      id
+      eventType
+      shiftAssignment {
+        id
+        status
+        driver {
+          id
+          fullName
+        }
+        vehicle {
+          id
+          licensePlate
+          model
+        }
+      }
+    }
+    errors {
+      message
+      field
+      code
+    }
+  }
+}

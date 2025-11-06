@@ -10,14 +10,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  MapPin,
-  Battery,
-  Gauge,
-  DollarSign,
-  Receipt,
-  AlertCircleIcon,
-} from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { MapPin, Battery, Gauge, Receipt, AlertCircleIcon } from "lucide-react"
 import type {
   CurrentShiftFragmentFragment,
   ShiftEvent,
@@ -50,8 +44,8 @@ export function ClockOutForm({
     gpsLon: 0,
     range: 0,
     notes: "",
-    revenue: 0,
-    earnings: 0,
+    boltEarnings: 0,
+    uberEarnings: 0,
     shiftAssignmentId: currentShift.id,
   })
 
@@ -67,10 +61,17 @@ export function ClockOutForm({
     if (open && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          const lat = position.coords.latitude
+          const lon = position.coords.longitude
           setLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+            latitude: lat,
+            longitude: lon,
           })
+          setFormData((prev) => ({
+            ...prev,
+            gpsLat: lat,
+            gpsLon: lon,
+          }))
           setLocationError(null)
         },
         (error) => {
@@ -122,7 +123,7 @@ export function ClockOutForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Clock Out
@@ -202,37 +203,67 @@ export function ClockOutForm({
               />
             </div>
 
-            {/* Revenue */}
-            <div className="space-y-2">
-              <Label htmlFor="revenue" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Revenue
-              </Label>
-              <Input
-                id="revenue"
-                type="number"
-                step="0.01"
-                value={formData.revenue}
-                onChange={(e) => handleInputChange("revenue", e.target.value)}
-                placeholder="Enter total revenue for this shift (GHS)"
-              />
-            </div>
+            {/* Earnings Section */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-sm">Earnings</h3>
 
-            {/* Expenses */}
-            <div className="space-y-2">
-              <Label htmlFor="earnings" className="flex items-center gap-2">
-                <Receipt className="h-4 w-4" />
-                Earnings
-              </Label>
-              <Input
-                id="earnings"
-                type="number"
-                step="0.01"
-                value={formData.earnings}
-                onChange={(e) => handleInputChange("earnings", e.target.value)}
-                placeholder="Enter earnings as indicated in the app (GHS)"
-                required
-              />
+              {/* Bolt Card */}
+              <Card className="border-dashed shadow-none">
+                <CardHeader>
+                  <CardTitle className="text-lg text-[#00D200]">Bolt</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="bolt_earnings"
+                      className="flex items-center gap-2"
+                    >
+                      <Receipt className="h-4 w-4" />
+                      Earnings (GHS)
+                    </Label>
+                    <Input
+                      id="bolt_earnings"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.boltEarnings}
+                      onChange={(e) =>
+                        handleInputChange("boltEarnings", e.target.value)
+                      }
+                      placeholder="Enter Bolt earnings as indicated in the app"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Uber Card */}
+              <Card className="border-dashed shadow-none">
+                <CardHeader>
+                  <CardTitle className="text-lg">Uber</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="uber_earnings"
+                      className="flex items-center gap-2"
+                    >
+                      <Receipt className="h-4 w-4" />
+                      Earnings (GHS)
+                    </Label>
+                    <Input
+                      id="uber_earnings"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.uberEarnings}
+                      onChange={(e) =>
+                        handleInputChange("uberEarnings", e.target.value)
+                      }
+                      placeholder="Enter Uber earnings as indicated in the app"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Location Status */}
@@ -280,12 +311,7 @@ export function ClockOutForm({
               type="submit"
               className="w-full"
               disabled={
-                loading ||
-                !location ||
-                !formData.odometer ||
-                !formData.range ||
-                !formData.earnings ||
-                !formData.revenue
+                loading || !location || !formData.odometer || !formData.range
               }
             >
               {loading && <Spinner />}

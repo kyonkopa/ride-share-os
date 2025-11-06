@@ -10,6 +10,7 @@
 #  reconciled           :boolean         not null default(false)
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
+#  source               :integer         not null default(0)
 #
 # Indexes
 #
@@ -17,6 +18,7 @@
 #  index_index_revenue_records_on_driver_id_and_created_at (driver_id, created_at)
 #  index_index_revenue_records_on_reconciled (reconciled)
 #  index_index_revenue_records_on_shift_assignment_id (shift_assignment_id)
+#  index_index_revenue_records_on_source (source)
 #
 # Foreign Keys
 #
@@ -28,7 +30,15 @@ class RevenueRecord < ApplicationRecord
   belongs_to :shift_assignment
   belongs_to :driver
 
+  attribute :source, :integer, default: 0
+
+  enum :source, {
+    bolt: 0,
+    uber: 1
+  }
+
   validates :total_revenue, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :total_profit, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :reconciled, inclusion: { in: [true, false] }
+  validates :source, presence: true
 end

@@ -23,7 +23,7 @@ RSpec.describe ShiftAssignmentService do
       end
 
       it 'creates assignments with correct time ranges' do
-        assignments = ShiftAssignmentService.assign_shifts(
+        assignments = described_class.assign_shifts(
           driver:,
           schedule: :daily_for_6_days,
           start_date:,
@@ -52,7 +52,7 @@ RSpec.describe ShiftAssignmentService do
       end
 
       it 'accepts custom city parameter' do
-        assignments = ShiftAssignmentService.assign_shifts(
+        assignments = described_class.assign_shifts(
           driver:,
           schedule: :daily_for_6_days,
           start_date:,
@@ -72,7 +72,7 @@ RSpec.describe ShiftAssignmentService do
           end_time: start_date.beginning_of_day + 17.hours
 )
 
-        assignments = ShiftAssignmentService.assign_shifts(
+        assignments = described_class.assign_shifts(
           driver:,
           schedule: :daily_for_6_days,
           start_date:,
@@ -88,7 +88,7 @@ RSpec.describe ShiftAssignmentService do
     context 'with invalid driver' do
       it 'raises error for nil driver' do
         expect {
-          ShiftAssignmentService.assign_shifts(
+          described_class.assign_shifts(
             driver: nil,
             schedule: :daily_for_6_days,
             start_date:,
@@ -101,7 +101,7 @@ RSpec.describe ShiftAssignmentService do
         unverified_driver = create(:driver, verified: false)
 
         expect {
-          ShiftAssignmentService.assign_shifts(
+          described_class.assign_shifts(
             driver: unverified_driver,
             schedule: :daily_for_6_days,
             start_date:,
@@ -114,7 +114,7 @@ RSpec.describe ShiftAssignmentService do
         new_driver = build(:driver, verified: true)
 
         expect {
-          ShiftAssignmentService.assign_shifts(
+          described_class.assign_shifts(
             driver: new_driver,
             schedule: :daily_for_6_days,
             start_date:,
@@ -127,7 +127,7 @@ RSpec.describe ShiftAssignmentService do
     context 'with unsupported schedule' do
       it 'raises error for unsupported schedule' do
         expect {
-          ShiftAssignmentService.assign_shifts(
+          described_class.assign_shifts(
             driver:,
             schedule: :weekly,
             start_date:,
@@ -144,7 +144,7 @@ RSpec.describe ShiftAssignmentService do
         )
 
         expect {
-          ShiftAssignmentService.assign_shifts(
+          described_class.assign_shifts(
             driver:,
             schedule: :daily_for_6_days,
             start_date:,
@@ -157,7 +157,7 @@ RSpec.describe ShiftAssignmentService do
     context 'with multiple calls' do
       it 'handles multiple assignment calls correctly' do
         # First call
-        first_assignments = ShiftAssignmentService.assign_shifts(
+        first_assignments = described_class.assign_shifts(
           driver:,
           schedule: :daily_for_6_days,
           start_date:,
@@ -165,7 +165,7 @@ RSpec.describe ShiftAssignmentService do
         )
 
         # Second call should skip existing assignments
-        second_assignments = ShiftAssignmentService.assign_shifts(
+        second_assignments = described_class.assign_shifts(
           driver:,
           schedule: :daily_for_6_days,
           start_date:,
@@ -182,7 +182,7 @@ RSpec.describe ShiftAssignmentService do
       it 'creates assignments starting from the specified date' do
         future_start_date = Date.current + 1.week
 
-        assignments = ShiftAssignmentService.assign_shifts(
+        assignments = described_class.assign_shifts(
           driver:,
           schedule: :daily_for_6_days,
           start_date: future_start_date,
@@ -199,7 +199,7 @@ RSpec.describe ShiftAssignmentService do
   describe 'private methods' do
     describe '#generate_daily_schedule' do
       it 'generates correct number of days' do
-        dates = ShiftAssignmentService.send(:generate_daily_schedule, start_date, 6)
+        dates = described_class.send(:generate_daily_schedule, start_date, end_date, 6, 0)
 
         expect(dates.count).to eq(6)
         expect(dates.first).to eq(start_date)
@@ -216,13 +216,13 @@ RSpec.describe ShiftAssignmentService do
           end_time: start_date.beginning_of_day + 17.hours
 )
 
-        result = ShiftAssignmentService.send(:existing_assignment?, driver, start_date)
+        result = described_class.send(:existing_assignment?, driver, start_date)
 
         expect(result).to be true
       end
 
       it 'returns false when no assignment exists' do
-        result = ShiftAssignmentService.send(:existing_assignment?, driver, start_date)
+        result = described_class.send(:existing_assignment?, driver, start_date)
 
         expect(result).to be false
       end

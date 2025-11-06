@@ -7,6 +7,8 @@ module Types
     value "clock_in", value: "clock_in", description: "A clock in event"
     value "clock_out", value: "clock_out", description: "A clock out event"
     value "telemetry_snapshot", value: "telemetry_snapshot", description: "A telemetry snapshot event"
+    value "pause", value: "pause", description: "A pause event"
+    value "resume", value: "resume", description: "A resume event"
   end
 
   class ShiftEventType < Types::BaseObject

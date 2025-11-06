@@ -91,9 +91,9 @@ export function formatShiftEventTime(timestamp: string): string {
   return formatRelativeTime(dateTime)
 }
 
-export function getShiftDuration(startTime: string): string {
+export function getShiftDuration(startTime: string, endTime?: string): string {
   const start = parseGraphQLDateTime(startTime)
-  const end = DateTime.now()
+  const end = endTime ? parseGraphQLDateTime(endTime) : DateTime.now()
   const diff = end.diff(start, ["hours", "minutes"])
 
   // return hours and minutes

@@ -140,7 +140,7 @@ RSpec.describe Mutations::ClockIn do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
           .with_context(context)
-          .with_mutation_error([{ "message" => "Shift assignment not found", "field" => "shift_assignment_id", "code" => "SHIFT_ASSIGNMENT_NOT_FOUND" }])
+          .with_mutation_error([{ "message" => "You do not have a shift assignment for today, please check your schedule or contact your manager", "field" => "shift_assignment_id", "code" => "NO_SHIFT_ASSIGNMENT_FOR_TODAY" }])
       end
     end
 
@@ -220,7 +220,7 @@ RSpec.describe Mutations::ClockIn do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
           .with_context(context)
-          .with_mutation_error([{ "message" => "Shift assignment not found", "field" => "shift_assignment_id", "code" => "SHIFT_ASSIGNMENT_NOT_FOUND" }])
+          .with_mutation_error([{ "message" => "You do not have a shift assignment for today, please check your schedule or contact your manager", "field" => "shift_assignment_id", "code" => "NO_SHIFT_ASSIGNMENT_FOR_TODAY" }])
       end
     end
   end

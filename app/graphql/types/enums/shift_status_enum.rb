@@ -9,6 +9,7 @@ module Types
       value "active", value: "active", description: "Shift is currently active"
       value "completed", value: "completed", description: "Shift has been completed"
       value "missed", value: "missed", description: "Shift was missed"
+      value "paused", value: "paused", description: "Shift is paused"
     end
   end
 end

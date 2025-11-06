@@ -6,7 +6,6 @@ one:
   vehicle: one
   start_time: 2025-10-22 09:07:34
   end_time: 2025-10-22 09:07:34
-  recurrence_rule: MyString
   status: 1
 
 two:
@@ -15,5 +14,4 @@ two:
   vehicle: two
   start_time: 2025-10-22 09:07:34
   end_time: 2025-10-22 09:07:34
-  recurrence_rule: MyString
   status: 1

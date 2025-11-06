@@ -43,6 +43,14 @@ FactoryBot.define do
       event_type { :telemetry_snapshot }
     end
 
+    trait :pause do
+      event_type { :pause }
+    end
+
+    trait :resume do
+      event_type { :resume }
+    end
+
     trait :with_gps do
       gps_lat { 5.6037 } # Accra coordinates
       gps_lon { -0.1870 }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_31_144035) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_06_124218) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -92,10 +92,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_31_144035) do
     t.boolean "reconciled", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "source", default: 0, null: false
     t.index ["driver_id", "created_at"], name: "index_revenue_records_on_driver_id_and_created_at"
     t.index ["driver_id"], name: "index_revenue_records_on_driver_id"
     t.index ["reconciled"], name: "index_revenue_records_on_reconciled"
     t.index ["shift_assignment_id"], name: "index_revenue_records_on_shift_assignment_id"
+    t.index ["source"], name: "index_revenue_records_on_source"
   end
 
   create_table "shift_assignments", force: :cascade do |t|
@@ -104,7 +106,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_31_144035) do
     t.bigint "vehicle_id"
     t.datetime "start_time", null: false
     t.datetime "end_time", null: false
-    t.string "recurrence_rule"
     t.integer "status", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

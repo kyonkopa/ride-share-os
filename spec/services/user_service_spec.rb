@@ -20,6 +20,11 @@ RSpec.describe UserService do
         expect(result[:user].email).to eq('test@example.com')
         expect(result[:user].first_name).to eq('John')
         expect(result[:user].last_name).to eq('Doe')
+      end
+
+      it 'generates a password with minimum requirements' do
+        result = described_class.create_user(user_attributes)
+
         expect(result[:password]).to be_present
         expect(result[:password].length).to be >= 12
       end
@@ -128,16 +133,29 @@ RSpec.describe UserService do
         expect(result[:user]).to be_persisted
         expect(result[:driver]).to be_persisted
         expect(result[:password]).to be_present
-
         expect(result[:user].email).to eq('driver@example.com')
         expect(result[:user].first_name).to eq('Jane')
+      end
+
+      it 'sets user attributes correctly' do
+        result = described_class.create_user_with_driver(attributes)
+
         expect(result[:user].last_name).to eq('Smith')
+      end
+
+      it 'sets driver attributes correctly' do
+        result = described_class.create_user_with_driver(attributes)
 
         expect(result[:driver].full_name).to eq('Jane Smith')
         expect(result[:driver].dob).to eq(Date.new(1990, 5, 15))
         expect(result[:driver].email).to eq('driver@example.com') # Delegated to user
         expect(result[:driver].phone_number).to eq('+233123456789')
         expect(result[:driver].verified).to be false
+      end
+
+      it 'associates driver with user' do
+        result = described_class.create_user_with_driver(attributes)
+
         expect(result[:driver].user).to eq(result[:user])
       end
 
@@ -215,35 +233,44 @@ RSpec.describe UserService do
 
     context 'with valid attributes' do
       it 'creates a driver successfully' do
-        driver = UserService.create_driver(
+        driver = described_class.create_driver(
           dob: driver_attributes[:dob],
           phone_number: driver_attributes[:phone_number],
-          user: user
+          user:
         )
 
         expect(driver).to be_persisted
         expect(driver.full_name).to eq('John Doe')
         expect(driver.dob).to eq(Date.new(1985, 3, 15))
         expect(driver.phone_number).to eq('+233123456789')
+      end
+
+      it 'associates driver with user and sets verified to false' do
+        driver = described_class.create_driver(
+          dob: driver_attributes[:dob],
+          phone_number: driver_attributes[:phone_number],
+          user:
+        )
+
         expect(driver.user).to eq(user)
         expect(driver.verified).to be false
       end
 
       it 'uses user full_name as driver full_name' do
-        driver = UserService.create_driver(
+        driver = described_class.create_driver(
           dob: driver_attributes[:dob],
           phone_number: driver_attributes[:phone_number],
-          user: user
+          user:
         )
 
         expect(driver.full_name).to eq('John Doe')
       end
 
       it 'sets verified to false by default' do
-        driver = UserService.create_driver(
+        driver = described_class.create_driver(
           dob: driver_attributes[:dob],
           phone_number: driver_attributes[:phone_number],
-          user: user
+          user:
         )
 
         expect(driver.verified).to be false
@@ -253,27 +280,27 @@ RSpec.describe UserService do
     context 'with invalid attributes' do
       it 'raises an error when phone_number is missing' do
         expect {
-          UserService.create_driver(
+          described_class.create_driver(
             dob: driver_attributes[:dob],
             phone_number: nil,
-            user: user
+            user:
           )
         }.to raise_error(StandardError, /Failed to create driver/)
       end
 
       it 'raises an error when dob is missing' do
         expect {
-          UserService.create_driver(
+          described_class.create_driver(
             dob: nil,
             phone_number: driver_attributes[:phone_number],
-            user: user
+            user:
           )
         }.to raise_error(StandardError, /Failed to create driver/)
       end
 
       it 'raises an error when user is missing' do
         expect {
-          UserService.create_driver(
+          described_class.create_driver(
             dob: driver_attributes[:dob],
             phone_number: driver_attributes[:phone_number],
             user: nil
@@ -283,12 +310,12 @@ RSpec.describe UserService do
 
       it 'raises an error when phone_number is not unique' do
         existing_driver = create(:driver, phone_number: '+233123456789')
-        
+
         expect {
-          UserService.create_driver(
+          described_class.create_driver(
             dob: driver_attributes[:dob],
             phone_number: '+233123456789',
-            user: user
+            user:
           )
         }.to raise_error(StandardError, 'Driver already exists')
       end
@@ -297,12 +324,12 @@ RSpec.describe UserService do
     context 'with duplicate phone number check' do
       it 'raises an error when driver already exists with same phone number' do
         create(:driver, phone_number: '+233123456789')
-        
+
         expect {
-          UserService.create_driver(
+          described_class.create_driver(
             dob: driver_attributes[:dob],
             phone_number: '+233123456789',
-            user: user
+            user:
           )
         }.to raise_error(StandardError, 'Driver already exists')
       end
@@ -313,15 +340,15 @@ RSpec.describe UserService do
 
       it 'prevents creating drivers with duplicate phone numbers' do
         # Create first driver
-        driver1 = UserService.create_driver(
+        driver1 = described_class.create_driver(
           dob: driver_attributes[:dob],
           phone_number: '+233123456789',
-          user: user
+          user:
         )
 
         # This should fail because phone_number must be unique across all drivers
         expect {
-          UserService.create_driver(
+          described_class.create_driver(
             dob: driver_attributes[:dob],
             phone_number: '+233123456789',
             user: another_user

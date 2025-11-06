@@ -17,13 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  MapPin,
-  Battery,
-  Gauge,
-  AlertCircle,
-  AlertCircleIcon,
-} from "lucide-react"
+import { MapPin, Gauge, AlertCircle, AlertCircleIcon } from "lucide-react"
 import {
   useClockInMutation,
   type ClockInFormData,
@@ -65,7 +59,6 @@ export function ClockInForm({
       setFormData({
         vehicleId: "",
         odometer: "",
-        range: "",
         notes: "",
       })
       addSuccess("Shift clocked in successfully")
@@ -77,7 +70,6 @@ export function ClockInForm({
   const [formData, setFormData] = useState({
     vehicleId: "",
     odometer: "",
-    range: "",
     notes: "",
   })
   const [location, setLocation] = useState<{
@@ -121,7 +113,7 @@ export function ClockInForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.vehicleId || !formData.odometer || !formData.range) {
+    if (!formData.vehicleId || !formData.odometer) {
       alert("Please fill in all required fields")
       return
     }
@@ -134,7 +126,6 @@ export function ClockInForm({
     const clockInData: ClockInFormData = {
       vehicleId: formData.vehicleId,
       odometer: parseFloat(formData.odometer),
-      range: parseFloat(formData.range),
       location: {
         ...location,
         timestamp: Date.now(),
@@ -144,8 +135,6 @@ export function ClockInForm({
 
     await handleClockIn(clockInData)
   }
-
-  const selectedVehicle = vehicles.find((v) => v.id === formData.vehicleId)
 
   // Check if there are any completed shifts for today
   const hasCompletedShift = todayShifts.some(
@@ -198,11 +187,6 @@ export function ClockInForm({
                   ))}
                 </SelectContent>
               </Select>
-              {selectedVehicle && (
-                <p className="text-sm text-muted-foreground">
-                  Battery capacity: {selectedVehicle.latestRange} km
-                </p>
-              )}
             </div>
 
             {/* Odometer */}
@@ -217,23 +201,6 @@ export function ClockInForm({
                 value={formData.odometer}
                 onChange={(e) => handleInputChange("odometer", e.target.value)}
                 placeholder="Enter current odometer reading"
-                required
-              />
-            </div>
-
-            {/* Range */}
-            <div className="space-y-2">
-              <Label htmlFor="range" className="flex items-center gap-2">
-                <Battery className="h-4 w-4" />
-                Range (km) *
-              </Label>
-              <Input
-                id="range"
-                type="number"
-                min="0"
-                value={formData.range}
-                onChange={(e) => handleInputChange("range", e.target.value)}
-                placeholder="Enter current range in km"
                 required
               />
             </div>
@@ -315,8 +282,7 @@ export function ClockInForm({
                 loading ||
                 !location ||
                 !formData.vehicleId ||
-                !formData.odometer ||
-                !formData.range
+                !formData.odometer
               }
             >
               {loading && <Spinner />}

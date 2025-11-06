@@ -19,7 +19,7 @@ module Mutations
       end
 
       if shift_assignment.nil?
-        error!("Shift assignment not found", code: "SHIFT_ASSIGNMENT_NOT_FOUND", field: "shift_assignment_id")
+        error!("You do not have a shift assignment for today, please check your schedule or contact your manager", code: "NO_SHIFT_ASSIGNMENT_FOR_TODAY", field: "shift_assignment_id")
         return empty_response
       end
 
@@ -48,7 +48,9 @@ module Mutations
       )
 
       shift_assignment.update!(status: :active, vehicle:)
-      vehicle.update!(latest_odometer: input[:odometer], latest_range: input[:vehicle_range])
+      vehicle_updates = { latest_odometer: input[:odometer] }
+      vehicle_updates[:latest_range] = input[:vehicle_range] if input[:vehicle_range].present?
+      vehicle.update!(vehicle_updates)
 
       { shift_event: }
     end

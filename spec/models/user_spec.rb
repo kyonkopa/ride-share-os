@@ -19,12 +19,15 @@ RSpec.describe User do
   end
 
   describe 'devise modules' do
-    it 'includes required devise modules' do
+    it 'includes core authentication modules' do
       expect(described_class.devise_modules).to include(:database_authenticatable)
       expect(described_class.devise_modules).to include(:registerable)
       expect(described_class.devise_modules).to include(:recoverable)
       expect(described_class.devise_modules).to include(:rememberable)
       expect(described_class.devise_modules).to include(:validatable)
+    end
+
+    it 'includes additional devise modules' do
       expect(described_class.devise_modules).to include(:confirmable)
       expect(described_class.devise_modules).to include(:lockable)
       expect(described_class.devise_modules).to include(:trackable)

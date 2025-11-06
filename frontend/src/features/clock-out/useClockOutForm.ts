@@ -16,9 +16,9 @@ export interface ClockOutFormData {
   gpsLon: number
   range: number
   notes?: string
-  earnings: number
+  boltEarnings: number
+  uberEarnings: number
   shiftAssignmentId?: string
-  revenue: number
 }
 
 export const useClockOutForm = ({
@@ -61,8 +61,12 @@ export const useClockOutForm = ({
       gpsLon: data.gpsLon,
       vehicleRange: Math.round(data.range),
       notes: data.notes || undefined,
-      earnings: parseFloat(data.earnings.toString()),
-      revenue: parseFloat(data.revenue.toString()),
+      boltEarnings: data.boltEarnings
+        ? parseFloat(data.boltEarnings.toString())
+        : undefined,
+      uberEarnings: data.uberEarnings
+        ? parseFloat(data.uberEarnings.toString())
+        : undefined,
     }
 
     await clockOut({

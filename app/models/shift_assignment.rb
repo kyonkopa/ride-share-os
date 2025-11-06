@@ -5,10 +5,9 @@
 #  id                   :integer         not null primary key
 #  city                 :integer         not null
 #  driver_id            :integer         not null
-#  vehicle_id           :integer        
+#  vehicle_id           :integer
 #  start_time           :datetime        not null
 #  end_time             :datetime        not null
-#  recurrence_rule      :string         
 #  status               :integer         not null default(0)
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
@@ -40,7 +39,8 @@ class ShiftAssignment < ApplicationRecord
     scheduled: 0,
     active: 1,
     completed: 2,
-    missed: 3
+    missed: 3,
+    paused: 4
   }
 
   belongs_to :driver
@@ -55,13 +55,21 @@ class ShiftAssignment < ApplicationRecord
   validate :end_time_after_start_time
 
   scope :scheduled_today, -> { where(start_time: Date.current.beginning_of_day..Date.current.end_of_day) }
+  scope :active_or_paused, -> { where(status: %i[active paused]) }
 
   def actual_start_time
-    shift_events.find_by(event_type: "clock_in")&.created_at
+    @actual_start_time ||= shift_events.find_by(event_type: "clock_in")&.created_at
   end
 
   def actual_end_time
-    shift_events.find_by(event_type: "clock_out")&.created_at
+    @actual_end_time ||= shift_events.find_by(event_type: "clock_out")&.created_at
+  end
+
+  def status
+    return super unless scheduled?
+
+    return "missed" if end_time.present? && end_time < Date.current && actual_end_time.blank?
+    super
   end
 
   private

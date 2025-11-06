@@ -36,7 +36,7 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       label: "My Calendar",
       icon: Calendar,
       path: "/calendar",
-      enabled: false,
+      enabled: true,
     },
     {
       id: "earnings",

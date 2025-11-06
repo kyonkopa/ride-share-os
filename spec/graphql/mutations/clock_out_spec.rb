@@ -42,9 +42,7 @@ RSpec.describe Mutations::ClockOut do
         vehicleRange: 250,
         gpsLat: 5.6037,
         gpsLon: -0.1870,
-        notes: "Ending shift",
-        revenue: 500.0,
-        earnings: 300.0
+        notes: "Ending shift"
       }
     }
   end
@@ -90,9 +88,7 @@ RSpec.describe Mutations::ClockOut do
         {
           input: {
             odometer: 51000,
-            notes: "Auto-found active shift",
-            revenue: 500.0,
-            earnings: 300.0
+            notes: "Auto-found active shift"
           }
         }
       end
@@ -120,10 +116,7 @@ RSpec.describe Mutations::ClockOut do
     context 'with minimal data' do
       let(:variables) do
         {
-          input: {
-            revenue: 500.0,
-            earnings: 300.0
-          }
+          input: {}
         }
       end
 
@@ -155,10 +148,7 @@ RSpec.describe Mutations::ClockOut do
     context 'when shift assignment not found' do
       let(:variables) do
         {
-          input: {
-            revenue: 500.0,
-            earnings: 300.0
-          }
+          input: {}
         }
       end
 
@@ -179,9 +169,7 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            odometer: 51000,
-            revenue: 500.0,
-            earnings: 300.0
+            odometer: 51000
           }
         }
       end
@@ -204,10 +192,7 @@ RSpec.describe Mutations::ClockOut do
       let(:other_shift) { create(:shift_assignment, :active, driver: other_driver, vehicle:) }
       let(:variables) do
         {
-          input: {
-            revenue: 500.0,
-            earnings: 300.0
-          }
+          input: {}
         }
       end
 
@@ -234,10 +219,7 @@ RSpec.describe Mutations::ClockOut do
       let(:context) { { current_user: user_without_driver } }
       let(:variables) do
         {
-          input: {
-            revenue: 500.0,
-            earnings: 300.0
-          }
+          input: {}
         }
       end
 
@@ -256,10 +238,7 @@ RSpec.describe Mutations::ClockOut do
 
       let(:variables) do
         {
-          input: {
-            revenue: 500.0,
-            earnings: 300.0
-          }
+          input: {}
         }
       end
 
@@ -275,10 +254,7 @@ RSpec.describe Mutations::ClockOut do
       let(:scheduled_shift) { create(:shift_assignment, :scheduled, driver:, vehicle:) }
       let(:variables) do
         {
-          input: {
-            revenue: 500.0,
-            earnings: 300.0
-          }
+          input: {}
         }
       end
 
@@ -302,9 +278,7 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            odometer: -100,
-            revenue: 500.0,
-            earnings: 300.0
+            odometer: -100
           }
         }
       end
@@ -322,9 +296,7 @@ RSpec.describe Mutations::ClockOut do
         {
           input: {
             gpsLat: 95.0, # Invalid latitude
-            gpsLon: 185.0, # Invalid longitude
-            revenue: 500.0,
-            earnings: 300.0
+            gpsLon: 185.0 # Invalid longitude
           }
         }
       end
@@ -344,9 +316,7 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            vehicleRange: -50,
-            revenue: 500.0,
-            earnings: 300.0
+            vehicleRange: -50
           }
         }
       end
@@ -365,10 +335,7 @@ RSpec.describe Mutations::ClockOut do
       let(:context) { {} }
       let(:variables) do
         {
-          input: {
-            revenue: 500.0,
-            earnings: 300.0
-          }
+          input: {}
         }
       end
 
@@ -387,9 +354,7 @@ RSpec.describe Mutations::ClockOut do
         {
           input: {
             odometer: 52000, # Higher than clock-in odometer
-            vehicleRange: 200, # Lower than clock-in range
-            revenue: 500.0,
-            earnings: 300.0
+            vehicleRange: 200 # Lower than clock-in range
           }
         }
       end
@@ -414,9 +379,7 @@ RSpec.describe Mutations::ClockOut do
           input: {
             gpsLat: 5.6500, # Different location
             gpsLon: -0.2000,
-            notes: "Ending shift at different location",
-            revenue: 500.0,
-            earnings: 300.0
+            notes: "Ending shift at different location"
           }
         }
       end
@@ -438,19 +401,16 @@ RSpec.describe Mutations::ClockOut do
 
     context 'when multiple active shifts exist' do
       let(:another_shift) { create(:shift_assignment, :active, driver:, vehicle:) }
+      let(:variables) do
+        {
+          input: {}
+        }
+      end
 
       before do
         create(:shift_event, :clock_in, shift_assignment: another_shift)
       end
 
-      let(:variables) do
-        {
-          input: {
-            revenue: 500.0,
-            earnings: 300.0
-          }
-        }
-      end
 
       it 'finds the first active shift' do
         expect(mutation).to execute_as_graphql
