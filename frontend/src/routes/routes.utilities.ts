@@ -6,6 +6,7 @@ export const Routes = {
   home: "/",
   calendar: "/calendar",
   vehicles: "/vehicles",
+  revenue: "/revenue",
 
   // Admin routes (if needed in the future)
   adminDashboard: "/admin/dashboard",

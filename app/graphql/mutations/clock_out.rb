@@ -43,23 +43,21 @@ module Mutations
       )
 
       # Create revenue record for Bolt if earnings provided
-      if !input[:bolt_earnings].nil?
+      if input[:bolt_earnings].present?
         RevenueRecord.create!(
           shift_assignment:,
           driver: current_user.driver,
-          total_revenue: 0.0,
-          total_profit: input[:bolt_earnings].nil? ? 0.0 : input[:bolt_earnings].to_f,
+          total_revenue: input[:bolt_earnings],
           source: :bolt
         )
       end
 
       # Create revenue record for Uber if earnings provided
-      if !input[:uber_earnings].nil?
+      if input[:uber_earnings].present?
         RevenueRecord.create!(
           shift_assignment:,
           driver: current_user.driver,
-          total_revenue: 0.0,
-          total_profit: input[:uber_earnings].nil? ? 0.0 : input[:uber_earnings].to_f,
+          total_revenue: input[:uber_earnings],
           source: :uber
         )
       end

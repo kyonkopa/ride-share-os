@@ -1,5 +1,5 @@
 interface StatusBadgeProps {
-  isOnline: boolean;
+  isOnline: boolean
 }
 
 export function StatusBadge({ isOnline }: StatusBadgeProps) {
@@ -24,5 +24,5 @@ export function StatusBadge({ isOnline }: StatusBadgeProps) {
         {isOnline ? "Online" : "Offline"}
       </div>
     </div>
-  );
+  )
 }

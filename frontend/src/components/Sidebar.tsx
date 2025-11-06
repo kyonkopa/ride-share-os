@@ -39,11 +39,11 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       enabled: true,
     },
     {
-      id: "earnings",
-      label: "Earnings",
+      id: "revenue",
+      label: "Revenue",
       icon: DollarSign,
-      path: "/earnings",
-      enabled: false,
+      path: "/revenue",
+      enabled: true,
     },
     {
       id: "charging",
@@ -109,7 +109,7 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
   return (
     <>
       {/* Mobile Menu Button */}
-      <div className="fixed top-4 left-4 z-50 md:hidden w-12 h-12">
+      <div className="fixed top-4 right-4 z-50 md:hidden w-12 h-12">
         <Button
           variant="ghost"
           size="icon"
@@ -117,9 +117,9 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? (
-            <Menu className="h-6 w-6" />
+            <Menu className="!h-6 !w-6" />
           ) : (
-            <X className="h-6 w-6" />
+            <X className="!h-6 !w-6" />
           )}
         </Button>
       </div>

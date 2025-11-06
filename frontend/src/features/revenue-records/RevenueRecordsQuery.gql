@@ -1,0 +1,26 @@
+query RevenueRecordsQuery($startDate: ISO8601Date, $endDate: ISO8601Date) {
+  revenueRecords(startDate: $startDate, endDate: $endDate) {
+    id
+    globalId
+    totalRevenue
+    totalProfit
+    reconciled
+    source
+    createdAt
+    updatedAt
+    driver {
+      id
+      fullName
+    }
+    shiftAssignment {
+      id
+      startTime
+      endTime
+      city
+      vehicle {
+        id
+        displayName
+      }
+    }
+  }
+}
