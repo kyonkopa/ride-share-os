@@ -69,7 +69,7 @@ export function TodaysShifts({ shifts }: TodaysShiftsProps) {
                     <p className="text-sm text-green-600">
                       GHS{" "}
                       {shift.revenueRecords
-                        .reduce((sum, record) => sum + record.totalProfit, 0)
+                        .reduce((sum, record) => sum + record.totalRevenue, 0)
                         .toFixed(2)}
                     </p>
                   )}

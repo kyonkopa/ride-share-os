@@ -51,7 +51,7 @@ export function HomeScreen({ children }: HomeScreenProps) {
     const totalEarnings = shifts.reduce((acc, shift) => {
       const shiftEarnings =
         shift.revenueRecords?.reduce(
-          (sum, record) => sum + record.totalProfit,
+          (sum, record) => sum + record.totalRevenue,
           0
         ) || 0
       return acc + shiftEarnings
