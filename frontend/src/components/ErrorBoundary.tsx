@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card"
+import { isCacheMismatchError, clearCacheAndReload } from "../lib/serviceWorker"
 
 interface Props {
   children: ReactNode
@@ -48,6 +49,16 @@ class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     })
 
+    // Check if this is a cache-related error and auto-fix it
+    if (isCacheMismatchError(error)) {
+      console.log(
+        "[ErrorBoundary] Cache mismatch detected, clearing cache and reloading..."
+      )
+      // Automatically clear cache and reload for cache-related errors
+      clearCacheAndReload()
+      return
+    }
+
     // You can also log to an error reporting service here
     // e.g., Sentry, LogRocket, etc.
   }
@@ -68,12 +79,20 @@ class ErrorBoundary extends Component<Props, State> {
     window.location.href = "/"
   }
 
+  handleClearCacheAndReload = async () => {
+    await clearCacheAndReload()
+  }
+
   render() {
     if (this.state.hasError) {
       const isServerError =
         this.state.error?.message?.includes("500") ||
         this.state.error?.message?.toLowerCase().includes("server error") ||
         this.state.error?.stack?.includes("500")
+
+      const isCacheError = this.state.error
+        ? isCacheMismatchError(this.state.error)
+        : false
 
       return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -82,15 +101,19 @@ class ErrorBoundary extends Component<Props, State> {
               <div className="flex items-center gap-3">
                 <AlertTriangle className="h-6 w-6 text-destructive" />
                 <CardTitle className="text-2xl">
-                  {isServerError
-                    ? "Server Error (500)"
-                    : "Something went wrong"}
+                  {isCacheError
+                    ? "Update Available"
+                    : isServerError
+                      ? "Server Error (500)"
+                      : "Something went wrong"}
                 </CardTitle>
               </div>
               <CardDescription>
-                {isServerError
-                  ? "We encountered an error while processing your request. Please try again."
-                  : "An unexpected error occurred. We're sorry for the inconvenience."}
+                {isCacheError
+                  ? "A new version of the app is available. Clearing cache and reloading..."
+                  : isServerError
+                    ? "We encountered an error while processing your request. Please try again."
+                    : "An unexpected error occurred. We're sorry for the inconvenience."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -113,15 +136,27 @@ class ErrorBoundary extends Component<Props, State> {
               )}
             </CardContent>
             <CardFooter className="flex gap-2 flex-wrap">
-              <Button onClick={this.handleReload} variant="default">
-                <RefreshCw className="h-4 w-4" />
-                Reload Page
-              </Button>
-              <Button onClick={this.handleGoHome} variant="outline">
-                <Home className="h-4 w-4" />
-                Go Home
-              </Button>
-              {import.meta.env.DEV && (
+              {isCacheError ? (
+                <Button
+                  onClick={this.handleClearCacheAndReload}
+                  variant="default"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Clear Cache & Reload
+                </Button>
+              ) : (
+                <>
+                  <Button onClick={this.handleReload} variant="default">
+                    <RefreshCw className="h-4 w-4" />
+                    Reload Page
+                  </Button>
+                  <Button onClick={this.handleGoHome} variant="outline">
+                    <Home className="h-4 w-4" />
+                    Go Home
+                  </Button>
+                </>
+              )}
+              {import.meta.env.DEV && !isCacheError && (
                 <Button onClick={this.handleReset} variant="ghost">
                   Try Again
                 </Button>
