@@ -179,12 +179,13 @@ export function ClockOutForm({
                 placeholder="Enter final odometer reading"
                 required
               />
-              {!!formData.odometer && !!currentShift.vehicle.latestOdometer && (
-                <p className="text-sm text-muted-foreground">
-                  Distance driven:{" "}
-                  {formData.odometer - (clockInShiftEvent?.odometer ?? 0)} km
-                </p>
-              )}
+              {!!formData.odometer &&
+                !!currentShift?.vehicle?.latestOdometer && (
+                  <p className="text-sm text-muted-foreground">
+                    Distance driven:{" "}
+                    {formData.odometer - (clockInShiftEvent?.odometer ?? 0)} km
+                  </p>
+                )}
             </div>
 
             {/* End Range */}
