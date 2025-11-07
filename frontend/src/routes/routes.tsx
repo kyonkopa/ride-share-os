@@ -5,6 +5,7 @@ import SuspenseFallback from "./SuspenseFallback"
 import { ProtectedRoute } from "../components/ProtectedRoute"
 import UnauthenticatedRoute from "./UnauthenticatedRoute"
 import { Layout } from "@/components/Layout"
+import ErrorBoundary from "@/components/ErrorBoundary"
 
 // Lazy load components for better performance
 const LoginPage = lazy(() => import("../pages/LoginPage"))
@@ -20,6 +21,7 @@ const SettingsPage = lazy(() => import("../pages/SettingsPage"))
 export const routes: RouteObject[] = [
   {
     element: <Outlet />,
+    errorElement: <ErrorBoundary />,
     children: [
       // Public routes
       {
