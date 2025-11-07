@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
 import { RefreshCw, CheckCircle2, AlertCircle } from "lucide-react"
-import { checkForServiceWorkerUpdate, forceUpdate } from "@/lib/serviceWorker"
+import { checkForAssetUpdate, clearCacheAndReload } from "@/lib/serviceWorker"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function SettingsPage() {
@@ -24,15 +24,17 @@ export default function SettingsPage() {
     setUpdateStatus(null)
 
     try {
-      const result = await checkForServiceWorkerUpdate()
-      setUpdateStatus(result)
-
-      // If update is available, automatically force the update
+      const result = await checkForAssetUpdate()
       if (result.hasUpdate) {
-        // Small delay to show the message
-        setTimeout(() => {
-          forceUpdate()
-        }, 1000)
+        setUpdateStatus({
+          hasUpdate: true,
+          message: `Update available (version: ${result.version}). Click reload to update.`,
+        })
+      } else {
+        setUpdateStatus({
+          hasUpdate: false,
+          message: "You are using the latest version",
+        })
       }
     } catch {
       setUpdateStatus({
@@ -42,6 +44,10 @@ export default function SettingsPage() {
     } finally {
       setIsChecking(false)
     }
+  }
+
+  const handleReload = () => {
+    clearCacheAndReload()
   }
 
   return (
@@ -112,6 +118,13 @@ export default function SettingsPage() {
               >
                 {updateStatus.message}
               </AlertDescription>
+              {updateStatus.hasUpdate && (
+                <div className="mt-4">
+                  <Button onClick={handleReload} size="sm" variant="default">
+                    Reload to Update
+                  </Button>
+                </div>
+              )}
             </Alert>
           )}
 

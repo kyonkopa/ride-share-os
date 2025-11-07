@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card"
-import { isCacheMismatchError, clearCacheAndReload } from "../lib/serviceWorker"
 
 interface ErrorCardProps {
   title: string
@@ -67,9 +66,6 @@ function ErrorCard({
 // Shared action handlers
 const handleReload = () => window.location.reload()
 const handleGoHome = () => (window.location.href = "/")
-const handleClearCacheAndReload = async () => {
-  await clearCacheAndReload()
-}
 
 // Shared action button components
 const ReloadButton = () => (
@@ -86,28 +82,9 @@ const HomeButton = () => (
   </Button>
 )
 
-const ClearCacheButton = () => (
-  <Button onClick={handleClearCacheAndReload} variant="default">
-    <RefreshCw className="h-4 w-4 mr-2" />
-    Clear Cache & Reload
-  </Button>
-)
-
 interface ErrorDisplayProps {
   errorDetails?: string
   errorStack?: string | null
-}
-
-function CacheErrorDisplay({ errorDetails, errorStack }: ErrorDisplayProps) {
-  return (
-    <ErrorCard
-      title="Update Available"
-      description="A new version of the app is available. Clearing cache and reloading..."
-      errorDetails={errorDetails}
-      errorStack={errorStack}
-      actions={<ClearCacheButton />}
-    />
-  )
 }
 
 function ServerErrorDisplay({ errorDetails, errorStack }: ErrorDisplayProps) {
@@ -179,7 +156,6 @@ function ErrorBoundary() {
     const isRouteError = isRouteErrorResponse(error)
     const status = isRouteError ? error.status : null
     const isServerError = isRouteError && status === 500
-    const isCacheError = error instanceof Error && isCacheMismatchError(error)
 
     const errorMessage = isRouteError
       ? error.statusText || `Error ${error.status}`
@@ -195,7 +171,6 @@ function ErrorBoundary() {
       isRouteError,
       status,
       isServerError,
-      isCacheError,
       errorMessage,
       errorDetails,
       errorStack,
@@ -204,34 +179,18 @@ function ErrorBoundary() {
 
   useEffect(() => {
     console.error("ErrorBoundary caught an error:", error)
-
-    if (errorInfo.isCacheError) {
-      console.log(
-        "[ErrorBoundary] Cache mismatch detected, clearing cache and reloading..."
-      )
-      clearCacheAndReload()
-      return
-    }
-
     // You can also log to an error reporting service here
     // e.g., Sentry, LogRocket, etc.
-  }, [error, errorInfo.isCacheError])
+  }, [error])
 
   const {
     errorDetails,
     errorStack,
-    isCacheError,
     isServerError,
     isRouteError,
     status,
     errorMessage,
   } = errorInfo
-
-  if (isCacheError) {
-    return (
-      <CacheErrorDisplay errorDetails={errorDetails} errorStack={errorStack} />
-    )
-  }
 
   if (isServerError) {
     return (

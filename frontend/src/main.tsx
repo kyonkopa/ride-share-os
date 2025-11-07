@@ -1,34 +1,46 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
+import { toast } from "sonner"
 import "./index.css"
 import App from "./App.tsx"
 import {
   registerServiceWorker,
-  isCacheMismatchError,
+  checkForAssetUpdate,
   clearCacheAndReload,
 } from "./lib/serviceWorker"
 
 // Register service worker for PWA updates
 registerServiceWorker()
 
-// Global error handler for cache-related errors (catches errors outside React)
-window.addEventListener("error", (event) => {
-  const error = event.error
-  if (error && isCacheMismatchError(error)) {
-    console.error("[App] Cache mismatch error detected:", error)
-    clearCacheAndReload()
+// Check for updates when document is ready
+if (!import.meta.env.DEV) {
+  const checkForUpdates = async () => {
+    try {
+      const { hasUpdate } = await checkForAssetUpdate()
+      if (hasUpdate) {
+        toast.info("A new version is available", {
+          description: "Click to reload and update",
+          action: {
+            label: "Reload",
+            onClick: () => {
+              clearCacheAndReload()
+            },
+          },
+          duration: Infinity,
+        })
+      }
+    } catch (error) {
+      console.error("[Version] Error checking for updates:", error)
+    }
   }
-})
 
-// Handle unhandled promise rejections (common with cache errors)
-window.addEventListener("unhandledrejection", (event) => {
-  const error = event.reason
-  if (error && isCacheMismatchError(error)) {
-    console.error("[App] Cache mismatch error in promise rejection:", error)
-    clearCacheAndReload()
-    event.preventDefault() // Prevent default error handling
+  // Check when document is ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", checkForUpdates)
+  } else {
+    checkForUpdates()
   }
-})
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
