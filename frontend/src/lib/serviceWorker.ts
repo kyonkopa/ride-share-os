@@ -148,6 +148,116 @@ export function isCacheMismatchError(error: Error | unknown): boolean {
 }
 
 /**
+ * Manually check for service worker updates
+ * Returns a promise that resolves with update status
+ */
+export async function checkForServiceWorkerUpdate(): Promise<{
+  hasUpdate: boolean
+  message: string
+}> {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    return {
+      hasUpdate: false,
+      message: "Service workers are not supported in this browser",
+    }
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration()
+    if (!registration) {
+      return {
+        hasUpdate: false,
+        message: "No service worker registration found",
+      }
+    }
+
+    // Check if there's already a waiting service worker
+    if (registration.waiting) {
+      return {
+        hasUpdate: true,
+        message: "Update available. Reloading...",
+      }
+    }
+
+    // Check for updates
+    await registration.update()
+
+    // Check again after update check
+    if (registration.waiting) {
+      return {
+        hasUpdate: true,
+        message: "Update available. Reloading...",
+      }
+    }
+
+    if (registration.installing) {
+      return {
+        hasUpdate: true,
+        message: "Update is being installed. Reloading...",
+      }
+    }
+
+    return {
+      hasUpdate: false,
+      message: "You are using the latest version",
+    }
+  } catch (error) {
+    console.error("[SW] Error checking for updates:", error)
+    return {
+      hasUpdate: false,
+      message: "Error checking for updates. Please try again.",
+    }
+  }
+}
+
+/**
+ * Force update by activating waiting service worker and reloading
+ */
+export async function forceUpdate(): Promise<void> {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    return
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration()
+    if (!registration) {
+      return
+    }
+
+    // If there's a waiting service worker, activate it
+    let waitingWorker = registration.waiting
+    if (waitingWorker) {
+      waitingWorker.postMessage({ type: "SKIP_WAITING" })
+      // Wait a bit for the message to be processed
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
+      return
+    }
+
+    // Check for updates first
+    await registration.update()
+
+    // Check again after update
+    waitingWorker = registration.waiting
+    if (waitingWorker) {
+      waitingWorker.postMessage({ type: "SKIP_WAITING" })
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
+      return
+    }
+
+    // If no update found, just reload to clear any cache issues
+    window.location.reload()
+  } catch (error) {
+    console.error("[SW] Error forcing update:", error)
+    // Fallback to simple reload
+    window.location.reload()
+  }
+}
+
+/**
  * Clear all caches and reload the app
  */
 export async function clearCacheAndReload(): Promise<void> {

@@ -81,7 +81,7 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       label: "Settings",
       icon: Settings,
       path: "/settings",
-      enabled: false,
+      enabled: true,
     },
     {
       id: "logout",
@@ -207,8 +207,13 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
                   onClick={() => handleItemClick(item.path)}
                   disabled={!item.enabled}
                 >
-                  <Icon className="h-5 w-5 mr-4" />
-                  <span className="text-lg font-medium">{item.label}</span>
+                  <Link
+                    to={item.path}
+                    className="w-full flex items-center justify-start"
+                  >
+                    <Icon className="h-5 w-5 mr-4" />
+                    <span className="text-lg font-medium">{item.label}</span>
+                  </Link>
                 </Button>
               )
             })}
