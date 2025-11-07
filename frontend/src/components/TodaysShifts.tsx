@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { formatDateTime, getShiftDuration } from "@/utils/dateUtils"
 import type { TodayShiftsQueryQuery } from "@/codegen/graphql"
+import { DateTime } from "luxon"
 
 interface TodaysShiftsProps {
   shifts: TodayShiftsQueryQuery["todayShifts"]
@@ -59,12 +60,14 @@ export function TodaysShifts({ shifts }: TodaysShiftsProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">
-                    {getShiftDuration(
-                      shift.actualStartTime,
-                      shift.actualEndTime
-                    )}
-                  </p>
+                  {shift.actualStartTime && (
+                    <p className="font-medium">
+                      {getShiftDuration(
+                        shift.actualStartTime,
+                        shift.actualEndTime || DateTime.now().toISO()
+                      )}
+                    </p>
+                  )}
                   {shift.revenueRecords && shift.revenueRecords.length > 0 && (
                     <p className="text-sm text-green-600">
                       GHS{" "}

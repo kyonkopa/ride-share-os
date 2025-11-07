@@ -97,7 +97,9 @@ export function HomeScreen({ children }: HomeScreenProps) {
         <StatusBadge isOnline={!!currentShift} />
 
         {/* Current Shift Status */}
-        <CurrentShift onClockIn={onClockIn} vehicles={vehicles} />
+        {user?.driver && (
+          <CurrentShift onClockIn={onClockIn} vehicles={vehicles} />
+        )}
 
         {/* Today's Shifts */}
         <TodaysShifts shifts={todayShiftsData?.todayShifts || []} />
