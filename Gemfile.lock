@@ -135,7 +135,7 @@ GEM
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     json (2.15.1)
-    jwt (2.10.2)
+    jwt (3.1.2)
       base64
     kamal (2.8.1)
       activesupport (>= 7.0)
@@ -421,7 +421,7 @@ DEPENDENCIES
   graphql (~> 2.5)
   hashids (~> 1.0)
   ice_cube (~> 0.16)
-  jwt (~> 2.7)
+  jwt (~> 3.1)
   kamal
   kaminari
   pg (~> 1.1)
