@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { DateTime } from "luxon"
 import { useRevenueRecords } from "@/features/revenue-records/useRevenueRecords"
 import { useRevenueStats } from "@/features/revenue-records/useRevenueStats"
@@ -25,6 +25,7 @@ import { Button } from "./ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs"
 import { cn } from "@/lib/utils"
 import type { RevenueRecord } from "@/codegen/graphql"
+import NumberFlow from "@number-flow/react"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -114,6 +115,21 @@ function RevenueStatsBar({
   loading,
   onBreakdownClick,
 }: RevenueStatsBarProps) {
+  const [animatedValue, setAnimatedValue] = useState(0)
+
+  useEffect(() => {
+    if (stats) {
+      setAnimatedValue(0)
+
+      // After 100ms, set to the actual value
+      const timer = setTimeout(() => {
+        setAnimatedValue(stats.totalRevenue)
+      }, 100)
+
+      return () => clearTimeout(timer)
+    }
+  }, [stats])
+
   if (loading) {
     return (
       <Card>
@@ -135,7 +151,8 @@ function RevenueStatsBar({
       <CardContent>
         <div className="flex items-center justify-between">
           <p className="text-2xl font-bold text-primary">
-            {formatCurrency(stats.totalRevenue)}
+            <span className="mr-1">GHS</span>
+            <NumberFlow value={animatedValue} />
           </p>
           <Button variant="outline" onClick={onBreakdownClick}>
             <BarChart3 className="mr-2 h-4 w-4" />
