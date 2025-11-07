@@ -14,6 +14,7 @@ const CalendarScreenWrapper = lazy(
 )
 const VehiclesScreenPage = lazy(() => import("../pages/VehiclesScreenPage"))
 const RevenueScreenPage = lazy(() => import("../pages/RevenueScreenPage"))
+const ExpenseScreenPage = lazy(() => import("../pages/ExpenseScreenPage"))
 
 export const routes: RouteObject[] = [
   {
@@ -55,6 +56,10 @@ export const routes: RouteObject[] = [
           {
             path: Routes.revenue,
             element: <RevenueScreenPage />,
+          },
+          {
+            path: Routes.expenses,
+            element: <ExpenseScreenPage />,
           },
         ],
       },

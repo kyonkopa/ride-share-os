@@ -57,7 +57,7 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       label: "Expenses",
       icon: Receipt,
       path: "/expenses",
-      enabled: false,
+      enabled: true,
     },
     {
       id: "vehicles",

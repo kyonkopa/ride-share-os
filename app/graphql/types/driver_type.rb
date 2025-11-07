@@ -11,7 +11,6 @@ module Types
     field :verified, Boolean, null: false
 
     # Associations
-    field :expenses, [Types::ExpenseType], null: true
     field :revenue_records, [Types::RevenueRecordType], null: true
     field :shift_assignments, [Types::ShiftAssignmentType], null: true
     field :user, Types::UserType, null: true

@@ -6,6 +6,7 @@ module Types
 
     field :driver, Types::DriverType, null: true
     field :email, String, null: false
+    field :expenses, [Types::ExpenseType], null: true
     field :first_name, String, null: false
     field :full_name, String, null: false
     field :last_name, String, null: false

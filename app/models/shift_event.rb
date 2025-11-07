@@ -5,11 +5,11 @@
 #  id                   :integer         not null primary key
 #  shift_assignment_id  :integer         not null
 #  event_type           :integer         not null
-#  odometer             :integer
-#  vehicle_range        :integer
-#  gps_lat              :decimal
-#  gps_lon              :decimal
-#  notes                :text
+#  odometer             :integer        
+#  vehicle_range        :integer        
+#  gps_lat              :decimal        
+#  gps_lon              :decimal        
+#  notes                :text           
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #

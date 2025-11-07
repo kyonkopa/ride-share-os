@@ -3,44 +3,59 @@
 # Table name: expenses
 #
 #  id                   :integer         not null primary key
-#  driver_id            :integer
-#  vehicle_id           :integer
-#  amount               :decimal         not null
+#  user_id              :integer        
+#  vehicle_id           :integer        
 #  category             :string          not null
 #  date                 :date            not null
-#  receipt_key          :string
+#  receipt_key          :string         
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
+#  amount               :integer         not null
 #
 # Indexes
 #
 #  index_index_expenses_on_category     (category)
 #  index_index_expenses_on_date         (date)
-#  index_index_expenses_on_driver_id    (driver_id)
-#  index_index_expenses_on_driver_id_and_date (driver_id, date)
+#  index_index_expenses_on_user_id      (user_id)
+#  index_index_expenses_on_user_id_and_date (user_id, date)
 #  index_index_expenses_on_vehicle_id   (vehicle_id)
 #  index_index_expenses_on_vehicle_id_and_date (vehicle_id, date)
 #
 # Foreign Keys
 #
-#  fk_rails_...  (driver_id => drivers.id)
+#  fk_rails_...  (user_id => users.id)
 #  fk_rails_...  (vehicle_id => vehicles.id)
 #
 
 class Expense < ApplicationRecord
-  belongs_to :driver, optional: true
+  belongs_to :user, optional: true
   belongs_to :vehicle, optional: true
 
-  validates :amount, presence: true, numericality: { greater_than: 0 }
+  validates :amount, presence: true, numericality: { greater_than: 0, only_integer: true }
   validates :category, presence: true
   validates :date, presence: true
-  validate :driver_or_vehicle_present
+  validate :user_or_vehicle_present
+
+  # Convert amount from dollars (Float) to cents (Integer) when setting
+  def amount=(value)
+    if value.is_a?(Float) || value.is_a?(BigDecimal)
+      super((value * 100).round.to_i)
+    else
+      super(value)
+    end
+  end
+
+  # Convert amount from cents (Integer) to dollars (Float) when reading
+  def amount_in_decimal
+    return nil if amount.nil?
+    amount / 100.0
+  end
 
   private
 
-  def driver_or_vehicle_present
-    unless driver_id.present? || vehicle_id.present?
-      errors.add(:base, "Either driver or vehicle must be present")
+  def user_or_vehicle_present
+    unless user_id.present? || vehicle_id.present?
+      errors.add(:base, "Either user or vehicle must be present")
     end
   end
 end

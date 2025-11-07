@@ -26,7 +26,6 @@ class Driver < ApplicationRecord
   belongs_to :user
   has_many :shift_assignments, dependent: :destroy
   has_many :revenue_records, dependent: :destroy
-  has_many :expenses, dependent: :destroy
 
   # Delegate email to user association
   delegate :email, to: :user

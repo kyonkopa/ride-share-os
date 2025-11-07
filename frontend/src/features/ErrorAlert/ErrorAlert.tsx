@@ -7,7 +7,7 @@ export function ErrorAlert(props: ToastProps) {
 
   return (
     <div
-      className="w-full min-w-[500px] max-w-full flex items-center p-4 mb-4 text-red-800 rounded-lg bg-red-50"
+      className="w-full max-w-full flex items-center p-4 mb-4 text-red-800 rounded-lg bg-red-50"
       role="alert"
     >
       <svg

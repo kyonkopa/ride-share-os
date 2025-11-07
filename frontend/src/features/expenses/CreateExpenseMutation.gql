@@ -1,0 +1,29 @@
+mutation CreateExpenseMutation($input: CreateExpenseInput!) {
+  createExpense(input: $input) {
+    expense {
+      id
+      globalId
+      amount
+      category
+      date
+      receiptKey
+      createdAt
+      updatedAt
+      user {
+        id
+        firstName
+        lastName
+        email
+      }
+      vehicle {
+        id
+        displayName
+      }
+    }
+    errors {
+      message
+      field
+      code
+    }
+  }
+}

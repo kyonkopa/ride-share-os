@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_06_124218) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_07_144428) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -68,18 +68,18 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_06_124218) do
   end
 
   create_table "expenses", force: :cascade do |t|
-    t.bigint "driver_id"
+    t.bigint "user_id"
     t.bigint "vehicle_id"
-    t.decimal "amount", precision: 10, scale: 2, null: false
     t.string "category", null: false
     t.date "date", null: false
     t.string "receipt_key"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "amount", null: false
     t.index ["category"], name: "index_expenses_on_category"
     t.index ["date"], name: "index_expenses_on_date"
-    t.index ["driver_id", "date"], name: "index_expenses_on_driver_id_and_date"
-    t.index ["driver_id"], name: "index_expenses_on_driver_id"
+    t.index ["user_id", "date"], name: "index_expenses_on_user_id_and_date"
+    t.index ["user_id"], name: "index_expenses_on_user_id"
     t.index ["vehicle_id", "date"], name: "index_expenses_on_vehicle_id_and_date"
     t.index ["vehicle_id"], name: "index_expenses_on_vehicle_id"
   end
@@ -180,7 +180,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_06_124218) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "drivers", "users"
-  add_foreign_key "expenses", "drivers"
+  add_foreign_key "expenses", "users"
   add_foreign_key "expenses", "vehicles"
   add_foreign_key "revenue_records", "drivers"
   add_foreign_key "revenue_records", "shift_assignments"

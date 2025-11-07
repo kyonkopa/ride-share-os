@@ -6,25 +6,25 @@
 #  email                :string          not null
 #  first_name           :string          not null
 #  last_name            :string          not null
-#  last_sign_in_at      :datetime
+#  last_sign_in_at      :datetime       
 #  sign_in_count        :integer         not null default(0)
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  encrypted_password   :string          not null default()
-#  reset_password_token :string
-#  reset_password_sent_at :datetime
-#  remember_created_at  :datetime
-#  current_sign_in_at   :datetime
-#  current_sign_in_ip   :string
-#  last_sign_in_ip      :string
-#  confirmation_token   :string
-#  confirmed_at         :datetime
-#  confirmation_sent_at :datetime
-#  unconfirmed_email    :string
+#  reset_password_token :string         
+#  reset_password_sent_at :datetime       
+#  remember_created_at  :datetime       
+#  current_sign_in_at   :datetime       
+#  current_sign_in_ip   :string         
+#  last_sign_in_ip      :string         
+#  confirmation_token   :string         
+#  confirmed_at         :datetime       
+#  confirmation_sent_at :datetime       
+#  unconfirmed_email    :string         
 #  failed_attempts      :integer         not null default(0)
-#  unlock_token         :string
-#  locked_at            :datetime
-#  deleted_at           :datetime
+#  unlock_token         :string         
+#  locked_at            :datetime       
+#  deleted_at           :datetime       
 #
 # Indexes
 #
@@ -46,6 +46,7 @@ class User < ApplicationRecord
   validates :last_name, presence: true
 
   has_one :driver, dependent: :destroy
+  has_many :expenses, dependent: :destroy
 
   scope :active, -> { where(deleted_at: nil) }
   scope :deleted, -> { where.not(deleted_at: nil) }
