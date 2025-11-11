@@ -9,14 +9,14 @@ import {
 import { useAuthStore } from "../../stores/AuthStore"
 
 export const useLoginMutation = () => {
-  const [errors, setError] = useState<Error[]>([])
+  const [errors, setErrors] = useState<Error[]>([])
   const { saveAuthData } = useAuthStore()
 
   const { mutate: login, loading } = useMutation<CreateSessionMutationMutation>(
     CreateSessionMutationDocument,
     {
       onError: (errors: Error[]) => {
-        setError(errors)
+        setErrors(errors)
       },
       onSuccess: (data: CreateSessionMutationMutation) => {
         const session = data.createSession
@@ -25,11 +25,19 @@ export const useLoginMutation = () => {
           saveAuthData(session?.user as User, session?.authToken)
         }
       },
+      onUnknownError: () => {
+        setErrors([
+          {
+            code: "UNKNOWN_ERROR",
+            message: "Sorry, something went wrong. Please try again later.",
+          },
+        ])
+      },
     }
   )
 
   const handleLogin = async (data: { email: string; password: string }) => {
-    setError([])
+    setErrors([])
 
     await login({
       variables: {

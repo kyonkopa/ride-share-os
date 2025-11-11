@@ -7,7 +7,7 @@ module Queries
     type [Types::ShiftAssignmentType], null: false
 
     def resolve
-      return [] unless current_user&.driver
+      return ShiftAssignment.scheduled_today.order(start_time: :asc) unless current_user&.driver
 
       driver = current_user.driver
 

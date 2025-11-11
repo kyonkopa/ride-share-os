@@ -47,6 +47,8 @@ class User < ApplicationRecord
 
   has_one :driver, dependent: :destroy
   has_many :expenses, dependent: :destroy
+  has_many :user_permissions, dependent: :destroy
+  has_many :permissions, through: :user_permissions
 
   scope :active, -> { where(deleted_at: nil) }
   scope :deleted, -> { where.not(deleted_at: nil) }
@@ -79,6 +81,10 @@ class User < ApplicationRecord
 
   def restore!
     update!(deleted_at: nil)
+  end
+
+  def can?(permission_slug)
+    permissions.exists?(slug: permission_slug)
   end
 
   private

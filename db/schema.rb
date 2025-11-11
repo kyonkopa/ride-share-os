@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_07_144428) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_11_123141) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -84,6 +84,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_07_144428) do
     t.index ["vehicle_id"], name: "index_expenses_on_vehicle_id"
   end
 
+  create_table "permissions", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_permissions_on_slug", unique: true
+  end
+
   create_table "revenue_records", force: :cascade do |t|
     t.bigint "shift_assignment_id", null: false
     t.bigint "driver_id", null: false
@@ -130,6 +138,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_07_144428) do
     t.datetime "updated_at", null: false
     t.index ["event_type"], name: "index_shift_events_on_event_type"
     t.index ["shift_assignment_id"], name: "index_shift_events_on_shift_assignment_id"
+  end
+
+  create_table "user_permissions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "permission_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["permission_id"], name: "index_user_permissions_on_permission_id"
+    t.index ["user_id", "permission_id"], name: "index_user_permissions_on_user_id_and_permission_id", unique: true
+    t.index ["user_id"], name: "index_user_permissions_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -187,4 +205,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_07_144428) do
   add_foreign_key "shift_assignments", "drivers"
   add_foreign_key "shift_assignments", "vehicles"
   add_foreign_key "shift_events", "shift_assignments"
+  add_foreign_key "user_permissions", "permissions"
+  add_foreign_key "user_permissions", "users"
 end

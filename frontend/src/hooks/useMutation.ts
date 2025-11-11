@@ -12,7 +12,7 @@ import type { GraphQLError } from "graphql"
 
 type UseMutationReturn<
   T = Record<string, unknown>,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > = {
   mutate: ({ variables }: { variables: TVariables }) => Promise<T | null>
   loading: boolean
@@ -20,7 +20,7 @@ type UseMutationReturn<
 
 export type MutationOptions<
   T = Record<string, unknown>,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 > = {
   variables?: TVariables
   refetchQueries?:
@@ -29,13 +29,14 @@ export type MutationOptions<
   onComplete?: (data: T | null) => void
   onSuccess?: (data: T) => void
   onError?: (error: Error[]) => void
+  onUnknownError?: (error: Error[]) => void
   handlePayloadErrors?: boolean
   fetchPolicy?: MutationFetchPolicy
 }
 
 export const useMutation = <
   T = Record<string, unknown>,
-  TVariables extends OperationVariables = OperationVariables
+  TVariables extends OperationVariables = OperationVariables,
 >(
   mutation: DocumentNode,
   options: MutationOptions<T, TVariables>
@@ -49,7 +50,13 @@ export const useMutation = <
     }
   )
 
-  const { onComplete, onSuccess, onError, handlePayloadErrors = true } = options
+  const {
+    onComplete,
+    onSuccess,
+    onError,
+    onUnknownError,
+    handlePayloadErrors = true,
+  } = options
 
   const mutate = useCallback(
     async ({ variables }: { variables: TVariables }): Promise<T | null> => {
@@ -81,6 +88,8 @@ export const useMutation = <
             addGraphQLError(error as GraphQLError)
           })
         }
+
+        onUnknownError?.(err as Error[])
         return null
       }
     },
@@ -91,6 +100,7 @@ export const useMutation = <
       onSuccess,
       onError,
       handlePayloadErrors,
+      onUnknownError,
     ]
   )
 

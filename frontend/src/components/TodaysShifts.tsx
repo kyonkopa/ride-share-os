@@ -1,5 +1,11 @@
 import React, { useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { formatDateTime, getShiftDuration } from "@/utils/dateUtils"
 import { ShiftStatusEnum, type TodayShiftsQueryQuery } from "@/codegen/graphql"
@@ -70,13 +76,9 @@ const ShiftItem = React.memo(function ShiftItem({
 
   return (
     <div className="p-3 border rounded-lg">
+      <p className="font-medium mb-1">{shift.driver.fullName}</p>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {statusConfig && (
-            <Badge className={statusConfig.className}>
-              {statusConfig.label}
-            </Badge>
-          )}
+        <div className="flex items-center gap-2">
           <p className="text-sm">
             {isScheduled && <span>Scheduled for </span>}
             {formatDateTime(startTime, "HH:mm")} -{" "}
@@ -92,6 +94,11 @@ const ShiftItem = React.memo(function ShiftItem({
               </span>
             )}
           </p>
+          {statusConfig && (
+            <Badge className={statusConfig.className}>
+              {statusConfig.label}
+            </Badge>
+          )}
         </div>
         <div className="text-right">
           {shift.actualStartTime && (
@@ -128,6 +135,10 @@ export const TodaysShifts = React.memo(function TodaysShifts({
     <Card>
       <CardHeader>
         <CardTitle>Today's Shifts</CardTitle>
+        <CardDescription>
+          {shifts.length} {shifts.length === 1 ? "shift" : "shifts"} scheduled
+          for today
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

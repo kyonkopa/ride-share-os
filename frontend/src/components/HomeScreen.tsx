@@ -82,8 +82,9 @@ export function HomeScreen({ children }: HomeScreenProps) {
 
   // Get today's shifts and events when the user is a driver
   useEffect(() => {
+    getTodayShifts()
+
     if (user?.driver) {
-      getTodayShifts()
       getTodaysShiftEvents()
     }
   }, [user?.driver, getTodayShifts, getTodaysShiftEvents])
@@ -94,7 +95,7 @@ export function HomeScreen({ children }: HomeScreenProps) {
     <>
       <div className="space-y-6">
         {/* Status Badge */}
-        <StatusBadge isOnline={!!currentShift} />
+        {user?.driver && <StatusBadge isOnline={!!currentShift} />}
 
         {/* Current Shift Status */}
         {user?.driver && (

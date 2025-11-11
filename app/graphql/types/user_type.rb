@@ -11,6 +11,7 @@ module Types
     field :full_name, String, null: false
     field :last_name, String, null: false
     field :last_sign_in_at, GraphQL::Types::ISO8601DateTime, null: true
+    field :permissions, [Types::PermissionType], null: true
     field :sign_in_count, Integer, null: false
   end
 end
