@@ -1,5 +1,6 @@
 export const ExpenseCategoryEnum = {
   Charging: "charging",
+  CarWash: "car_wash",
   Maintenance: "maintenance",
   Toll: "toll",
   Insurance: "insurance",

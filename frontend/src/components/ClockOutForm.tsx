@@ -25,6 +25,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
 import { useNotification } from "@/hooks/useNotification"
 
+const DAILY_REVENUE_TARGET = 500 // GHS
+
 interface ClockOutFormProps {
   currentShift: CurrentShiftFragmentFragment
   clockInShiftEvent: ShiftEvent
@@ -121,6 +123,11 @@ export function ClockOutForm({
 
   const shiftDuration = getShiftDuration(clockInShiftEvent.createdAt)
 
+  const boltEarnings = Number(formData.boltEarnings) || 0
+  const uberEarnings = Number(formData.uberEarnings) || 0
+  const totalRevenue = boltEarnings + uberEarnings
+  const hasHitTarget = totalRevenue >= DAILY_REVENUE_TARGET
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
@@ -205,7 +212,7 @@ export function ClockOutForm({
             </div>
 
             {/* Earnings Section */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h3 className="font-semibold text-sm">Earnings</h3>
 
               {/* Bolt Card */}
@@ -266,6 +273,17 @@ export function ClockOutForm({
                 </CardContent>
               </Card>
             </div>
+
+            {/* Revenue Target Achievement */}
+            {hasHitTarget && (
+              <div className="text-sm text-green-600">
+                <span className="text-base">🏆</span>
+                <span className="ml-2">
+                  Congratulations! You've hit your daily revenue target of GHS{" "}
+                  {DAILY_REVENUE_TARGET}
+                </span>
+              </div>
+            )}
 
             {/* Location Status */}
             <div className="space-y-2">

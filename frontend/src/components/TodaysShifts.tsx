@@ -1,22 +1,125 @@
+import React, { useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { formatDateTime, getShiftDuration } from "@/utils/dateUtils"
-import type { TodayShiftsQueryQuery } from "@/codegen/graphql"
+import { ShiftStatusEnum, type TodayShiftsQueryQuery } from "@/codegen/graphql"
 import { DateTime } from "luxon"
 
 interface TodaysShiftsProps {
   shifts: TodayShiftsQueryQuery["todayShifts"]
 }
 
-function getStartTime(shift: TodayShiftsQueryQuery["todayShifts"][0]) {
+type Shift = TodayShiftsQueryQuery["todayShifts"][0]
+
+const STATUS_BADGE_CONFIG: Record<
+  ShiftStatusEnum,
+  { label: string; className: string }
+> = {
+  [ShiftStatusEnum.Completed]: {
+    label: "Completed",
+    className: "bg-green-500 ml-2",
+  },
+  [ShiftStatusEnum.Active]: {
+    label: "Active",
+    className: "bg-yellow-500 ml-2",
+  },
+  [ShiftStatusEnum.Scheduled]: {
+    label: "Pending",
+    className: "bg-gray-500 ml-2",
+  },
+  [ShiftStatusEnum.Missed]: { label: "Missed", className: "bg-red-500 ml-2" },
+  [ShiftStatusEnum.Paused]: {
+    label: "Paused",
+    className: "bg-orange-500 ml-2",
+  },
+}
+
+function getStartTime(shift: Shift): string {
   return shift.actualStartTime || shift.startTime
 }
 
-function getEndTime(shift: TodayShiftsQueryQuery["todayShifts"][0]) {
+function getEndTime(shift: Shift): string {
   return shift.actualEndTime || shift.endTime
 }
 
-export function TodaysShifts({ shifts }: TodaysShiftsProps) {
+function calculateTotalRevenue(
+  revenueRecords: Shift["revenueRecords"]
+): number {
+  if (!revenueRecords || revenueRecords.length === 0) return 0
+  return revenueRecords.reduce((sum, record) => sum + record.totalRevenue, 0)
+}
+
+interface ShiftItemProps {
+  shift: Shift
+  currentTimeISO: string
+}
+
+const ShiftItem = React.memo(function ShiftItem({
+  shift,
+  currentTimeISO,
+}: ShiftItemProps) {
+  const statusConfig = STATUS_BADGE_CONFIG[shift.status]
+  const startTime = getStartTime(shift)
+  const endTime = getEndTime(shift)
+  const isActive = shift.status === ShiftStatusEnum.Active
+  const isScheduled = shift.status === ShiftStatusEnum.Scheduled
+  const totalRevenue = useMemo(
+    () => calculateTotalRevenue(shift.revenueRecords),
+    [shift.revenueRecords]
+  )
+
+  return (
+    <div className="p-3 border rounded-lg">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {statusConfig && (
+            <Badge className={statusConfig.className}>
+              {statusConfig.label}
+            </Badge>
+          )}
+          <p className="text-sm">
+            {isScheduled && <span>Scheduled for </span>}
+            {formatDateTime(startTime, "HH:mm")} -{" "}
+            {isActive ? (
+              <span>Active</span>
+            ) : (
+              <span>{formatDateTime(endTime, "HH:mm")}</span>
+            )}
+            {isScheduled && (
+              <span className="text-sm">
+                {" "}
+                in <b className="capitalize">{shift.city}</b>
+              </span>
+            )}
+          </p>
+        </div>
+        <div className="text-right">
+          {shift.actualStartTime && (
+            <p className="font-medium">
+              {getShiftDuration(
+                shift.actualStartTime,
+                shift.actualEndTime || currentTimeISO
+              )}
+            </p>
+          )}
+          {totalRevenue > 0 && (
+            <p className="text-sm text-green-600">
+              GHS {totalRevenue.toFixed(2)}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <p className="font-medium">{shift.vehicle?.displayName}</p>
+    </div>
+  )
+})
+
+export const TodaysShifts = React.memo(function TodaysShifts({
+  shifts,
+}: TodaysShiftsProps) {
+  const currentTimeISO = useMemo(() => DateTime.now().toISO() || "", [])
+
   if (shifts.length === 0) {
     return null
   }
@@ -28,60 +131,15 @@ export function TodaysShifts({ shifts }: TodaysShiftsProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {shifts.map((shift) => {
-            return (
-              <div
-                key={shift.id}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      shift.status === "active"
-                        ? "bg-green-500"
-                        : shift.status === "completed"
-                          ? "bg-blue-500"
-                          : "bg-gray-500"
-                    }`}
-                  />
-                  <div>
-                    <p className="font-medium">
-                      {shift.vehicle?.displayName}
-                      {shift.status === "completed" && (
-                        <Badge className="bg-green-500 ml-2">Completed</Badge>
-                      )}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDateTime(getStartTime(shift), "HH:mm")} -{" "}
-                      {getEndTime(shift)
-                        ? formatDateTime(getEndTime(shift), "HH:mm")
-                        : "Active"}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  {shift.actualStartTime && (
-                    <p className="font-medium">
-                      {getShiftDuration(
-                        shift.actualStartTime,
-                        shift.actualEndTime || DateTime.now().toISO()
-                      )}
-                    </p>
-                  )}
-                  {shift.revenueRecords && shift.revenueRecords.length > 0 && (
-                    <p className="text-sm text-green-600">
-                      GHS{" "}
-                      {shift.revenueRecords
-                        .reduce((sum, record) => sum + record.totalRevenue, 0)
-                        .toFixed(2)}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+          {shifts.map((shift) => (
+            <ShiftItem
+              key={shift.id}
+              shift={shift}
+              currentTimeISO={currentTimeISO}
+            />
+          ))}
         </div>
       </CardContent>
     </Card>
   )
-}
+})

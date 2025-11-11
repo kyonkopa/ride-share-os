@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react"
 import { DateTime } from "luxon"
 import { useRevenueRecords } from "@/features/revenue-records/useRevenueRecords"
 import { useRevenueStats } from "@/features/revenue-records/useRevenueStats"
+import { BreakdownView } from "@/features/revenue-records/BreakdownView"
 import { Spinner } from "./ui/spinner"
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
 import { AlertCircleIcon } from "lucide-react"
@@ -19,12 +20,18 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card"
-import { DollarSign, ArrowLeft, BarChart3 } from "lucide-react"
+import { DollarSign, BarChart3 } from "lucide-react"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion"
 import { cn } from "@/lib/utils"
-import type { RevenueRecord } from "@/codegen/graphql"
+import type { RevenueRecord, RevenueSourceEnum } from "@/codegen/graphql"
 import NumberFlow from "@number-flow/react"
 
 function formatCurrency(amount: number): string {
@@ -42,32 +49,89 @@ function formatDate(dateString: string): string {
   })
 }
 
-interface RevenueRecordCardProps {
-  record: RevenueRecord
+type MergedRevenueRecord = {
+  driverId: string
+  driverName: string
+  date: string
+  totalRevenue: number
+  totalProfit: number
+  allReconciled: boolean
+  vehicle?: string
+  sourceBreakdown: Array<{
+    source: RevenueSourceEnum
+    revenue: number
+    profit: number
+    reconciled: boolean
+  }>
+  records: RevenueRecord[]
 }
 
-function RevenueRecordCard({ record }: RevenueRecordCardProps) {
+interface RevenueRecordCardProps {
+  mergedRecord: MergedRevenueRecord
+}
+
+function RevenueRecordCard({ mergedRecord }: RevenueRecordCardProps) {
   return (
     <Card className="gap-2">
-      <CardHeader>
-        <CardTitle>{formatCurrency(record.totalRevenue)}</CardTitle>
+      <CardHeader className="flex items-center justify-between">
+        <CardTitle>{formatCurrency(mergedRecord.totalRevenue)}</CardTitle>
+        <Badge
+          className={cn(
+            mergedRecord.allReconciled ? "bg-green-500" : "bg-amber-500"
+          )}
+        >
+          {mergedRecord.allReconciled ? "Reconciled" : "Unreconciled"}
+        </Badge>
       </CardHeader>
       <CardContent>
         <div className="space-y-1 text-sm text-muted-foreground">
-          <div>Profit: {formatCurrency(record.totalProfit)}</div>
-          <div>Driver: {record.driver.fullName}</div>
-          <div>
-            Vehicle: {record.shiftAssignment.vehicle?.displayName || "N/A"}
-          </div>
-          <div>Date: {formatDate(record.createdAt)}</div>
-          <div>
-            Source: <span className="capitalize">{record.source}</span>
-          </div>
-          <Badge
-            className={cn(record.reconciled ? "bg-green-500" : "bg-amber-500")}
-          >
-            {record.reconciled ? "Reconciled" : "Unreconciled"}
-          </Badge>
+          <div>Profit: {formatCurrency(mergedRecord.totalProfit)}</div>
+          <div>Driver: {mergedRecord.driverName}</div>
+          <div>Vehicle: {mergedRecord.vehicle || "N/A"}</div>
+          <div>Date: {formatDate(mergedRecord.date)}</div>
+
+          {!!mergedRecord.sourceBreakdown.length && (
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="breakdown" className="border-none">
+                <AccordionTrigger className="py-2 text-sm">
+                  <span className="truncate underline">
+                    View Source Breakdown
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2 pt-2">
+                    {mergedRecord.sourceBreakdown.map((item) => (
+                      <div
+                        key={item.source}
+                        className="flex items-center justify-between rounded-md border p-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium capitalize">
+                            {item.source}
+                          </span>
+                          <Badge
+                            className={cn(
+                              item.reconciled ? "bg-green-500" : "bg-amber-500"
+                            )}
+                          >
+                            {item.reconciled ? "Reconciled" : "Unreconciled"}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold">
+                            {formatCurrency(item.revenue)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Profit: {formatCurrency(item.profit)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -97,23 +161,18 @@ type RevenueStats = {
   sourceTotals: Record<string, { revenue: number; profit: number }>
 }
 
-type DailyBreakdown = {
-  date: string
-  revenue: number
-  profit: number
-  count: number
-}
-
 interface RevenueStatsBarProps {
   stats: RevenueStats | null | undefined
   loading: boolean
   onBreakdownClick: () => void
+  periodLabel: string
 }
 
 function RevenueStatsBar({
   stats,
   loading,
   onBreakdownClick,
+  periodLabel,
 }: RevenueStatsBarProps) {
   const [animatedValue, setAnimatedValue] = useState(0)
 
@@ -146,7 +205,7 @@ function RevenueStatsBar({
     <Card className="gap-2">
       <CardHeader>
         <CardTitle>Revenue Summary</CardTitle>
-        <CardDescription>Revenue for this week</CardDescription>
+        <CardDescription>{periodLabel}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between">
@@ -164,133 +223,10 @@ function RevenueStatsBar({
   )
 }
 
-interface BreakdownViewProps {
-  revenueRecords: RevenueRecord[]
-  startDate?: string
-  endDate?: string
-  onBack: () => void
-}
-
-function BreakdownView({
-  revenueRecords,
-  startDate,
-  endDate,
-  onBack,
-}: BreakdownViewProps) {
-  // Calculate daily breakdown
-  const dailyBreakdown = useMemo(() => {
-    if (!revenueRecords.length) return []
-
-    const breakdownMap = new Map<string, DailyBreakdown>()
-
-    revenueRecords.forEach((record) => {
-      const date = new Date(record.createdAt).toISOString().split("T")[0]
-      const existing = breakdownMap.get(date)
-
-      if (existing) {
-        existing.revenue += record.totalRevenue
-        existing.profit += record.totalProfit
-        existing.count += 1
-      } else {
-        breakdownMap.set(date, {
-          date,
-          revenue: record.totalRevenue,
-          profit: record.totalProfit,
-          count: 1,
-        })
-      }
-    })
-
-    // Sort by date descending
-    return Array.from(breakdownMap.values()).sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
-  }, [revenueRecords])
-
-  return (
-    <div className="space-y-6">
-      {/* Header with Back Button */}
-      <Button variant="outline" onClick={onBack}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
-      </Button>
-      <div className="flex items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Revenue Breakdown</h1>
-          <p className="text-sm text-muted-foreground">
-            Daily revenue breakdown
-            {startDate && endDate && (
-              <>
-                {" "}
-                ({formatDate(startDate)} - {formatDate(endDate)})
-              </>
-            )}
-          </p>
-        </div>
-      </div>
-
-      {/* Breakdown Content */}
-      {dailyBreakdown.length === 0 ? (
-        <Empty className="border border-dashed">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <DollarSign />
-            </EmptyMedia>
-            <EmptyTitle>No revenue data found</EmptyTitle>
-            <EmptyDescription>
-              No revenue records available for the selected period.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Daily Breakdown</CardTitle>
-            <CardDescription>
-              Revenue breakdown by day
-              {startDate && endDate && (
-                <>
-                  {" "}
-                  ({formatDate(startDate)} - {formatDate(endDate)})
-                </>
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {dailyBreakdown.map((day) => (
-                <div
-                  key={day.date}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium">{formatDate(day.date)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {day.count} record{day.count !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">
-                      {formatCurrency(day.revenue)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Profit: {formatCurrency(day.profit)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
-}
-
 export function RevenueScreen() {
-  const [activeTab, setActiveTab] = useState<"this-week" | "all-time">(
-    "this-week"
-  )
+  const [activeTab, setActiveTab] = useState<
+    "this-week" | "last-week" | "all-time"
+  >("this-week")
   const [showBreakdown, setShowBreakdown] = useState(false)
 
   // Calculate current week start and end dates
@@ -304,6 +240,17 @@ export function RevenueScreen() {
     }
   }, [])
 
+  // Calculate last week start and end dates
+  const lastWeekDates = useMemo(() => {
+    const now = DateTime.now()
+    const lastWeekStart = now.minus({ weeks: 1 }).startOf("week")
+    const lastWeekEnd = now.minus({ weeks: 1 }).endOf("week")
+    return {
+      start: lastWeekStart.toISODate(),
+      end: lastWeekEnd.toISODate(),
+    }
+  }, [])
+
   // Determine date parameters based on active tab
   const dateParams = useMemo(() => {
     if (activeTab === "this-week") {
@@ -312,11 +259,17 @@ export function RevenueScreen() {
         endDate: weekDates.end,
       }
     }
+    if (activeTab === "last-week") {
+      return {
+        startDate: lastWeekDates.start,
+        endDate: lastWeekDates.end,
+      }
+    }
     return {
       startDate: undefined,
       endDate: undefined,
     }
-  }, [activeTab, weekDates])
+  }, [activeTab, weekDates, lastWeekDates])
 
   const { revenueRecords, loading, error } = useRevenueRecords(
     dateParams.startDate,
@@ -327,6 +280,69 @@ export function RevenueScreen() {
     dateParams.startDate,
     dateParams.endDate
   )
+
+  // Merge revenue records by driver and date
+  const mergedRevenueRecords = useMemo(() => {
+    const mergedMap = new Map<string, MergedRevenueRecord>()
+
+    revenueRecords.forEach((record) => {
+      const date = new Date(record.createdAt).toISOString().split("T")[0]
+      const key = `${record.driver.id}-${date}`
+
+      const existing = mergedMap.get(key)
+
+      if (existing) {
+        // Update totals
+        existing.totalRevenue += record.totalRevenue
+        existing.totalProfit += record.totalProfit
+        existing.allReconciled = existing.allReconciled && record.reconciled
+
+        // Update or add source breakdown
+        const sourceItem = existing.sourceBreakdown.find(
+          (item) => item.source === record.source
+        )
+        if (sourceItem) {
+          sourceItem.revenue += record.totalRevenue
+          sourceItem.profit += record.totalProfit
+          sourceItem.reconciled = sourceItem.reconciled && record.reconciled
+        } else {
+          existing.sourceBreakdown.push({
+            source: record.source,
+            revenue: record.totalRevenue,
+            profit: record.totalProfit,
+            reconciled: record.reconciled,
+          })
+        }
+
+        existing.records.push(record)
+      } else {
+        // Create new merged record
+        mergedMap.set(key, {
+          driverId: record.driver.id,
+          driverName: record.driver.fullName,
+          date: record.createdAt,
+          totalRevenue: record.totalRevenue,
+          totalProfit: record.totalProfit,
+          allReconciled: record.reconciled,
+          vehicle: record.shiftAssignment.vehicle?.displayName,
+          sourceBreakdown: [
+            {
+              source: record.source,
+              revenue: record.totalRevenue,
+              profit: record.totalProfit,
+              reconciled: record.reconciled,
+            },
+          ],
+          records: [record],
+        })
+      }
+    })
+
+    // Sort by date descending
+    return Array.from(mergedMap.values()).sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
+  }, [revenueRecords])
 
   if (loading) {
     return (
@@ -374,11 +390,16 @@ export function RevenueScreen() {
       </div>
 
       {/* Stats Bar */}
-      {activeTab === "this-week" && (
+      {(activeTab === "this-week" || activeTab === "last-week") && (
         <RevenueStatsBar
           stats={stats}
           loading={statsLoading}
           onBreakdownClick={() => setShowBreakdown(true)}
+          periodLabel={
+            activeTab === "this-week"
+              ? "Revenue for this week"
+              : "Revenue for last week"
+          }
         />
       )}
 
@@ -386,11 +407,12 @@ export function RevenueScreen() {
       <Tabs
         value={activeTab}
         onValueChange={(value) =>
-          setActiveTab(value as "this-week" | "all-time")
+          setActiveTab(value as "this-week" | "last-week" | "all-time")
         }
       >
         <TabsList>
           <TabsTrigger value="this-week">This Week</TabsTrigger>
+          <TabsTrigger value="last-week">Last Week</TabsTrigger>
           <TabsTrigger value="all-time">All Time</TabsTrigger>
         </TabsList>
         <TabsContent value="this-week" className="mt-3">
@@ -401,12 +423,36 @@ export function RevenueScreen() {
             </p>
           )}
           {/* Revenue Records List */}
-          {revenueRecords.length === 0 ? (
+          {mergedRevenueRecords.length === 0 ? (
             <RevenueRecordsEmpty />
           ) : (
             <div className="flex flex-col gap-4">
-              {revenueRecords.map((record) => (
-                <RevenueRecordCard key={record.id} record={record} />
+              {mergedRevenueRecords.map((mergedRecord, index) => (
+                <RevenueRecordCard
+                  key={`${mergedRecord.driverId}-${mergedRecord.date}-${index}`}
+                  mergedRecord={mergedRecord}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        <TabsContent value="last-week" className="mt-3">
+          {dateParams.startDate && dateParams.endDate && (
+            <p className="text-sm text-muted-foreground mb-4">
+              Showing revenue records for {formatDate(dateParams.startDate)} to{" "}
+              {formatDate(dateParams.endDate)}
+            </p>
+          )}
+          {/* Revenue Records List */}
+          {mergedRevenueRecords.length === 0 ? (
+            <RevenueRecordsEmpty />
+          ) : (
+            <div className="flex flex-col gap-4">
+              {mergedRevenueRecords.map((mergedRecord, index) => (
+                <RevenueRecordCard
+                  key={`${mergedRecord.driverId}-${mergedRecord.date}-${index}`}
+                  mergedRecord={mergedRecord}
+                />
               ))}
             </div>
           )}
@@ -416,12 +462,15 @@ export function RevenueScreen() {
             Showing all revenue records
           </p>
           {/* Revenue Records List */}
-          {revenueRecords.length === 0 ? (
+          {mergedRevenueRecords.length === 0 ? (
             <RevenueRecordsEmpty />
           ) : (
             <div className="flex flex-col gap-4">
-              {revenueRecords.map((record) => (
-                <RevenueRecordCard key={record.id} record={record} />
+              {mergedRevenueRecords.map((mergedRecord, index) => (
+                <RevenueRecordCard
+                  key={`${mergedRecord.driverId}-${mergedRecord.date}-${index}`}
+                  mergedRecord={mergedRecord}
+                />
               ))}
             </div>
           )}
