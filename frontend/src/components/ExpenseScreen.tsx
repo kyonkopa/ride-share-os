@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { DateTime } from "luxon"
 import { useExpenses } from "@/features/expenses/useExpenses"
 import { useExpenseStats } from "@/features/expenses/useExpenseStats"
@@ -32,6 +32,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion"
+import NumberFlow from "@number-flow/react"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -48,82 +49,120 @@ function formatDate(dateString: string): string {
   })
 }
 
-type MergedExpense = {
-  vehicleId: string
-  vehicleName: string
+type DateExpenseGroup = {
+  date: string
   totalAmount: number
   expenseCount: number
   expenses: Expense[]
 }
 
-interface MergedExpenseCardProps {
-  mergedExpense: MergedExpense
+type VehicleExpenseGroup = {
+  vehicleId: string
+  vehicleName: string
+  totalAmount: number
+  expenseCount: number
+  dateGroups: DateExpenseGroup[]
 }
 
-function MergedExpenseCard({ mergedExpense }: MergedExpenseCardProps) {
+interface DateExpenseGroupCardProps {
+  dateGroup: DateExpenseGroup
+}
+
+function DateExpenseGroupCard({ dateGroup }: DateExpenseGroupCardProps) {
+  return (
+    <div className="rounded-md border p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-semibold">{formatDate(dateGroup.date)}</p>
+          <p className="text-sm text-muted-foreground">
+            {dateGroup.expenseCount}{" "}
+            {dateGroup.expenseCount === 1 ? "expense" : "expenses"}
+          </p>
+        </div>
+        <p className="text-md font-bold text-primary">
+          {formatCurrency(dateGroup.totalAmount)}
+        </p>
+      </div>
+      {dateGroup.expenses.length > 0 && (
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="breakdown" className="border-none">
+            <AccordionTrigger className="py-2 text-sm">
+              <span className="truncate underline">View Expense Breakdown</span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-2 pt-2">
+                {dateGroup.expenses.map((expense) => (
+                  <div
+                    key={expense.id}
+                    className="flex items-center justify-between rounded-md border p-2"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium capitalize">
+                          {expense.category}
+                        </span>
+                        {expense.receiptKey && (
+                          <Badge variant="outline" className="text-xs">
+                            Receipt
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {expense.user && (
+                          <span>
+                            Added by {expense.user.firstName}{" "}
+                            {expense.user.lastName}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">
+                        {formatCurrency(expense.amount)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      )}
+    </div>
+  )
+}
+
+interface VehicleExpenseGroupCardProps {
+  vehicleGroup: VehicleExpenseGroup
+}
+
+function VehicleExpenseGroupCard({
+  vehicleGroup,
+}: VehicleExpenseGroupCardProps) {
   return (
     <Card className="gap-2">
       <CardHeader className="flex items-center justify-between">
         <div>
-          <CardTitle>{formatCurrency(mergedExpense.totalAmount)}</CardTitle>
+          <CardTitle>{formatCurrency(vehicleGroup.totalAmount)}</CardTitle>
           <CardDescription className="mt-1">
-            {mergedExpense.vehicleName}
+            {vehicleGroup.vehicleName}
           </CardDescription>
         </div>
         <Badge variant="outline">
-          {mergedExpense.expenseCount}{" "}
-          {mergedExpense.expenseCount === 1 ? "expense" : "expenses"}
+          {vehicleGroup.expenseCount}{" "}
+          {vehicleGroup.expenseCount === 1 ? "expense" : "expenses"}
         </Badge>
       </CardHeader>
       <CardContent>
-        {mergedExpense.expenses.length > 0 && (
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="breakdown" className="border-none">
-              <AccordionTrigger className="py-2 text-sm">
-                <span className="truncate underline">
-                  View Expense Breakdown
-                </span>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-2 pt-2">
-                  {mergedExpense.expenses.map((expense) => (
-                    <div
-                      key={expense.id}
-                      className="flex items-center justify-between rounded-md border p-2"
-                    >
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium capitalize">
-                            {expense.category}
-                          </span>
-                          {expense.receiptKey && (
-                            <Badge variant="outline" className="text-xs">
-                              Receipt
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {formatDate(expense.date)}
-                          {expense.user && (
-                            <span>
-                              {" "}
-                              • Added by {expense.user.firstName}{" "}
-                              {expense.user.lastName}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold">
-                          {formatCurrency(expense.amount)}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+        {vehicleGroup.dateGroups.length > 0 && (
+          <div className="space-y-3">
+            {vehicleGroup.dateGroups.map((dateGroup) => (
+              <DateExpenseGroupCard
+                key={dateGroup.date}
+                dateGroup={dateGroup}
+              />
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
@@ -155,14 +194,35 @@ type ExpenseStats = {
 interface ExpenseStatsBarProps {
   stats: ExpenseStats | null | undefined
   loading: boolean
+  periodLabel: string
 }
 
-function ExpenseStatsBar({ stats, loading }: ExpenseStatsBarProps) {
+function ExpenseStatsBar({
+  stats,
+  loading,
+  periodLabel,
+}: ExpenseStatsBarProps) {
+  const [animatedValue, setAnimatedValue] = useState(0)
+
+  useEffect(() => {
+    if (stats) {
+      setAnimatedValue(0)
+
+      // After 100ms, set to the actual value
+      const timer = setTimeout(() => {
+        setAnimatedValue(stats.totalAmount)
+      }, 100)
+
+      return () => clearTimeout(timer)
+    }
+  }, [stats])
+
   if (loading) {
     return (
       <Card>
         <CardContent className="pt-6">
           <Spinner />
+          <span className="ml-2">Loading expense stats...</span>
         </CardContent>
       </Card>
     )
@@ -171,23 +231,17 @@ function ExpenseStatsBar({ stats, loading }: ExpenseStatsBarProps) {
   if (!stats) return null
 
   return (
-    <Card>
+    <Card className="gap-2">
       <CardHeader>
         <CardTitle>Expense Summary</CardTitle>
-        <CardDescription>Expenses for this week</CardDescription>
+        <CardDescription>{periodLabel}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-auto gap-2">
-          <div className="text-center p-4 bg-muted rounded-lg border-box">
-            <p className="text-2xl font-bold text-primary">
-              {formatCurrency(stats.totalAmount)}
-            </p>
-            <p className="text-sm text-muted-foreground">Total Expenses</p>
-          </div>
-          <div className="text-center p-4 bg-muted rounded-lg">
-            <p className="text-2xl font-bold text-primary">{stats.count}</p>
-            <p className="text-sm text-muted-foreground">Total Count</p>
-          </div>
+        <div className="flex items-center justify-between">
+          <p className="text-2xl font-bold text-primary">
+            <span className="mr-1">GHS</span>
+            <NumberFlow value={animatedValue} />
+          </p>
         </div>
       </CardContent>
     </Card>
@@ -249,36 +303,65 @@ export function ExpenseScreen() {
     dateParams.endDate
   )
 
-  // Merge expenses by vehicle ID
+  // Merge expenses by vehicle ID, then by date
   const mergedExpenses = useMemo(() => {
-    const mergedMap = new Map<string, MergedExpense>()
+    const vehicleMap = new Map<string, VehicleExpenseGroup>()
 
     expenses.forEach((expense) => {
       // Handle expenses without a vehicle - group them separately
       const vehicleId = expense.vehicle?.id || "no-vehicle"
       const vehicleName = expense.vehicle?.displayName || "No Vehicle"
+      const expenseDate = expense.date
 
-      const existing = mergedMap.get(vehicleId)
+      let vehicleGroup = vehicleMap.get(vehicleId)
 
-      if (existing) {
-        // Update totals
-        existing.totalAmount += expense.amount
-        existing.expenseCount += 1
-        existing.expenses.push(expense)
-      } else {
-        // Create new merged expense
-        mergedMap.set(vehicleId, {
+      if (!vehicleGroup) {
+        // Create new vehicle group
+        vehicleGroup = {
           vehicleId,
           vehicleName,
-          totalAmount: expense.amount,
-          expenseCount: 1,
-          expenses: [expense],
-        })
+          totalAmount: 0,
+          expenseCount: 0,
+          dateGroups: [],
+        }
+        vehicleMap.set(vehicleId, vehicleGroup)
       }
+
+      // Find or create date group within vehicle
+      let dateGroup = vehicleGroup.dateGroups.find(
+        (dg) => dg.date === expenseDate
+      )
+
+      if (!dateGroup) {
+        // Create new date group
+        dateGroup = {
+          date: expenseDate,
+          totalAmount: 0,
+          expenseCount: 0,
+          expenses: [],
+        }
+        vehicleGroup.dateGroups.push(dateGroup)
+      }
+
+      // Update totals
+      dateGroup.totalAmount += expense.amount
+      dateGroup.expenseCount += 1
+      dateGroup.expenses.push(expense)
+
+      // Update vehicle totals
+      vehicleGroup.totalAmount += expense.amount
+      vehicleGroup.expenseCount += 1
     })
 
-    // Sort by total amount descending, then by vehicle name
-    return Array.from(mergedMap.values()).sort((a, b) => {
+    // Sort date groups within each vehicle by date descending
+    vehicleMap.forEach((vehicleGroup) => {
+      vehicleGroup.dateGroups.sort((a, b) => {
+        return new Date(b.date).getTime() - new Date(a.date).getTime()
+      })
+    })
+
+    // Sort vehicles by total amount descending, then by vehicle name
+    return Array.from(vehicleMap.values()).sort((a, b) => {
       if (b.totalAmount !== a.totalAmount) {
         return b.totalAmount - a.totalAmount
       }
@@ -325,7 +408,11 @@ export function ExpenseScreen() {
 
       {/* Stats Bar */}
       {activeTab === "this-week" && (
-        <ExpenseStatsBar stats={stats} loading={statsLoading} />
+        <ExpenseStatsBar
+          stats={stats}
+          loading={statsLoading}
+          periodLabel="Expenses for this week"
+        />
       )}
 
       {/* Tabs */}
@@ -346,10 +433,10 @@ export function ExpenseScreen() {
             <ExpensesEmpty />
           ) : (
             <div className="flex flex-col gap-4">
-              {mergedExpenses.map((mergedExpense) => (
-                <MergedExpenseCard
-                  key={mergedExpense.vehicleId}
-                  mergedExpense={mergedExpense}
+              {mergedExpenses.map((vehicleGroup) => (
+                <VehicleExpenseGroupCard
+                  key={vehicleGroup.vehicleId}
+                  vehicleGroup={vehicleGroup}
                 />
               ))}
               {pagination &&
@@ -375,10 +462,10 @@ export function ExpenseScreen() {
             <ExpensesEmpty />
           ) : (
             <div className="flex flex-col gap-4">
-              {mergedExpenses.map((mergedExpense) => (
-                <MergedExpenseCard
-                  key={mergedExpense.vehicleId}
-                  mergedExpense={mergedExpense}
+              {mergedExpenses.map((vehicleGroup) => (
+                <VehicleExpenseGroupCard
+                  key={vehicleGroup.vehicleId}
+                  vehicleGroup={vehicleGroup}
                 />
               ))}
               {pagination &&
