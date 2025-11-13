@@ -338,15 +338,17 @@ export function ExpenseScreen() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Expenses</h1>
-        <p className="text-sm text-muted-foreground">
-          View and manage your expenses
-        </p>
-      </div>
-
-      <div className="flex justify-end">
-        <Button onClick={() => setShowAddExpense(true)}>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Expenses</h1>
+          <p className="text-sm text-muted-foreground">
+            View and manage your expenses
+          </p>
+        </div>
+        <Button
+          onClick={() => setShowAddExpense(true)}
+          className="hidden md:flex"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add Expense
         </Button>
@@ -444,6 +446,20 @@ export function ExpenseScreen() {
           },
         }}
       />
+
+      {/* Floating Add Expense Button - Only on small screens */}
+      <Button
+        onClick={() => setShowAddExpense(true)}
+        className="fixed bottom-6 right-6 shadow-2xl z-50 md:hidden"
+        style={{
+          boxShadow:
+            "0 10px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.3)",
+        }}
+        size="lg"
+      >
+        <Plus className="mr-2 h-4 w-4" />
+        Add Expense
+      </Button>
     </div>
   )
 }
