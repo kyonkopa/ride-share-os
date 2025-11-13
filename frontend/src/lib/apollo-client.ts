@@ -5,7 +5,7 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors"
 import { useAuthStore } from "../stores/AuthStore"
 
 const endpoint =
-  import.meta.env.VITE_GRAPHQL_ENDPOINT ?? "http://localhost:3000/graphql"
+  import.meta.env.VITE_GRAPHQL_ENDPOINT ?? "http://localhost:3001/graphql"
 
 const httpLink = new HttpLink({
   uri: endpoint,

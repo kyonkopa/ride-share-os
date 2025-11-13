@@ -7,6 +7,7 @@ import {
   type CreateExpenseInput,
   type CreateExpenseMutationMutation,
   type CreateExpenseMutationMutationVariables,
+  type ExpensesQueryQueryVariables,
   type Error,
 } from "../../codegen/graphql"
 
@@ -18,13 +19,17 @@ export interface CreateExpenseFormData {
   receiptKey?: string
 }
 
+interface UseCreateExpenseMutationOptions {
+  onSuccess?: (data: CreateExpenseMutationMutation) => void
+  onError?: (errors: Error[]) => void
+  expensesQueryVariables?: ExpensesQueryQueryVariables
+}
+
 export const useCreateExpenseMutation = ({
   onSuccess,
   onError,
-}: {
-  onSuccess?: (data: CreateExpenseMutationMutation) => void
-  onError?: (errors: Error[]) => void
-} = {}) => {
+  expensesQueryVariables,
+}: UseCreateExpenseMutationOptions = {}) => {
   const [errors, setErrors] = useState<Error[]>([])
 
   const { mutate: createExpense, loading } = useMutation<
@@ -42,9 +47,16 @@ export const useCreateExpenseMutation = ({
     refetchQueries: [
       {
         query: ExpensesQueryDocument,
+        ...(expensesQueryVariables && { variables: expensesQueryVariables }),
       },
       {
         query: ExpenseStatsQueryDocument,
+        ...(expensesQueryVariables && {
+          variables: {
+            startDate: expensesQueryVariables.startDate,
+            endDate: expensesQueryVariables.endDate,
+          },
+        }),
       },
     ],
   })

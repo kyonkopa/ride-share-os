@@ -42,13 +42,24 @@ module Mutations
         notes: input[:notes]
       )
 
+      # Determine created_at timestamp for revenue records
+      # If clocking out on a different calendar day than the shift's start day (past midnight),
+      # set to a minute before midnight of the shift's start day
+      clock_out_time = shift_event.created_at
+      revenue_created_at = if clock_out_time > shift_assignment.start_time.end_of_day
+        shift_assignment.start_time.end_of_day - 1.hour
+      else
+        clock_out_time
+      end
+
       # Create revenue record for Bolt if earnings provided
       if input[:bolt_earnings].present?
         RevenueRecord.create!(
           shift_assignment:,
           driver: current_user.driver,
           total_revenue: input[:bolt_earnings],
-          source: :bolt
+          source: :bolt,
+          created_at: revenue_created_at
         )
       end
 
@@ -58,7 +69,8 @@ module Mutations
           shift_assignment:,
           driver: current_user.driver,
           total_revenue: input[:uber_earnings],
-          source: :uber
+          source: :uber,
+          created_at: revenue_created_at
         )
       end
 

@@ -12,6 +12,10 @@ query TodaysShiftEventsQuery {
     shiftAssignment {
       id
       globalId
+      driver {
+        id
+        fullName
+      }
       vehicle {
         id
         displayName

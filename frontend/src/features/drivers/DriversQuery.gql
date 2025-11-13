@@ -1,0 +1,10 @@
+query DriversQuery {
+  drivers {
+    id
+    globalId
+    fullName
+    email
+    phoneNumber
+    verified
+  }
+}

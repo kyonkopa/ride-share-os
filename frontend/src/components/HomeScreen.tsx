@@ -83,10 +83,7 @@ export function HomeScreen({ children }: HomeScreenProps) {
   // Get today's shifts and events when the user is a driver
   useEffect(() => {
     getTodayShifts()
-
-    if (user?.driver) {
-      getTodaysShiftEvents()
-    }
+    getTodaysShiftEvents()
   }, [user?.driver, getTodayShifts, getTodaysShiftEvents])
 
   const onClockIn = () => setShowClockIn(true)

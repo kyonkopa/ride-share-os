@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { MapPin, Gauge, AlertCircle, AlertCircleIcon } from "lucide-react"
+import { MapPin, Gauge, AlertCircleIcon } from "lucide-react"
 import {
   useClockInMutation,
   type ClockInFormData,
@@ -29,6 +29,7 @@ import type {
   VehicleFragmentFragment,
 } from "@/codegen/graphql"
 import { Alert, AlertDescription } from "./ui/alert"
+import { InlineErrorAlert } from "./ui/inline-error-alert"
 
 interface ClockInFormProps {
   vehicles: VehicleFragmentFragment[]
@@ -239,37 +240,21 @@ export function ClockInForm({
             {errors.length > 0 && (
               <div className="space-y-2">
                 {shiftAssignmentNotFoundError && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
-                    <p className="text-sm text-red-600">
-                      {shiftAssignmentNotFoundError.message}
-                    </p>
-                  </div>
+                  <InlineErrorAlert
+                    message={shiftAssignmentNotFoundError.message}
+                  />
                 )}
                 {permissionDeniedError && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
-                    <p className="text-sm text-red-600">
-                      {permissionDeniedError.message}
-                    </p>
-                  </div>
+                  <InlineErrorAlert message={permissionDeniedError.message} />
                 )}
                 {alreadyClockeInError && (
-                  <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                    <AlertCircle className="h-4 w-4 text-yellow-600" />
-                    <p className="text-sm text-yellow-600">
-                      {alreadyClockeInError.message}
-                    </p>
-                  </div>
+                  <InlineErrorAlert
+                    message={alreadyClockeInError.message}
+                    variant="warning"
+                  />
                 )}
                 {validationErrors.map((error, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md"
-                  >
-                    <AlertCircle className="h-4 w-4 text-red-600" />
-                    <p className="text-sm text-red-600">{error.message}</p>
-                  </div>
+                  <InlineErrorAlert key={index} message={error.message} />
                 ))}
               </div>
             )}

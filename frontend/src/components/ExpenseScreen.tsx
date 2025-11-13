@@ -49,120 +49,83 @@ function formatDate(dateString: string): string {
   })
 }
 
-type DateExpenseGroup = {
+type VehicleDateExpenseGroup = {
+  vehicleId: string
+  vehicleName: string
   date: string
   totalAmount: number
   expenseCount: number
   expenses: Expense[]
 }
 
-type VehicleExpenseGroup = {
-  vehicleId: string
-  vehicleName: string
-  totalAmount: number
-  expenseCount: number
-  dateGroups: DateExpenseGroup[]
+interface VehicleDateExpenseGroupCardProps {
+  group: VehicleDateExpenseGroup
 }
 
-interface DateExpenseGroupCardProps {
-  dateGroup: DateExpenseGroup
-}
-
-function DateExpenseGroupCard({ dateGroup }: DateExpenseGroupCardProps) {
-  return (
-    <div className="rounded-md border p-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="font-semibold">{formatDate(dateGroup.date)}</p>
-          <p className="text-sm text-muted-foreground">
-            {dateGroup.expenseCount}{" "}
-            {dateGroup.expenseCount === 1 ? "expense" : "expenses"}
-          </p>
-        </div>
-        <p className="text-md font-bold text-primary">
-          {formatCurrency(dateGroup.totalAmount)}
-        </p>
-      </div>
-      {dateGroup.expenses.length > 0 && (
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="breakdown" className="border-none">
-            <AccordionTrigger className="py-2 text-sm">
-              <span className="truncate underline">View Expense Breakdown</span>
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-2 pt-2">
-                {dateGroup.expenses.map((expense) => (
-                  <div
-                    key={expense.id}
-                    className="flex items-center justify-between rounded-md border p-2"
-                  >
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium capitalize">
-                          {expense.category}
-                        </span>
-                        {expense.receiptKey && (
-                          <Badge variant="outline" className="text-xs">
-                            Receipt
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {expense.user && (
-                          <span>
-                            Added by {expense.user.firstName}{" "}
-                            {expense.user.lastName}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        {formatCurrency(expense.amount)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      )}
-    </div>
-  )
-}
-
-interface VehicleExpenseGroupCardProps {
-  vehicleGroup: VehicleExpenseGroup
-}
-
-function VehicleExpenseGroupCard({
-  vehicleGroup,
-}: VehicleExpenseGroupCardProps) {
+function VehicleDateExpenseGroupCard({
+  group,
+}: VehicleDateExpenseGroupCardProps) {
   return (
     <Card className="gap-2">
       <CardHeader className="flex items-center justify-between">
         <div>
-          <CardTitle>{formatCurrency(vehicleGroup.totalAmount)}</CardTitle>
+          <CardTitle>{formatCurrency(group.totalAmount)}</CardTitle>
           <CardDescription className="mt-1">
-            {vehicleGroup.vehicleName}
+            {group.vehicleName} • {formatDate(group.date)}
           </CardDescription>
         </div>
         <Badge variant="outline">
-          {vehicleGroup.expenseCount}{" "}
-          {vehicleGroup.expenseCount === 1 ? "expense" : "expenses"}
+          {group.expenseCount}{" "}
+          {group.expenseCount === 1 ? "expense" : "expenses"}
         </Badge>
       </CardHeader>
       <CardContent>
-        {vehicleGroup.dateGroups.length > 0 && (
-          <div className="space-y-3">
-            {vehicleGroup.dateGroups.map((dateGroup) => (
-              <DateExpenseGroupCard
-                key={dateGroup.date}
-                dateGroup={dateGroup}
-              />
-            ))}
-          </div>
+        {group.expenses.length > 0 && (
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="breakdown" className="border-none">
+              <AccordionTrigger className="py-2 text-sm">
+                <span className="truncate underline">
+                  View Expense Breakdown
+                </span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2 pt-2">
+                  {group.expenses.map((expense) => (
+                    <div
+                      key={expense.id}
+                      className="flex items-center justify-between rounded-md border p-2"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium capitalize">
+                            {expense.category.replace(/_/g, " ")}
+                          </span>
+                          {expense.receiptKey && (
+                            <Badge variant="outline" className="text-xs">
+                              Receipt
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {expense.user && (
+                            <span>
+                              Added by {expense.user.firstName}{" "}
+                              {expense.user.lastName}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">
+                          {formatCurrency(expense.amount)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         )}
       </CardContent>
     </Card>
@@ -255,13 +218,16 @@ export function ExpenseScreen() {
   const [showAddExpense, setShowAddExpense] = useState(false)
   const { vehicles } = useVehicles()
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+
+  // Determine items per page based on active tab
+  const itemsPerPage = useMemo(() => {
+    return activeTab === "this-week" ? 100 : 10
+  }, [activeTab])
 
   // Reset to page 1 when tab changes
   const handleTabChange = (value: string) => {
     setActiveTab(value as "this-week" | "all-time")
     setCurrentPage(1)
-    setItemsPerPage(10)
   }
 
   // Calculate current week start and end dates
@@ -303,9 +269,9 @@ export function ExpenseScreen() {
     dateParams.endDate
   )
 
-  // Merge expenses by vehicle ID, then by date
+  // Merge expenses by vehicle ID and date together
   const mergedExpenses = useMemo(() => {
-    const vehicleMap = new Map<string, VehicleExpenseGroup>()
+    const groupMap = new Map<string, VehicleDateExpenseGroup>()
 
     expenses.forEach((expense) => {
       // Handle expenses without a vehicle - group them separately
@@ -313,59 +279,39 @@ export function ExpenseScreen() {
       const vehicleName = expense.vehicle?.displayName || "No Vehicle"
       const expenseDate = expense.date
 
-      let vehicleGroup = vehicleMap.get(vehicleId)
+      // Create a unique key for vehicle + date combination
+      const groupKey = `${vehicleId}-${expenseDate}`
 
-      if (!vehicleGroup) {
-        // Create new vehicle group
-        vehicleGroup = {
+      let group = groupMap.get(groupKey)
+
+      if (!group) {
+        // Create new vehicle+date group
+        group = {
           vehicleId,
           vehicleName,
-          totalAmount: 0,
-          expenseCount: 0,
-          dateGroups: [],
-        }
-        vehicleMap.set(vehicleId, vehicleGroup)
-      }
-
-      // Find or create date group within vehicle
-      let dateGroup = vehicleGroup.dateGroups.find(
-        (dg) => dg.date === expenseDate
-      )
-
-      if (!dateGroup) {
-        // Create new date group
-        dateGroup = {
           date: expenseDate,
           totalAmount: 0,
           expenseCount: 0,
           expenses: [],
         }
-        vehicleGroup.dateGroups.push(dateGroup)
+        groupMap.set(groupKey, group)
       }
 
-      // Update totals
-      dateGroup.totalAmount += expense.amount
-      dateGroup.expenseCount += 1
-      dateGroup.expenses.push(expense)
-
-      // Update vehicle totals
-      vehicleGroup.totalAmount += expense.amount
-      vehicleGroup.expenseCount += 1
+      // Update totals and add expense
+      group.totalAmount += expense.amount
+      group.expenseCount += 1
+      group.expenses.push(expense)
     })
 
-    // Sort date groups within each vehicle by date descending
-    vehicleMap.forEach((vehicleGroup) => {
-      vehicleGroup.dateGroups.sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime()
-      })
-    })
+    // Sort groups by date descending, then by vehicle name, then by total amount
+    return Array.from(groupMap.values()).sort((a, b) => {
+      const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime()
+      if (dateDiff !== 0) return dateDiff
 
-    // Sort vehicles by total amount descending, then by vehicle name
-    return Array.from(vehicleMap.values()).sort((a, b) => {
-      if (b.totalAmount !== a.totalAmount) {
-        return b.totalAmount - a.totalAmount
-      }
-      return a.vehicleName.localeCompare(b.vehicleName)
+      const nameDiff = a.vehicleName.localeCompare(b.vehicleName)
+      if (nameDiff !== 0) return nameDiff
+
+      return b.totalAmount - a.totalAmount
     })
   }, [expenses])
 
@@ -433,10 +379,10 @@ export function ExpenseScreen() {
             <ExpensesEmpty />
           ) : (
             <div className="flex flex-col gap-4">
-              {mergedExpenses.map((vehicleGroup) => (
-                <VehicleExpenseGroupCard
-                  key={vehicleGroup.vehicleId}
-                  vehicleGroup={vehicleGroup}
+              {mergedExpenses.map((group) => (
+                <VehicleDateExpenseGroupCard
+                  key={`${group.vehicleId}-${group.date}`}
+                  group={group}
                 />
               ))}
               {pagination &&
@@ -462,10 +408,10 @@ export function ExpenseScreen() {
             <ExpensesEmpty />
           ) : (
             <div className="flex flex-col gap-4">
-              {mergedExpenses.map((vehicleGroup) => (
-                <VehicleExpenseGroupCard
-                  key={vehicleGroup.vehicleId}
-                  vehicleGroup={vehicleGroup}
+              {mergedExpenses.map((group) => (
+                <VehicleDateExpenseGroupCard
+                  key={`${group.vehicleId}-${group.date}`}
+                  group={group}
                 />
               ))}
               {pagination &&
@@ -489,6 +435,14 @@ export function ExpenseScreen() {
         open={showAddExpense}
         onOpenChange={setShowAddExpense}
         vehicles={vehicles}
+        expensesQueryVariables={{
+          startDate: dateParams.startDate,
+          endDate: dateParams.endDate,
+          pagination: {
+            page: currentPage,
+            perPage: itemsPerPage,
+          },
+        }}
       />
     </div>
   )

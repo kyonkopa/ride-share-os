@@ -87,7 +87,6 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       id: "logout",
       label: "Logout",
       icon: LogOut,
-      path: "/logout",
       enabled: true,
     },
   ]
@@ -204,16 +203,23 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
                         : ""
                     }
                   `}
-                  onClick={() => handleItemClick(item.path)}
+                  onClick={() => handleItemClick(item.id)}
                   disabled={!item.enabled}
                 >
-                  <Link
-                    to={item.path}
-                    className="w-full flex items-center justify-start"
-                  >
-                    <Icon className="h-5 w-5 mr-4" />
-                    <span className="text-lg font-medium">{item.label}</span>
-                  </Link>
+                  {item.path ? (
+                    <Link
+                      to={item.path}
+                      className="w-full flex items-center justify-start"
+                    >
+                      <Icon className="h-5 w-5 mr-4" />
+                      <span className="text-lg font-medium">{item.label}</span>
+                    </Link>
+                  ) : (
+                    <div className="w-full flex items-center justify-start">
+                      <Icon className="h-5 w-5 mr-4" />
+                      <span className="text-lg font-medium">{item.label}</span>
+                    </div>
+                  )}
                 </Button>
               )
             })}

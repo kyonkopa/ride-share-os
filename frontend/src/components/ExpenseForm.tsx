@@ -18,7 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Spinner } from "./ui/spinner"
-import type { VehicleFragmentFragment } from "@/codegen/graphql"
+import type {
+  VehicleFragmentFragment,
+  ExpensesQueryQueryVariables,
+} from "@/codegen/graphql"
 import {
   ExpenseCategoryEnum,
   EXPENSE_CATEGORIES,
@@ -33,6 +36,7 @@ interface ExpenseFormProps {
   onOpenChange: (open: boolean) => void
   open: boolean
   onSuccess?: () => void
+  expensesQueryVariables?: ExpensesQueryQueryVariables
 }
 
 export function ExpenseForm({
@@ -40,6 +44,7 @@ export function ExpenseForm({
   open,
   onOpenChange,
   onSuccess,
+  expensesQueryVariables,
 }: ExpenseFormProps) {
   const [datePickerOpen, setDatePickerOpen] = useState(false)
 
@@ -57,6 +62,7 @@ export function ExpenseForm({
       onOpenChange(false)
       onSuccess?.()
     },
+    expensesQueryVariables,
   })
 
   return (
@@ -110,7 +116,9 @@ export function ExpenseForm({
                   <SelectContent>
                     {EXPENSE_CATEGORIES.map((category) => (
                       <SelectItem key={category} value={category}>
-                        <span className="capitalize">{category}</span>
+                        <span className="capitalize">
+                          {category.replace(/_/g, " ")}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>

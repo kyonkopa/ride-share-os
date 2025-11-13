@@ -3,6 +3,7 @@ module Types
     class RevenueSourceEnum < Types::BaseEnum
       value "bolt", "Bolt"
       value "uber", "Uber"
+      value "off_trip", "Off trip"
     end
   end
 

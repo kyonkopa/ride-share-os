@@ -83,7 +83,14 @@ export function TodaysActivity({ events }: TodaysActivityProps) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium">{eventInfo.label}</p>
+                    <p className="font-medium">
+                      {eventInfo.label}
+                      {event.shiftAssignment?.driver?.fullName && (
+                        <span className="font-normal ml-2">
+                          • {event.shiftAssignment.driver.fullName}
+                        </span>
+                      )}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {formatDateTime(event.createdAt, "HH:mm")}
                     </p>

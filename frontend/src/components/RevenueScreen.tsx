@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card"
-import { DollarSign, BarChart3 } from "lucide-react"
+import { DollarSign, BarChart3, Plus } from "lucide-react"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs"
@@ -33,6 +33,7 @@ import {
 import { cn } from "@/lib/utils"
 import type { RevenueRecord, RevenueSourceEnum } from "@/codegen/graphql"
 import NumberFlow from "@number-flow/react"
+import { RevenueForm } from "./RevenueForm"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -77,8 +78,9 @@ function RevenueRecordCard({ mergedRecord }: RevenueRecordCardProps) {
         <CardTitle>{formatCurrency(mergedRecord.totalRevenue)}</CardTitle>
         <Badge
           className={cn(
-            mergedRecord.allReconciled ? "bg-green-500" : "bg-amber-500"
+            mergedRecord.allReconciled ? "border-green-500" : "border-amber-500"
           )}
+          variant="outline"
         >
           {mergedRecord.allReconciled ? "Reconciled" : "Unreconciled"}
         </Badge>
@@ -94,7 +96,7 @@ function RevenueRecordCard({ mergedRecord }: RevenueRecordCardProps) {
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="breakdown" className="border-none">
                 <AccordionTrigger className="py-2 text-sm">
-                  <span className="truncate underline">
+                  <span className="truncate underline text-primary">
                     View Source Breakdown
                   </span>
                 </AccordionTrigger>
@@ -229,6 +231,7 @@ export function RevenueScreen() {
     "this-week" | "last-week" | "all-time"
   >("this-week")
   const [showBreakdown, setShowBreakdown] = useState(false)
+  const [showAddRevenue, setShowAddRevenue] = useState(false)
 
   // Calculate current week start and end dates
   const weekDates = useMemo(() => {
@@ -389,6 +392,13 @@ export function RevenueScreen() {
             View all your revenue records
           </p>
         </div>
+        <Button
+          onClick={() => setShowAddRevenue(true)}
+          className="hidden md:flex"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Revenue
+        </Button>
       </div>
 
       {/* Stats Bar */}
@@ -420,8 +430,8 @@ export function RevenueScreen() {
         <TabsContent value="this-week" className="mt-3">
           {dateParams.startDate && dateParams.endDate && (
             <p className="text-sm text-muted-foreground mb-4">
-              Showing revenue records for {formatDate(dateParams.startDate)} to{" "}
-              {formatDate(dateParams.endDate)}
+              Showing revenue from {formatDate(dateParams.startDate)} to{" "}
+              {formatDate(dateParams.endDate)} grouped by driver
             </p>
           )}
           {/* Revenue Records List */}
@@ -478,6 +488,30 @@ export function RevenueScreen() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Add Revenue Modal */}
+      <RevenueForm
+        open={showAddRevenue}
+        onOpenChange={setShowAddRevenue}
+        revenueRecordsQueryVariables={{
+          startDate: dateParams.startDate,
+          endDate: dateParams.endDate,
+        }}
+      />
+
+      {/* Floating Add Revenue Button - Only on small screens */}
+      <Button
+        onClick={() => setShowAddRevenue(true)}
+        className="fixed bottom-6 right-6 shadow-2xl z-50 md:hidden"
+        style={{
+          boxShadow:
+            "0 10px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.3)",
+        }}
+        size="lg"
+      >
+        <Plus className="mr-2 h-4 w-4" />
+        Add Revenue
+      </Button>
     </div>
   )
 }

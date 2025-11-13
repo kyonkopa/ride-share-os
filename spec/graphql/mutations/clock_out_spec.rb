@@ -8,7 +8,12 @@ RSpec.describe Mutations::ClockOut do
   let(:vehicle) { create(:vehicle) }
   let(:shift_assignment) { create(:shift_assignment, :active, driver:, vehicle:) }
 
-  let(:mutation) do
+  # Create a clock-in event before each test
+  before do
+    create(:shift_event, :clock_in, shift_assignment:, odometer: 50000, vehicle_range: 300)
+  end
+
+  def mutation
     <<~GQL
       mutation ClockOut($input: ClockOutInput!) {
         clockOut(input: $input) {
@@ -35,7 +40,7 @@ RSpec.describe Mutations::ClockOut do
     GQL
   end
 
-  let(:variables) do
+  def default_variables
     {
       input: {
         odometer: 51000,
@@ -47,18 +52,17 @@ RSpec.describe Mutations::ClockOut do
     }
   end
 
-  let(:context) { { current_user: user } }
-
-  # Create a clock-in event before each test
-  before do
-    create(:shift_event, :clock_in, shift_assignment:, odometer: 50000, vehicle_range: 300)
+  def graphql_context
+    { current_user: user }
   end
 
   describe 'successful clock out' do
+    let(:variables) { default_variables }
+
     it 'creates a shift event and updates shift assignment status to completed' do
       expect(mutation).to execute_as_graphql
         .with_variables(variables)
-        .with_context(context)
+        .with_context(graphql_context)
         .with_no_errors
         .and_return({
           shiftEvent: {
@@ -96,7 +100,7 @@ RSpec.describe Mutations::ClockOut do
       it 'finds and uses the active shift assignment' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_no_errors
           .and_return({
             shiftEvent: {
@@ -123,7 +127,7 @@ RSpec.describe Mutations::ClockOut do
       it 'creates a clock out event with minimal data' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_no_errors
           .and_return({
             shiftEvent: {
@@ -160,7 +164,7 @@ RSpec.describe Mutations::ClockOut do
       it 'returns an error' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_mutation_error([{ "message" => "Shift assignment not found", "field" => "shift_assignment_id", "code" => "SHIFT_ASSIGNMENT_NOT_FOUND" }])
       end
     end
@@ -182,7 +186,7 @@ RSpec.describe Mutations::ClockOut do
       it 'returns a shift assignment not found error' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_mutation_error([{ "message" => "Shift assignment not found", "field" => "shift_assignment_id", "code" => "SHIFT_ASSIGNMENT_NOT_FOUND" }])
       end
     end
@@ -209,14 +213,14 @@ RSpec.describe Mutations::ClockOut do
         # and there are none, it will return SHIFT_ASSIGNMENT_NOT_FOUND instead of PERMISSION_DENIED
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_mutation_error([{ "message" => "Shift assignment not found", "field" => "shift_assignment_id", "code" => "SHIFT_ASSIGNMENT_NOT_FOUND" }])
       end
     end
 
     context 'when user has no driver profile' do
       let(:user_without_driver) { create(:user, :confirmed) }
-      let(:context) { { current_user: user_without_driver } }
+      let(:test_context) { { current_user: user_without_driver } }
       let(:variables) do
         {
           input: {}
@@ -226,7 +230,7 @@ RSpec.describe Mutations::ClockOut do
       it 'returns a no driver profile error' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(test_context)
           .with_mutation_error([{ "message" => "You do not have a driver profile", "field" => nil, "code" => "NO_DRIVER_PROFILE" }])
       end
     end
@@ -245,7 +249,7 @@ RSpec.describe Mutations::ClockOut do
       it 'returns an already clocked out error' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_mutation_error([{ "message" => "Already clocked out of this shift", "field" => nil, "code" => "ALREADY_CLOCKED_OUT" }])
       end
     end
@@ -267,7 +271,7 @@ RSpec.describe Mutations::ClockOut do
       it 'returns a not clocked in error' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_mutation_error([{ "message" => "Must clock in before clocking out", "field" => nil, "code" => "NOT_CLOCKED_IN" }])
       end
     end
@@ -286,7 +290,7 @@ RSpec.describe Mutations::ClockOut do
       it 'returns validation errors' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_mutation_error([{ "message" => "Odometer must be greater than or equal to 0", "field" => "odometer", "code" => "greater_than_or_equal_to" }])
       end
     end
@@ -304,7 +308,7 @@ RSpec.describe Mutations::ClockOut do
       it 'returns validation errors' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_mutation_error([
             { "message" => "Gps lat must be less than or equal to 90", "field" => "gps_lat", "code" => "less_than_or_equal_to" },
             { "message" => "Gps lon must be less than or equal to 180", "field" => "gps_lon", "code" => "less_than_or_equal_to" }
@@ -324,7 +328,7 @@ RSpec.describe Mutations::ClockOut do
       it 'returns validation errors' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_mutation_error([{ "message" => "Vehicle range must be greater than or equal to 0", "field" => "vehicle_range", "code" => "greater_than_or_equal_to" }])
       end
     end
@@ -332,7 +336,7 @@ RSpec.describe Mutations::ClockOut do
 
   describe 'authentication' do
     context 'when user is not authenticated' do
-      let(:context) { {} }
+      let(:test_context) { {} }
       let(:variables) do
         {
           input: {}
@@ -342,7 +346,7 @@ RSpec.describe Mutations::ClockOut do
       it 'returns an authentication error' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(test_context)
           .with_errors(['Authentication is required'])
       end
     end
@@ -362,7 +366,7 @@ RSpec.describe Mutations::ClockOut do
       it 'correctly records the clock out data' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_no_errors
           .and_return({
             shiftEvent: {
@@ -387,7 +391,7 @@ RSpec.describe Mutations::ClockOut do
       it 'records the GPS coordinates and notes' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_no_errors
           .and_return({
             shiftEvent: {
@@ -415,7 +419,7 @@ RSpec.describe Mutations::ClockOut do
       it 'finds the first active shift' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
-          .with_context(context)
+          .with_context(graphql_context)
           .with_no_errors
           .and_return({
             shiftEvent: {
@@ -424,6 +428,223 @@ RSpec.describe Mutations::ClockOut do
               }
             }
           }.with_indifferent_access)
+      end
+    end
+  end
+
+  describe 'revenue records' do
+    context 'when clocking out with earnings before midnight' do
+      let(:shift_start_time) { Time.zone.parse('2024-01-15 18:00:00') }
+      let(:test_shift_assignment) { create(:shift_assignment, :active, driver:, vehicle:, start_time: shift_start_time, end_time: shift_start_time + 8.hours) }
+      let(:clock_out_time) { shift_start_time + 5.hours } # 2024-01-15 23:00:00 (before midnight)
+      let(:variables) do
+        {
+          input: {
+            bolt_earnings: 150.50,
+            uber_earnings: 200.75
+          }
+        }
+      end
+
+      before do
+        # Complete the default shift_assignment and remove its clock-in to prevent it from being found
+        ShiftAssignment.where(driver:).where.not(id: test_shift_assignment.id).update_all(status: :completed)
+        ShiftAssignment.where(driver:).where.not(id: test_shift_assignment.id).each { |sa| sa.shift_events.destroy_all }
+        create(:shift_event, :clock_in, shift_assignment: test_shift_assignment, created_at: shift_start_time)
+        travel_to(clock_out_time)
+      end
+
+      after do
+        travel_back
+      end
+
+      it 'creates revenue records with clock out time as created_at', :aggregate_failures do
+        expect(mutation).to execute_as_graphql
+          .with_variables(variables)
+          .with_context(graphql_context)
+          .with_no_errors
+          .with_effects do
+            bolt_record = RevenueRecord.find_by(shift_assignment: test_shift_assignment, source: :bolt)
+            uber_record = RevenueRecord.find_by(shift_assignment: test_shift_assignment, source: :uber)
+
+            expect(bolt_record).to be_present
+            expect(bolt_record.total_revenue).to eq(150.50)
+            expect(bolt_record.created_at).to be_within(1.second).of(clock_out_time)
+
+            expect(uber_record).to be_present
+            expect(uber_record.total_revenue).to eq(200.75)
+            expect(uber_record.created_at).to be_within(1.second).of(clock_out_time)
+          end
+      end
+    end
+
+    context 'when clocking out with earnings after midnight' do
+      let(:shift_start_time) { Time.zone.parse('2024-01-15 18:00:00') }
+      let(:test_shift_assignment) { create(:shift_assignment, :active, driver:, vehicle:, start_time: shift_start_time, end_time: shift_start_time + 8.hours) }
+      let(:clock_out_time) { shift_start_time.to_date.end_of_day + 2.hours } # 2024-01-16 02:00:00 (after midnight)
+      let(:expected_revenue_created_at) { shift_start_time.end_of_day - 1.hour }
+      let(:variables) do
+        {
+          input: {
+            bolt_earnings: 180.25,
+            uber_earnings: 220.50
+          }
+        }
+      end
+
+      before do
+        # Complete the default shift_assignment and remove its clock-in to prevent it from being found
+        ShiftAssignment.where(driver:).where.not(id: test_shift_assignment.id).update_all(status: :completed)
+        ShiftAssignment.where(driver:).where.not(id: test_shift_assignment.id).each { |sa| sa.shift_events.destroy_all }
+        create(:shift_event, :clock_in, shift_assignment: test_shift_assignment, created_at: shift_start_time)
+        travel_to(clock_out_time)
+      end
+
+      after do
+        travel_back
+      end
+
+      it 'creates revenue records with shift start day end_of_day minus 1 hour as created_at', :aggregate_failures do
+        expect(mutation).to execute_as_graphql
+          .with_variables(variables)
+          .with_context(graphql_context)
+          .with_no_errors
+          .with_effects do
+            bolt_record = RevenueRecord.find_by(shift_assignment: test_shift_assignment, source: :bolt)
+            uber_record = RevenueRecord.find_by(shift_assignment: test_shift_assignment, source: :uber)
+
+            expect(bolt_record).to be_present
+            expect(bolt_record.total_revenue).to eq(180.25)
+            expect(bolt_record.created_at).to be_within(1.second).of(expected_revenue_created_at)
+
+            expect(uber_record).to be_present
+            expect(uber_record.total_revenue).to eq(220.50)
+            expect(uber_record.created_at).to be_within(1.second).of(expected_revenue_created_at)
+          end
+      end
+    end
+
+    context 'when clocking out with only bolt earnings' do
+      let(:shift_start_time) { Time.zone.parse('2024-01-15 18:00:00') }
+      let(:test_shift_assignment) { create(:shift_assignment, :active, driver:, vehicle:, start_time: shift_start_time, end_time: shift_start_time + 8.hours) }
+      let(:clock_out_time) { shift_start_time.to_date.end_of_day + 1.hour } # After midnight
+      let(:expected_revenue_created_at) { shift_start_time.end_of_day - 1.hour }
+      let(:variables) do
+        {
+          input: {
+            bolt_earnings: 100.00
+          }
+        }
+      end
+
+      before do
+        # Complete the default shift_assignment and remove its clock-in to prevent it from being found
+        ShiftAssignment.where(driver:).where.not(id: test_shift_assignment.id).update_all(status: :completed)
+        ShiftAssignment.where(driver:).where.not(id: test_shift_assignment.id).each { |sa| sa.shift_events.destroy_all }
+        create(:shift_event, :clock_in, shift_assignment: test_shift_assignment, created_at: shift_start_time)
+        travel_to(clock_out_time)
+      end
+
+      after do
+        travel_back
+      end
+
+      it 'creates only bolt revenue record with correct timestamp', :aggregate_failures do
+        expect(mutation).to execute_as_graphql
+          .with_variables(variables)
+          .with_context(graphql_context)
+          .with_no_errors
+          .with_effects do
+            bolt_record = RevenueRecord.find_by(shift_assignment: test_shift_assignment, source: :bolt)
+            uber_record = RevenueRecord.find_by(shift_assignment: test_shift_assignment, source: :uber)
+
+            expect(bolt_record).to be_present
+            expect(bolt_record.total_revenue).to eq(100.00)
+            expect(bolt_record.created_at).to be_within(1.second).of(expected_revenue_created_at)
+
+            expect(uber_record).to be_nil
+          end
+      end
+    end
+
+    context 'when clocking out with only uber earnings' do
+      let(:shift_start_time) { Time.zone.parse('2024-01-15 18:00:00') }
+      let(:test_shift_assignment) { create(:shift_assignment, :active, driver:, vehicle:, start_time: shift_start_time, end_time: shift_start_time + 8.hours) }
+      let(:clock_out_time) { shift_start_time + 5.hours } # Before midnight
+      let(:variables) do
+        {
+          input: {
+            uber_earnings: 175.00
+          }
+        }
+      end
+
+      before do
+        # Complete the default shift_assignment and remove its clock-in to prevent it from being found
+        ShiftAssignment.where(driver:).where.not(id: test_shift_assignment.id).update_all(status: :completed)
+        ShiftAssignment.where(driver:).where.not(id: test_shift_assignment.id).each { |sa| sa.shift_events.destroy_all }
+        create(:shift_event, :clock_in, shift_assignment: test_shift_assignment, created_at: shift_start_time)
+        travel_to(clock_out_time)
+      end
+
+      after do
+        travel_back
+      end
+
+      it 'creates only uber revenue record with clock out time as created_at', :aggregate_failures do
+        expect(mutation).to execute_as_graphql
+          .with_variables(variables)
+          .with_context(graphql_context)
+          .with_no_errors
+          .with_effects do
+            bolt_record = RevenueRecord.find_by(shift_assignment: test_shift_assignment, source: :bolt)
+            uber_record = RevenueRecord.find_by(shift_assignment: test_shift_assignment, source: :uber)
+
+            expect(bolt_record).to be_nil
+
+            expect(uber_record).to be_present
+            expect(uber_record.total_revenue).to eq(175.00)
+            expect(uber_record.created_at).to be_within(1.second).of(clock_out_time)
+          end
+      end
+    end
+
+    context 'when clocking out exactly at end of shift start day' do
+      let(:shift_start_time) { Time.zone.parse('2024-01-15 18:00:00') }
+      let(:test_shift_assignment) { create(:shift_assignment, :active, driver:, vehicle:, start_time: shift_start_time, end_time: shift_start_time + 8.hours) }
+      let(:clock_out_time) { shift_start_time.end_of_day } # Exactly at end of day
+      let(:variables) do
+        {
+          input: {
+            bolt_earnings: 120.00
+          }
+        }
+      end
+
+      before do
+        # Complete the default shift_assignment and remove its clock-in to prevent it from being found
+        ShiftAssignment.where(driver:).where.not(id: test_shift_assignment.id).update_all(status: :completed)
+        ShiftAssignment.where(driver:).where.not(id: test_shift_assignment.id).each { |sa| sa.shift_events.destroy_all }
+        create(:shift_event, :clock_in, shift_assignment: test_shift_assignment, created_at: shift_start_time)
+        travel_to(clock_out_time)
+      end
+
+      after do
+        travel_back
+      end
+
+      it 'creates revenue record with clock out time as created_at (not after end_of_day)', :aggregate_failures do
+        expect(mutation).to execute_as_graphql
+          .with_variables(variables)
+          .with_context(graphql_context)
+          .with_no_errors
+          .with_effects do
+            bolt_record = RevenueRecord.find_by(shift_assignment: test_shift_assignment, source: :bolt)
+
+            expect(bolt_record).to be_present
+            expect(bolt_record.total_revenue).to eq(120.00)
+            expect(bolt_record.created_at).to be_within(1.second).of(clock_out_time)
+          end
       end
     end
   end

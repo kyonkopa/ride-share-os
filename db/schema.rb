@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_11_123141) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_13_231313) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -101,11 +101,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_11_123141) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "source", default: 0, null: false
+    t.bigint "vehicle_id"
     t.index ["driver_id", "created_at"], name: "index_revenue_records_on_driver_id_and_created_at"
     t.index ["driver_id"], name: "index_revenue_records_on_driver_id"
     t.index ["reconciled"], name: "index_revenue_records_on_reconciled"
     t.index ["shift_assignment_id"], name: "index_revenue_records_on_shift_assignment_id"
     t.index ["source"], name: "index_revenue_records_on_source"
+    t.index ["vehicle_id"], name: "index_revenue_records_on_vehicle_id"
   end
 
   create_table "shift_assignments", force: :cascade do |t|
@@ -202,6 +204,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_11_123141) do
   add_foreign_key "expenses", "vehicles"
   add_foreign_key "revenue_records", "drivers"
   add_foreign_key "revenue_records", "shift_assignments"
+  add_foreign_key "revenue_records", "vehicles"
   add_foreign_key "shift_assignments", "drivers"
   add_foreign_key "shift_assignments", "vehicles"
   add_foreign_key "shift_events", "shift_assignments"

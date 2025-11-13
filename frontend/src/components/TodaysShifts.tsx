@@ -23,20 +23,23 @@ const STATUS_BADGE_CONFIG: Record<
 > = {
   [ShiftStatusEnum.Completed]: {
     label: "Completed",
-    className: "bg-green-500 ml-2",
+    className: "border-green-500 ml-2",
   },
   [ShiftStatusEnum.Active]: {
     label: "Active",
-    className: "bg-yellow-500 ml-2",
+    className: "border-yellow-500 ml-2",
   },
   [ShiftStatusEnum.Scheduled]: {
     label: "Pending",
-    className: "bg-gray-500 ml-2",
+    className: "border-gray-500 ml-2",
   },
-  [ShiftStatusEnum.Missed]: { label: "Missed", className: "bg-red-500 ml-2" },
+  [ShiftStatusEnum.Missed]: {
+    label: "Missed",
+    className: "border-red-500 ml-2",
+  },
   [ShiftStatusEnum.Paused]: {
     label: "Paused",
-    className: "bg-orange-500 ml-2",
+    className: "border-orange-500 ml-2",
   },
 }
 
@@ -82,11 +85,7 @@ const ShiftItem = React.memo(function ShiftItem({
           <p className="text-sm">
             {isScheduled && <span>Scheduled for </span>}
             {formatDateTime(startTime, "HH:mm")} -{" "}
-            {isActive ? (
-              <span>Active</span>
-            ) : (
-              <span>{formatDateTime(endTime, "HH:mm")}</span>
-            )}
+            {!isActive && <span>{formatDateTime(endTime, "HH:mm")}</span>}
             {isScheduled && (
               <span className="text-sm">
                 {" "}
@@ -95,7 +94,7 @@ const ShiftItem = React.memo(function ShiftItem({
             )}
           </p>
           {statusConfig && (
-            <Badge className={statusConfig.className}>
+            <Badge variant="outline" className={statusConfig.className}>
               {statusConfig.label}
             </Badge>
           )}
