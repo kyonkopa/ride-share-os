@@ -62,8 +62,6 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
     // Get the number of days since the start of the month rounded up
     const daysUntil = Math.ceil(now.diff(monthStart, "days").days)
 
-    console.log("daysUntil", daysUntil)
-
     const attendanceRate = Math.round((workedDays / daysUntil) * 100)
 
     const totalRevenue = monthShifts.reduce((acc, shift) => {
