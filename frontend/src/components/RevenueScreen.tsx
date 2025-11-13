@@ -194,6 +194,7 @@ function RevenueStatsBar({
       <Card>
         <CardContent className="pt-6">
           <Spinner />
+          <span className="ml-2">Loading revenue stats...</span>
         </CardContent>
       </Card>
     )
@@ -346,8 +347,9 @@ export function RevenueScreen() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center min-h-screen">
         <Spinner />
+        <span className="ml-2">Loading revenue records...</span>
       </div>
     )
   }

@@ -11,7 +11,7 @@ export function Layout() {
 
       {/* Main Content Area */}
       <div className="md:ml-80 min-h-screen">
-        <main className="p-4 md:p-6 max-w-4xl md:ml-0">
+        <main className="p-4 md:p-6 max-w-4xl md:ml-0 min-h-screen">
           <Outlet />
         </main>
       </div>

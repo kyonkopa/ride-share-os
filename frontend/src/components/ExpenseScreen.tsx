@@ -26,6 +26,12 @@ import { Button } from "./ui/button"
 import { ExpenseForm } from "./ExpenseForm"
 import type { Expense } from "@/codegen/graphql"
 import { Paginator } from "./pagination/paginator"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -42,34 +48,83 @@ function formatDate(dateString: string): string {
   })
 }
 
-interface ExpenseCardProps {
-  expense: Expense
+type MergedExpense = {
+  vehicleId: string
+  vehicleName: string
+  totalAmount: number
+  expenseCount: number
+  expenses: Expense[]
 }
 
-function ExpenseCard({ expense }: ExpenseCardProps) {
+interface MergedExpenseCardProps {
+  mergedExpense: MergedExpense
+}
+
+function MergedExpenseCard({ mergedExpense }: MergedExpenseCardProps) {
   return (
     <Card className="gap-2">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>{formatCurrency(expense.amount)}</CardTitle>
-          <Badge variant="outline" className="capitalize">
-            {expense.category}
-          </Badge>
+      <CardHeader className="flex items-center justify-between">
+        <div>
+          <CardTitle>{formatCurrency(mergedExpense.totalAmount)}</CardTitle>
+          <CardDescription className="mt-1">
+            {mergedExpense.vehicleName}
+          </CardDescription>
         </div>
+        <Badge variant="outline">
+          {mergedExpense.expenseCount}{" "}
+          {mergedExpense.expenseCount === 1 ? "expense" : "expenses"}
+        </Badge>
       </CardHeader>
       <CardContent>
-        <div className="space-y-1 text-sm text-muted-foreground">
-          <div>Date: {formatDate(expense.date)}</div>
-          {expense.user && (
-            <div>
-              Added by: {expense.user.firstName} {expense.user.lastName}
-            </div>
-          )}
-          {expense.vehicle && <div>Vehicle: {expense.vehicle.displayName}</div>}
-          {expense.receiptKey && (
-            <div className="text-xs text-blue-600">Receipt attached</div>
-          )}
-        </div>
+        {mergedExpense.expenses.length > 0 && (
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="breakdown" className="border-none">
+              <AccordionTrigger className="py-2 text-sm">
+                <span className="truncate underline">
+                  View Expense Breakdown
+                </span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2 pt-2">
+                  {mergedExpense.expenses.map((expense) => (
+                    <div
+                      key={expense.id}
+                      className="flex items-center justify-between rounded-md border p-2"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium capitalize">
+                            {expense.category}
+                          </span>
+                          {expense.receiptKey && (
+                            <Badge variant="outline" className="text-xs">
+                              Receipt
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatDate(expense.date)}
+                          {expense.user && (
+                            <span>
+                              {" "}
+                              • Added by {expense.user.firstName}{" "}
+                              {expense.user.lastName}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">
+                          {formatCurrency(expense.amount)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        )}
       </CardContent>
     </Card>
   )
@@ -194,6 +249,43 @@ export function ExpenseScreen() {
     dateParams.endDate
   )
 
+  // Merge expenses by vehicle ID
+  const mergedExpenses = useMemo(() => {
+    const mergedMap = new Map<string, MergedExpense>()
+
+    expenses.forEach((expense) => {
+      // Handle expenses without a vehicle - group them separately
+      const vehicleId = expense.vehicle?.id || "no-vehicle"
+      const vehicleName = expense.vehicle?.displayName || "No Vehicle"
+
+      const existing = mergedMap.get(vehicleId)
+
+      if (existing) {
+        // Update totals
+        existing.totalAmount += expense.amount
+        existing.expenseCount += 1
+        existing.expenses.push(expense)
+      } else {
+        // Create new merged expense
+        mergedMap.set(vehicleId, {
+          vehicleId,
+          vehicleName,
+          totalAmount: expense.amount,
+          expenseCount: 1,
+          expenses: [expense],
+        })
+      }
+    })
+
+    // Sort by total amount descending, then by vehicle name
+    return Array.from(mergedMap.values()).sort((a, b) => {
+      if (b.totalAmount !== a.totalAmount) {
+        return b.totalAmount - a.totalAmount
+      }
+      return a.vehicleName.localeCompare(b.vehicleName)
+    })
+  }, [expenses])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -250,12 +342,15 @@ export function ExpenseScreen() {
             </p>
           )}
           {/* Expenses List */}
-          {expenses.length === 0 ? (
+          {mergedExpenses.length === 0 ? (
             <ExpensesEmpty />
           ) : (
-            <div className="flex flex-col gap-2">
-              {expenses.map((expense) => (
-                <ExpenseCard key={expense.id} expense={expense} />
+            <div className="flex flex-col gap-4">
+              {mergedExpenses.map((mergedExpense) => (
+                <MergedExpenseCard
+                  key={mergedExpense.vehicleId}
+                  mergedExpense={mergedExpense}
+                />
               ))}
               {pagination &&
                 pagination.pageCount != null &&
@@ -276,12 +371,15 @@ export function ExpenseScreen() {
             Showing all expenses
           </p>
           {/* Expenses List */}
-          {expenses.length === 0 ? (
+          {mergedExpenses.length === 0 ? (
             <ExpensesEmpty />
           ) : (
-            <div className="flex flex-col gap-2">
-              {expenses.map((expense) => (
-                <ExpenseCard key={expense.id} expense={expense} />
+            <div className="flex flex-col gap-4">
+              {mergedExpenses.map((mergedExpense) => (
+                <MergedExpenseCard
+                  key={mergedExpense.vehicleId}
+                  mergedExpense={mergedExpense}
+                />
               ))}
               {pagination &&
                 pagination.pageCount != null &&
