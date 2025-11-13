@@ -109,7 +109,7 @@ function RevenueRecordCard({ mergedRecord }: RevenueRecordCardProps) {
                       >
                         <div className="flex items-center gap-2">
                           <span className="font-medium capitalize">
-                            {item.source}
+                            {item.source.replace(/_/g, " ")}
                           </span>
                           <Badge
                             className={cn(
