@@ -63,7 +63,7 @@ group :development do
 end
 
 gem "graphql", "~> 2.5"
-gem "jwt", "~> 2.7"
+gem "jwt", "~> 3.1"
 gem "hashids", "~> 1.0"
 gem "devise", "~> 4.9"
 gem "ice_cube", "~> 0.16"
