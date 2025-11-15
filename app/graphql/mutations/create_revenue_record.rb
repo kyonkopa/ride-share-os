@@ -16,11 +16,9 @@ module Mutations
       end
 
       # Find shift assignment for the driver on the given date
-      # Match by the date of the shift's start_time
-      date = input[:date]
-      shift_assignment = driver.shift_assignments
-                               .where("DATE(start_time) = ?", date)
-                               .first
+      date = Date.parse(input[:date])
+      date_range = date.beginning_of_day..date.end_of_day
+      shift_assignment = driver.shift_assignments.where(start_time: date_range).first
 
       if shift_assignment.nil?
         error!("No shift assignment found for this driver on the given date, ensure the driver worked on that day", code: "NOT_FOUND", field: "date")

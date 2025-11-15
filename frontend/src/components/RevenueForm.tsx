@@ -146,6 +146,7 @@ export function RevenueForm({
                         }
                         setDatePickerOpen(false)
                       }}
+                      timeZone="UTC"
                     />
                   </PopoverContent>
                 </Popover>
