@@ -37,6 +37,8 @@ import { RevenueForm } from "./RevenueForm"
 import { formatDate } from "@/utils/dateUtils"
 import { FinanceDetailsBreakdownView } from "./FinanceDetailsBreakdownView"
 import { Building2 } from "lucide-react"
+import { useAuthorizer } from "@/hooks/useAuthorizer"
+import { PermissionEnum } from "@/codegen/graphql"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -222,6 +224,7 @@ function RevenueStatsBar({
 }
 
 export function RevenueScreen() {
+  const { can } = useAuthorizer()
   const [activeTab, setActiveTab] = useState<
     "this-week" | "last-week" | "all-time"
   >("this-week")
@@ -407,18 +410,20 @@ export function RevenueScreen() {
       </div>
 
       {/* Finance Details Button */}
-      <Card
-        className="cursor-pointer bg-blue-100 hover:bg-muted/80 border-blue-400 p-2"
-        onClick={() => setShowFinanceDetails(true)}
-      >
-        <CardHeader className="p-2">
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Financial Breakdown
-          </CardTitle>
-          <CardDescription>View monthly financial breakdown</CardDescription>
-        </CardHeader>
-      </Card>
+      {can(PermissionEnum.RevenueReadAccess) && (
+        <Card
+          className="cursor-pointer bg-blue-100 hover:bg-muted/80 border-blue-400 p-2"
+          onClick={() => setShowFinanceDetails(true)}
+        >
+          <CardHeader className="p-2">
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Financial Breakdown
+            </CardTitle>
+            <CardDescription>View monthly financial breakdown</CardDescription>
+          </CardHeader>
+        </Card>
+      )}
 
       {/* Stats Bar */}
       {(activeTab === "this-week" || activeTab === "last-week") && (
