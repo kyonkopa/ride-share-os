@@ -13,5 +13,9 @@ query CurrentUserQuery {
       id
       slug
     }
+    driver {
+      id
+      fullName
+    }
   }
 }
