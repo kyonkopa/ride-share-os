@@ -35,6 +35,8 @@ import type { RevenueRecord, RevenueSourceEnum } from "@/codegen/graphql"
 import NumberFlow from "@number-flow/react"
 import { RevenueForm } from "./RevenueForm"
 import { formatDate } from "@/utils/dateUtils"
+import { FinanceDetailsBreakdownView } from "./FinanceDetailsBreakdownView"
+import { Building2 } from "lucide-react"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -225,6 +227,7 @@ export function RevenueScreen() {
   >("this-week")
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [showAddRevenue, setShowAddRevenue] = useState(false)
+  const [showFinanceDetails, setShowFinanceDetails] = useState(false)
 
   // Calculate current week start and end dates
   const weekDates = useMemo(() => {
@@ -362,6 +365,15 @@ export function RevenueScreen() {
     )
   }
 
+  // Show finance details breakdown view
+  if (showFinanceDetails) {
+    return (
+      <FinanceDetailsBreakdownView
+        onBack={() => setShowFinanceDetails(false)}
+      />
+    )
+  }
+
   // Show breakdown view
   if (showBreakdown) {
     return (
@@ -393,6 +405,20 @@ export function RevenueScreen() {
           Add Revenue
         </Button>
       </div>
+
+      {/* Finance Details Button */}
+      <Card
+        className="cursor-pointer bg-blue-100 hover:bg-muted/80 border-blue-400 p-2"
+        onClick={() => setShowFinanceDetails(true)}
+      >
+        <CardHeader className="p-2">
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Financial Breakdown
+          </CardTitle>
+          <CardDescription>View monthly financial breakdown</CardDescription>
+        </CardHeader>
+      </Card>
 
       {/* Stats Bar */}
       {(activeTab === "this-week" || activeTab === "last-week") && (
@@ -483,14 +509,16 @@ export function RevenueScreen() {
       </Tabs>
 
       {/* Add Revenue Modal */}
-      <RevenueForm
-        open={showAddRevenue}
-        onOpenChange={setShowAddRevenue}
-        revenueRecordsQueryVariables={{
-          startDate: dateParams.startDate,
-          endDate: dateParams.endDate,
-        }}
-      />
+      {showAddRevenue && (
+        <RevenueForm
+          open={true}
+          onOpenChange={setShowAddRevenue}
+          revenueRecordsQueryVariables={{
+            startDate: dateParams.startDate,
+            endDate: dateParams.endDate,
+          }}
+        />
+      )}
 
       {/* Floating Add Revenue Button - Only on small screens */}
       <Button

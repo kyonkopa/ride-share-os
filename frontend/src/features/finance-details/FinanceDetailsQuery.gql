@@ -1,0 +1,8 @@
+query FinanceDetailsQuery($startDate: ISO8601Date!, $endDate: ISO8601Date!) {
+  financeDetails(startDate: $startDate, endDate: $endDate) {
+    totalRevenue
+    totalPayrollDue
+    totalExpenses
+    earnings
+  }
+}

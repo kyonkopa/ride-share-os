@@ -27,8 +27,15 @@ export function formatDateTime(
  */
 export function formatDate(date: Date | string): string {
   const dateTime =
-    date instanceof Date ? DateTime.fromJSDate(date) : DateTime.fromISO(date)
-  return dateTime.setZone("utc").startOf("day").toFormat("MMM d, yyyy")
+    date instanceof Date
+      ? DateTime.fromJSDate(date, {
+          zone: "utc",
+        })
+      : DateTime.fromISO(date, {
+          zone: "utc",
+        })
+
+  return dateTime.startOf("day").toFormat("MMM d, yyyy")
 }
 
 /**

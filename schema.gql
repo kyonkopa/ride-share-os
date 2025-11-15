@@ -341,6 +341,31 @@ type ExpenseStats {
 }
 
 """
+Finance details breakdown for a date range
+"""
+type FinanceDetails {
+  """
+  Net company earnings (revenue - payroll - expenses)
+  """
+  earnings: Float!
+
+  """
+  Total expenses for the period
+  """
+  totalExpenses: Float!
+
+  """
+  Total payroll due to drivers for the period
+  """
+  totalPayrollDue: Float!
+
+  """
+  Total revenue for the period
+  """
+  totalRevenue: Float!
+}
+
+"""
 An ISO 8601-encoded date
 """
 scalar ISO8601Date @specifiedBy(url: "https://tools.ietf.org/html/rfc3339")
@@ -548,7 +573,7 @@ type Permission {
   globalId: String!
   id: String!
   name: String!
-  slug: String!
+  slug: PermissionEnum!
   updatedAt: ISO8601DateTime!
 }
 
@@ -559,62 +584,72 @@ enum PermissionEnum {
   """
   View Drivers
   """
-  DRIVER_READ_ACCESS
+  driver_read_access
 
   """
   Manage Drivers
   """
-  DRIVER_WRITE_ACCESS
+  driver_write_access
 
   """
   View Expenses
   """
-  EXPENSE_READ_ACCESS
+  expense_read_access
 
   """
   Manage Expenses
   """
-  EXPENSE_WRITE_ACCESS
+  expense_write_access
+
+  """
+  View Payroll
+  """
+  payroll_read_access
+
+  """
+  Manage Payroll
+  """
+  payroll_write_access
 
   """
   View Revenue
   """
-  REVENUE_READ_ACCESS
+  revenue_read_access
 
   """
   Manage Revenue
   """
-  REVENUE_WRITE_ACCESS
+  revenue_write_access
 
   """
   View Shifts
   """
-  SHIFT_READ_ACCESS
+  shift_read_access
 
   """
   Manage Shifts
   """
-  SHIFT_WRITE_ACCESS
+  shift_write_access
 
   """
   View Users
   """
-  USER_READ_ACCESS
+  user_read_access
 
   """
   Manage Users
   """
-  USER_WRITE_ACCESS
+  user_write_access
 
   """
   View Vehicles
   """
-  VEHICLE_READ_ACCESS
+  vehicle_read_access
 
   """
   Manage Vehicles
   """
-  VEHICLE_WRITE_ACCESS
+  vehicle_write_access
 }
 
 type Query {
@@ -669,6 +704,21 @@ type Query {
   ): PaginatedResultExpense
 
   """
+  Get finance details breakdown for a date range
+  """
+  financeDetails(
+    """
+    End date for the date range
+    """
+    endDate: ISO8601Date!
+
+    """
+    Start date for the date range
+    """
+    startDate: ISO8601Date!
+  ): FinanceDetails!
+
+  """
   Get shift assignments for the current driver within a date range
   """
   myShiftAssignments(
@@ -697,11 +747,6 @@ type Query {
     """
     startDate: ISO8601Date!
   ): Payroll!
-
-  """
-  Get all available permissions in the system
-  """
-  permissions: [PermissionEnum!]!
 
   """
   Get all revenue records within a date range

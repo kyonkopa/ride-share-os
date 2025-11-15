@@ -19,13 +19,7 @@ import {
   CardTitle,
 } from "./ui/card"
 import { Users } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select"
+import { MonthSelector } from "./MonthSelector"
 import {
   Accordion,
   AccordionContent,
@@ -35,33 +29,12 @@ import {
 import { useAuthorizer } from "@/hooks/useAuthorizer"
 import { PermissionEnum } from "@/codegen/graphql"
 import { formatDate } from "@/utils/dateUtils"
+
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "GHS",
   }).format(amount)
-}
-
-function formatMonthYear(date: DateTime): string {
-  return date.toFormat("MMMM yyyy")
-}
-
-// Generate month options up to the current month
-function generateMonthOptions(): Array<{ value: string; label: string }> {
-  const now = DateTime.now()
-  const currentMonth = now.startOf("month")
-  const options: Array<{ value: string; label: string }> = []
-
-  // Go back 12 months from current month
-  for (let i = 0; i < 12; i++) {
-    const month = currentMonth.minus({ months: i })
-    options.push({
-      value: month.toISODate() || "",
-      label: formatMonthYear(month),
-    })
-  }
-
-  return options
 }
 
 interface DailyBreakdown {
@@ -157,8 +130,6 @@ export function PayrollScreen() {
     currentMonth.toISODate() || ""
   )
 
-  const monthOptions = useMemo(() => generateMonthOptions(), [])
-
   // Calculate start and end dates for the selected month
   const dateRange = useMemo(() => {
     if (!selectedMonth) {
@@ -238,24 +209,11 @@ export function PayrollScreen() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Month Selector */}
-          <div className="rounded-md border border-dashed p-4">
-            <div className="space-y-2">
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger
-                  id="month-select"
-                  className="w-full md:w-[300px]"
-                >
-                  <SelectValue placeholder="Select a month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <MonthSelector
+              value={selectedMonth}
+              onValueChange={setSelectedMonth}
+            />
           </div>
 
           {/* Summary Stats */}
