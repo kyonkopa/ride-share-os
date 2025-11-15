@@ -43,11 +43,10 @@ function formatCurrency(amount: number): string {
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
+  return DateTime.fromISO(dateString)
+    .setZone("utc")
+    .startOf("day")
+    .toFormat("MMM d, yyyy")
 }
 
 type MergedRevenueRecord = {
