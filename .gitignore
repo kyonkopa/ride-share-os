@@ -56,6 +56,10 @@ capybara-*.html
 .env.*
 .env.local
 .env.*.local
+**/.env
+**/.env.*
+**/.env.local
+**/.env.*.local
 
 # Swap files
 *.swp

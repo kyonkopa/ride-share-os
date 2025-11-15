@@ -15,6 +15,7 @@ export interface ExpenseFormValues {
   category: ExpenseCategory
   date: Date
   vehicleId?: string
+  description?: string
 }
 
 interface UseExpenseFormOptions {
@@ -57,6 +58,12 @@ export const useExpenseForm = ({
         schema.required("Vehicle is required for this expense category"),
       otherwise: (schema) => schema.optional(),
     }),
+    description: yup.string().when("category", {
+      is: (value: ExpenseCategory) => value === ExpenseCategoryEnum.Other,
+      then: (schema) =>
+        schema.required("Description is required when category is 'Other'"),
+      otherwise: (schema) => schema.optional(),
+    }),
   }) as yup.ObjectSchema<ExpenseFormValues>
 
   const form = useForm<ExpenseFormValues>({
@@ -64,6 +71,7 @@ export const useExpenseForm = ({
       amount: 0,
       category: ExpenseCategoryEnum.Other,
       date: new Date(),
+      description: "",
     },
     resolver: yupResolver(validation),
   })
@@ -76,6 +84,7 @@ export const useExpenseForm = ({
       reset({
         amount: 0,
         date: new Date(),
+        description: "",
       })
     }
   }, [open, reset])
@@ -86,6 +95,7 @@ export const useExpenseForm = ({
       category: data.category,
       date: data.date,
       vehicleId: data.vehicleId,
+      description: data.description,
     })
   }
 

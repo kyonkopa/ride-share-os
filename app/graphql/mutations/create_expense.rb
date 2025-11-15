@@ -13,7 +13,8 @@ module Mutations
         amount: input[:amount],
         category: input[:category],
         date: input[:date],
-        receipt_key: input[:receipt_key]
+        receipt_key: input[:receipt_key],
+        description: input[:description]
       }
 
       # Set user_id to current user (the user who added the expense)

@@ -3,14 +3,15 @@
 # Table name: expenses
 #
 #  id                   :integer         not null primary key
-#  user_id              :integer        
-#  vehicle_id           :integer        
+#  user_id              :integer
+#  vehicle_id           :integer
 #  category             :string          not null
 #  date                 :date            not null
-#  receipt_key          :string         
+#  receipt_key          :string
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  amount               :integer         not null
+#  description          :string
 #
 # Indexes
 #
@@ -34,6 +35,7 @@ class Expense < ApplicationRecord
   validates :amount, presence: true, numericality: { greater_than: 0, only_integer: true }
   validates :category, presence: true
   validates :date, presence: true
+  validates :description, presence: true, if: -> { category == "other" }
   validate :user_or_vehicle_present
 
   # Convert amount from dollars (Float) to cents (Integer) when setting

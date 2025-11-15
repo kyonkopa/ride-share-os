@@ -130,6 +130,26 @@ export function ExpenseForm({
             )}
           </div>
 
+          {/* Description - shown when Other is selected */}
+          {watch("category") === ExpenseCategoryEnum.Other && (
+            <div className="space-y-2">
+              <Label htmlFor="description">Description *</Label>
+              <Input
+                id="description"
+                type="text"
+                placeholder="Enter expense description"
+                {...register("description", {
+                  required: "Description is required when category is 'Other'",
+                })}
+              />
+              {errors.description && (
+                <p className="text-sm text-red-600">
+                  {errors.description.message}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Date Picker */}
           <div className="space-y-2">
             <Label htmlFor="date-picker">Date *</Label>

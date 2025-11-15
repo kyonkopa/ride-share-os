@@ -106,6 +106,11 @@ function VehicleDateExpenseGroupCard({
                             </Badge>
                           )}
                         </div>
+                        {expense.category === "other" && expense.description && (
+                          <div className="text-sm text-muted-foreground">
+                            {expense.description}
+                          </div>
+                        )}
                         <div className="text-xs text-muted-foreground">
                           {expense.user && (
                             <span>

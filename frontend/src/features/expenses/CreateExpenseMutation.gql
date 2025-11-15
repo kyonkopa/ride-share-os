@@ -7,6 +7,7 @@ mutation CreateExpenseMutation($input: CreateExpenseInput!) {
       category
       date
       receiptKey
+      description
       createdAt
       updatedAt
       user {

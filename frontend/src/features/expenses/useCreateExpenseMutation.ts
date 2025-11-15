@@ -17,6 +17,7 @@ export interface CreateExpenseFormData {
   date: Date
   vehicleId?: string
   receiptKey?: string
+  description?: string
 }
 
 interface UseCreateExpenseMutationOptions {
@@ -68,14 +69,9 @@ export const useCreateExpenseMutation = ({
       amount: parseFloat(data.amount.toString()),
       category: data.category,
       date: data.date.toISOString().split("T")[0],
-    }
-
-    if (data.vehicleId) {
-      input.vehicleId = data.vehicleId
-    }
-
-    if (data.receiptKey) {
-      input.receiptKey = data.receiptKey
+      description: data.description,
+      receiptKey: data.receiptKey,
+      vehicleId: data.vehicleId,
     }
 
     await createExpense({

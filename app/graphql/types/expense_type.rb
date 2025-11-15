@@ -7,6 +7,7 @@ module Types
     field :amount, Float, null: false, description: "Expense amount in dollars"
     field :category, String, null: false
     field :date, GraphQL::Types::ISO8601Date, null: false
+    field :description, String, null: true, description: "Description of the expense (used when category is 'other')"
     field :receipt_key, String, null: true
 
     # Associations
