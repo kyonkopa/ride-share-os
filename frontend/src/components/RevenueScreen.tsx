@@ -226,7 +226,7 @@ function RevenueStatsBar({
 export function RevenueScreen() {
   const { can } = useAuthorizer()
   const [activeTab, setActiveTab] = useState<
-    "this-week" | "last-week" | "all-time"
+    "this-week" | "last-week" | "this-month" | "all-time"
   >("this-week")
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [showAddRevenue, setShowAddRevenue] = useState(false)
@@ -254,6 +254,17 @@ export function RevenueScreen() {
     }
   }, [])
 
+  // Calculate current month start and end dates
+  const monthDates = useMemo(() => {
+    const now = DateTime.now()
+    const monthStart = now.startOf("month")
+    const monthEnd = now.endOf("month")
+    return {
+      start: monthStart.toISODate(),
+      end: monthEnd.toISODate(),
+    }
+  }, [])
+
   // Determine date parameters based on active tab
   const dateParams = useMemo(() => {
     if (activeTab === "this-week") {
@@ -268,11 +279,17 @@ export function RevenueScreen() {
         endDate: lastWeekDates.end,
       }
     }
+    if (activeTab === "this-month") {
+      return {
+        startDate: monthDates.start,
+        endDate: monthDates.end,
+      }
+    }
     return {
       startDate: undefined,
       endDate: undefined,
     }
-  }, [activeTab, weekDates, lastWeekDates])
+  }, [activeTab, weekDates, lastWeekDates, monthDates])
 
   const { revenueRecords, loading, error } = useRevenueRecords(
     dateParams.startDate,
@@ -426,7 +443,9 @@ export function RevenueScreen() {
       )}
 
       {/* Stats Bar */}
-      {(activeTab === "this-week" || activeTab === "last-week") && (
+      {(activeTab === "this-week" ||
+        activeTab === "last-week" ||
+        activeTab === "this-month") && (
         <RevenueStatsBar
           stats={stats}
           loading={statsLoading}
@@ -434,7 +453,9 @@ export function RevenueScreen() {
           periodLabel={
             activeTab === "this-week"
               ? "Revenue for this week"
-              : "Revenue for last week"
+              : activeTab === "last-week"
+                ? "Revenue for last week"
+                : "Revenue for this month"
           }
         />
       )}
@@ -443,12 +464,15 @@ export function RevenueScreen() {
       <Tabs
         value={activeTab}
         onValueChange={(value) =>
-          setActiveTab(value as "this-week" | "last-week" | "all-time")
+          setActiveTab(
+            value as "this-week" | "last-week" | "this-month" | "all-time"
+          )
         }
       >
         <TabsList>
           <TabsTrigger value="this-week">This Week</TabsTrigger>
           <TabsTrigger value="last-week">Last Week</TabsTrigger>
+          <TabsTrigger value="this-month">This Month</TabsTrigger>
           <TabsTrigger value="all-time">All Time</TabsTrigger>
         </TabsList>
         <TabsContent value="this-week" className="mt-3">
@@ -477,6 +501,27 @@ export function RevenueScreen() {
             <p className="text-sm text-muted-foreground mb-4">
               Showing revenue records for {formatDate(dateParams.startDate)} to{" "}
               {formatDate(dateParams.endDate)}
+            </p>
+          )}
+          {/* Revenue Records List */}
+          {mergedRevenueRecords.length === 0 ? (
+            <RevenueRecordsEmpty />
+          ) : (
+            <div className="flex flex-col gap-4">
+              {mergedRevenueRecords.map((mergedRecord, index) => (
+                <RevenueRecordCard
+                  key={`${mergedRecord.driverId}-${mergedRecord.date}-${index}`}
+                  mergedRecord={mergedRecord}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        <TabsContent value="this-month" className="mt-3">
+          {dateParams.startDate && dateParams.endDate && (
+            <p className="text-sm text-muted-foreground mb-4">
+              Showing revenue from {formatDate(dateParams.startDate)} to{" "}
+              {formatDate(dateParams.endDate)} grouped by driver
             </p>
           )}
           {/* Revenue Records List */}

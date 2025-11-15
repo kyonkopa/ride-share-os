@@ -211,21 +211,21 @@ function ExpenseStatsBar({
 }
 
 export function ExpenseScreen() {
-  const [activeTab, setActiveTab] = useState<"this-week" | "all-time">(
-    "this-week"
-  )
+  const [activeTab, setActiveTab] = useState<
+    "this-week" | "this-month" | "all-time"
+  >("this-week")
   const [showAddExpense, setShowAddExpense] = useState(false)
   const { vehicles } = useVehicles()
   const [currentPage, setCurrentPage] = useState(1)
 
   // Determine items per page based on active tab
   const itemsPerPage = useMemo(() => {
-    return activeTab === "this-week" ? 100 : 10
+    return activeTab === "all-time" ? 10 : 100
   }, [activeTab])
 
   // Reset to page 1 when tab changes
   const handleTabChange = (value: string) => {
-    setActiveTab(value as "this-week" | "all-time")
+    setActiveTab(value as "this-week" | "this-month" | "all-time")
     setCurrentPage(1)
   }
 
@@ -240,6 +240,17 @@ export function ExpenseScreen() {
     }
   }, [])
 
+  // Calculate current month start and end dates
+  const monthDates = useMemo(() => {
+    const now = DateTime.now()
+    const monthStart = now.startOf("month")
+    const monthEnd = now.endOf("month")
+    return {
+      start: monthStart.toISODate(),
+      end: monthEnd.toISODate(),
+    }
+  }, [])
+
   // Determine date parameters based on active tab
   const dateParams = useMemo(() => {
     if (activeTab === "this-week") {
@@ -248,11 +259,17 @@ export function ExpenseScreen() {
         endDate: weekDates.end,
       }
     }
+    if (activeTab === "this-month") {
+      return {
+        startDate: monthDates.start,
+        endDate: monthDates.end,
+      }
+    }
     return {
       startDate: undefined,
       endDate: undefined,
     }
-  }, [activeTab, weekDates])
+  }, [activeTab, weekDates, monthDates])
 
   const { expenses, loading, error, pagination } = useExpenses({
     startDate: dateParams.startDate,
@@ -354,11 +371,15 @@ export function ExpenseScreen() {
       </div>
 
       {/* Stats Bar */}
-      {activeTab === "this-week" && (
+      {(activeTab === "this-week" || activeTab === "this-month") && (
         <ExpenseStatsBar
           stats={stats}
           loading={statsLoading}
-          periodLabel="Expenses for this week"
+          periodLabel={
+            activeTab === "this-week"
+              ? "Expenses for this week"
+              : "Expenses for this month"
+          }
         />
       )}
 
@@ -366,9 +387,42 @@ export function ExpenseScreen() {
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="this-week">This Week</TabsTrigger>
+          <TabsTrigger value="this-month">This Month</TabsTrigger>
           <TabsTrigger value="all-time">All Time</TabsTrigger>
         </TabsList>
         <TabsContent value="this-week" className="mt-3">
+          {dateParams.startDate && dateParams.endDate && (
+            <p className="text-sm text-muted-foreground mb-4">
+              Showing expenses for {formatDate(dateParams.startDate)} to{" "}
+              {formatDate(dateParams.endDate)}
+            </p>
+          )}
+          {/* Expenses List */}
+          {mergedExpenses.length === 0 ? (
+            <ExpensesEmpty />
+          ) : (
+            <div className="flex flex-col gap-4">
+              {mergedExpenses.map((group) => (
+                <VehicleDateExpenseGroupCard
+                  key={`${group.vehicleId}-${group.date}`}
+                  group={group}
+                />
+              ))}
+              {pagination &&
+                pagination.pageCount != null &&
+                pagination.pageCount > 1 && (
+                  <Paginator
+                    currentPage={currentPage}
+                    totalPages={pagination.pageCount}
+                    onPageChange={(page) => {
+                      setCurrentPage(page)
+                    }}
+                  />
+                )}
+            </div>
+          )}
+        </TabsContent>
+        <TabsContent value="this-month" className="mt-3">
           {dateParams.startDate && dateParams.endDate && (
             <p className="text-sm text-muted-foreground mb-4">
               Showing expenses for {formatDate(dateParams.startDate)} to{" "}
