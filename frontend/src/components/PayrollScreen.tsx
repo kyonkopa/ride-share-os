@@ -34,6 +34,7 @@ import {
 } from "./ui/accordion"
 import { useAuthorizer } from "@/hooks/useAuthorizer"
 import { PermissionEnum } from "@/codegen/graphql"
+import { formatDate } from "@/utils/dateUtils"
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -130,10 +131,6 @@ function PayrollDriverCard({
       </CardContent>
     </Card>
   )
-}
-
-function formatDate(dateString: string): string {
-  return DateTime.fromISO(dateString).toFormat("MMM d, yyyy")
 }
 
 function PayrollEmpty() {

@@ -34,19 +34,13 @@ import { cn } from "@/lib/utils"
 import type { RevenueRecord, RevenueSourceEnum } from "@/codegen/graphql"
 import NumberFlow from "@number-flow/react"
 import { RevenueForm } from "./RevenueForm"
+import { formatDate } from "@/utils/dateUtils"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "GHS",
   }).format(amount)
-}
-
-function formatDate(dateString: string): string {
-  return DateTime.fromISO(dateString)
-    .setZone("utc")
-    .startOf("day")
-    .toFormat("MMM d, yyyy")
 }
 
 type MergedRevenueRecord = {

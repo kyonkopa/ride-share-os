@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/empty"
 import { DollarSign } from "lucide-react"
 import type { RevenueRecord } from "@/codegen/graphql"
+import { formatDate } from "@/utils/dateUtils"
 
 type DailyBreakdown = {
   date: string
@@ -30,14 +31,6 @@ function formatCurrency(amount: number): string {
     style: "currency",
     currency: "GHS",
   }).format(amount)
-}
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
 }
 
 export interface BreakdownViewProps {

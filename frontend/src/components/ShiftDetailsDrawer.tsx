@@ -16,6 +16,7 @@ import type {
   VehicleFragmentFragment,
 } from "@/codegen/graphql"
 import { ShiftEventTypeEnum, ShiftStatusEnum } from "@/codegen/graphql"
+import { formatDate } from "@/utils/dateUtils"
 
 interface ShiftDetailsDrawerProps {
   isOpen: boolean
@@ -40,15 +41,6 @@ export function ShiftDetailsDrawer({
     return DateTime.fromISO(dateTime).toLocaleString({
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
     })
   }
 
@@ -399,10 +391,7 @@ export function ShiftDetailsDrawer({
             <DialogDescription>
               {selectedShift && (
                 <>
-                  Activities for shift on{" "}
-                  {formatDate(
-                    DateTime.fromISO(selectedShift.startTime).toJSDate()
-                  )}
+                  Activities for shift on {formatDate(selectedShift.startTime)}
                 </>
               )}
             </DialogDescription>

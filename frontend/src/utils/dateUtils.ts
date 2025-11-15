@@ -22,6 +22,16 @@ export function formatDateTime(
 }
 
 /**
+ * Format a date (Date object or string) for display (normalized to UTC)
+ * Formats as "MMM d, yyyy" (e.g., "Jan 15, 2024")
+ */
+export function formatDate(date: Date | string): string {
+  const dateTime =
+    date instanceof Date ? DateTime.fromJSDate(date) : DateTime.fromISO(date)
+  return dateTime.setZone("utc").startOf("day").toFormat("MMM d, yyyy")
+}
+
+/**
  * Format a DateTime for display as a relative time (e.g., "2 hours ago")
  */
 export function formatRelativeTime(dateTime: DateTime): string {

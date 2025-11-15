@@ -33,20 +33,13 @@ import {
   AccordionTrigger,
 } from "./ui/accordion"
 import NumberFlow from "@number-flow/react"
+import { formatDate } from "@/utils/dateUtils"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "GHS",
   }).format(amount)
-}
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
 }
 
 type VehicleDateExpenseGroup = {
@@ -106,11 +99,12 @@ function VehicleDateExpenseGroupCard({
                             </Badge>
                           )}
                         </div>
-                        {expense.category === "other" && expense.description && (
-                          <div className="text-sm text-muted-foreground">
-                            {expense.description}
-                          </div>
-                        )}
+                        {expense.category === "other" &&
+                          expense.description && (
+                            <div className="text-sm text-muted-foreground">
+                              {expense.description}
+                            </div>
+                          )}
                         <div className="text-xs text-muted-foreground">
                           {expense.user && (
                             <span>
