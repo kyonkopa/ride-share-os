@@ -1,5 +1,9 @@
 import { ExpenseScreen } from "../components/ExpenseScreen"
 
 export default function ExpenseScreenPage() {
-  return <ExpenseScreen />
+  return (
+    <div className="mb-[60px]">
+      <ExpenseScreen />
+    </div>
+  )
 }
