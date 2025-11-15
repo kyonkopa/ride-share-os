@@ -1,0 +1,17 @@
+query CurrentUserQuery {
+  currentUser {
+    id
+    globalId
+    email
+    firstName
+    lastName
+    fullName
+    createdAt
+    updatedAt
+    signInCount
+    permissions {
+      id
+      slug
+    }
+  }
+}

@@ -12,6 +12,7 @@ interface AuthState {
   setLoading: (loading: boolean) => void
   clearStorage: () => void
   saveAuthData: (user: User, tokens: AuthToken) => void
+  updateUserFromQuery: (user: User | null) => void
 }
 
 const initialState = {
@@ -34,6 +35,19 @@ export const useAuthStore = create<AuthState>()(
           tokens,
           isAuthenticated: true,
         }),
+      updateUserFromQuery: (user: User | null) => {
+        if (user) {
+          set({
+            user,
+            isAuthenticated: true,
+          })
+        } else {
+          set({
+            user: null,
+            isAuthenticated: false,
+          })
+        }
+      },
       clearStorage: () => {
         set({
           user: null,
