@@ -38,6 +38,15 @@ class Expense < ApplicationRecord
   validates :description, presence: true, if: -> { category == "other" }
   validate :user_or_vehicle_present
 
+  # validate uniqueness of category and date for a given vehicle
+  validate :unique_category_and_date_for_vehicle
+
+  def unique_category_and_date_for_vehicle
+    if vehicle_id.present? && Expense.exists?(category:, date:, vehicle_id:)
+      errors.add(:base, "An expense with this category and date already exists for this vehicle")
+    end
+  end
+
   # Convert amount from dollars (Float) to cents (Integer) when setting
   def amount=(value)
     if value.is_a?(Float) || value.is_a?(BigDecimal)

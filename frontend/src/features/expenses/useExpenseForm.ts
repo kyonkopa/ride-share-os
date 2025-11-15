@@ -11,7 +11,7 @@ import { useNotification } from "@/hooks/useNotification"
 import type { ExpensesQueryQueryVariables } from "../../codegen/graphql"
 
 export interface ExpenseFormValues {
-  amount: number
+  amount: number | null
   category: ExpenseCategory
   date: Date
   vehicleId?: string
@@ -31,7 +31,11 @@ export const useExpenseForm = ({
 }: UseExpenseFormOptions) => {
   const { addSuccess } = useNotification()
 
-  const { handleCreateExpense, loading: creating } = useCreateExpenseMutation({
+  const {
+    handleCreateExpense,
+    loading: creating,
+    errors: mutationErrors,
+  } = useCreateExpenseMutation({
     onSuccess: () => {
       addSuccess("Expense created successfully")
       onSuccess?.()
@@ -68,7 +72,7 @@ export const useExpenseForm = ({
 
   const form = useForm<ExpenseFormValues>({
     defaultValues: {
-      amount: 0,
+      amount: null,
       category: ExpenseCategoryEnum.Other,
       date: new Date(),
       description: "",
@@ -82,7 +86,7 @@ export const useExpenseForm = ({
   useEffect(() => {
     if (!open) {
       reset({
-        amount: 0,
+        amount: null,
         date: new Date(),
         description: "",
       })
@@ -91,7 +95,7 @@ export const useExpenseForm = ({
 
   const onSubmitForm = async (data: ExpenseFormValues) => {
     await handleCreateExpense({
-      amount: data.amount,
+      amount: data.amount ?? 0,
       category: data.category,
       date: data.date,
       vehicleId: data.vehicleId,
@@ -103,5 +107,6 @@ export const useExpenseForm = ({
     ...form,
     onSubmitForm,
     loading: creating,
+    mutationErrors,
   }
 }

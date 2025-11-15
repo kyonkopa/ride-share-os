@@ -30,6 +30,7 @@ import { useExpenseForm } from "@/features/expenses/useExpenseForm"
 import { ChevronDownIcon } from "lucide-react"
 import { Calendar } from "./ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { InlineErrorAlert } from "./ui/inline-error-alert"
 
 interface ExpenseFormProps {
   vehicles: VehicleFragmentFragment[]
@@ -56,6 +57,7 @@ export function ExpenseForm({
     watch,
     onSubmitForm,
     loading,
+    mutationErrors,
   } = useExpenseForm({
     open,
     onSuccess: () => {
@@ -187,6 +189,7 @@ export function ExpenseForm({
                         }
                         setDatePickerOpen(false)
                       }}
+                      timeZone="UTC"
                     />
                   </PopoverContent>
                 </Popover>
@@ -250,6 +253,13 @@ export function ExpenseForm({
               }}
             />
           </div>
+
+          {/* Mutation errors */}
+          {mutationErrors &&
+            mutationErrors.length > 0 &&
+            mutationErrors.map((error) => (
+              <InlineErrorAlert key={error.message} message={error.message} />
+            ))}
 
           {/* Submit Button */}
           <Button
