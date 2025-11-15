@@ -10,5 +10,9 @@ module Types
     field :source, Types::Enums::RevenueSourceEnum, null: false
     field :total_profit, Float, null: false
     field :total_revenue, Float, null: false
+
+    def vehicle
+      object.vehicle || object.shift_assignment.vehicle
+    end
   end
 end
