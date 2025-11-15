@@ -121,6 +121,27 @@ class UserService
       User.where(deleted_at: nil)
     end
 
+    # Add a permission to a user by permission slug
+    # @param user [User] The user to add the permission to
+    # @param permission_slug [String] The slug of the permission to add
+    # @return [UserPermission] The created user permission record
+    # @raise [StandardError] If the permission doesn't exist or if attachment fails
+    def add_permission(user:, permission_slug:)
+      raise StandardError, "User is required" unless user&.persisted?
+
+      permission = Permission.find_by(slug: permission_slug)
+      raise StandardError, "Permission with slug '#{permission_slug}' not found" if permission.nil?
+
+      # Check if permission is already attached (idempotent - return existing if present)
+      existing_user_permission = user.user_permissions.find_by(permission_id: permission.id)
+      return existing_user_permission if existing_user_permission.present?
+
+      # Create the user permission association
+      user.user_permissions.create!(permission:)
+    rescue ActiveRecord::RecordInvalid => e
+      raise StandardError, "Failed to add permission: #{e.message}"
+    end
+
     private
 
     # Generate a secure random password

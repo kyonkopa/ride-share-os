@@ -4,24 +4,10 @@
 #
 
 # Seed permissions
-permissions_data = [
-  { name: "View Drivers", slug: "driver_read_access" },
-  { name: "Manage Drivers", slug: "driver_write_access" },
-  { name: "View Vehicles", slug: "vehicle_read_access" },
-  { name: "Manage Vehicles", slug: "vehicle_write_access" },
-  { name: "View Shifts", slug: "shift_read_access" },
-  { name: "Manage Shifts", slug: "shift_write_access" },
-  { name: "View Revenue", slug: "revenue_read_access" },
-  { name: "Manage Revenue", slug: "revenue_write_access" },
-  { name: "View Expenses", slug: "expense_read_access" },
-  { name: "Manage Expenses", slug: "expense_write_access" },
-  { name: "View Users", slug: "user_read_access" },
-  { name: "Manage Users", slug: "user_write_access" }
-]
-
+permissions_data = JSON.parse(File.read("db/data/permissions.json"))
 permissions_data.each do |permission_data|
-  Permission.find_or_create_by!(slug: permission_data[:slug]) do |p|
-    p.name = permission_data[:name]
+  Permission.find_or_create_by!(slug: permission_data["slug"]) do |p|
+    p.name = permission_data["name"]
   end
 end
 

@@ -13,14 +13,12 @@ import { useTodaysShiftEvents } from "@/features/todays-shift-events/useTodaysSh
 import { useAuthStore } from "@/stores/AuthStore"
 import { parseGraphQLDateTime } from "@/utils/dateUtils"
 import type { ShiftAssignment } from "@/codegen/graphql"
-
 interface HomeScreenProps {
   children?: React.ReactNode
 }
 
 export function HomeScreen({ children }: HomeScreenProps) {
   const { vehicles } = useVehicles()
-
   const { currentShift } = useShift()
   const [showClockIn, setShowClockIn] = useState(false)
 

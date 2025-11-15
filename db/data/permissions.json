@@ -1,0 +1,16 @@
+[
+  { "name": "View Drivers", "slug": "driver_read_access" },
+  { "name": "Manage Drivers", "slug": "driver_write_access" },
+  { "name": "View Vehicles", "slug": "vehicle_read_access" },
+  { "name": "Manage Vehicles", "slug": "vehicle_write_access" },
+  { "name": "View Shifts", "slug": "shift_read_access" },
+  { "name": "Manage Shifts", "slug": "shift_write_access" },
+  { "name": "View Revenue", "slug": "revenue_read_access" },
+  { "name": "Manage Revenue", "slug": "revenue_write_access" },
+  { "name": "View Expenses", "slug": "expense_read_access" },
+  { "name": "Manage Expenses", "slug": "expense_write_access" },
+  { "name": "View Users", "slug": "user_read_access" },
+  { "name": "Manage Users", "slug": "user_write_access" },
+  { "name": "View Payroll", "slug": "payroll_read_access" },
+  { "name": "Manage Payroll", "slug": "payroll_write_access" }
+]

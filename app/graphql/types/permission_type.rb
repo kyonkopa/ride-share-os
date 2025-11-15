@@ -5,6 +5,6 @@ module Types
     description "A permission in the system"
 
     field :name, String, null: false
-    field :slug, String, null: false
+    field :slug, Types::Enums::PermissionEnum, null: false
   end
 end

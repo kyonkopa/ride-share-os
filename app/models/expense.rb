@@ -39,9 +39,11 @@ class Expense < ApplicationRecord
   validate :user_or_vehicle_present
 
   # validate uniqueness of category and date for a given vehicle
-  validate :unique_category_and_date_for_vehicle
+  validate :unique_category_and_date_for_vehicle, on: :create
 
   def unique_category_and_date_for_vehicle
+    return if category == "other"
+
     if vehicle_id.present? && Expense.exists?(category:, date:, vehicle_id:)
       errors.add(:base, "An expense with this category and date already exists for this vehicle")
     end

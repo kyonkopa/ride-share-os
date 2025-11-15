@@ -3,6 +3,8 @@
 module Types
   class QueryType < Types::BaseObject
     field :current_shift, resolver: Queries::CurrentShiftQuery, description: "Get the current shift"
+    field :payroll, resolver: Queries::PayrollQuery, description: "Get all drivers with their shift assignments for payroll calculation"
+
     field :current_user, resolver: Queries::CurrentUserQuery, description: "Get the current authenticated user"
     field :drivers, resolver: Queries::DriversQuery, description: "Get all drivers in the system"
     field :expense_stats, resolver: Queries::ExpenseStatsQuery, description: "Get expense statistics within a date range"

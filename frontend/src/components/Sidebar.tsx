@@ -4,7 +4,6 @@ import {
   Home,
   Calendar,
   DollarSign,
-  MapPin,
   Receipt,
   User,
   Settings,
@@ -12,6 +11,7 @@ import {
   Menu,
   X,
   Car,
+  Wallet,
 } from "lucide-react"
 import { useAuthStore } from "@/stores/AuthStore"
 import { Link } from "react-router-dom"
@@ -46,13 +46,6 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       enabled: true,
     },
     {
-      id: "charging",
-      label: "Charging Stations",
-      icon: MapPin,
-      path: "/charging",
-      enabled: false,
-    },
-    {
       id: "expenses",
       label: "Expenses",
       icon: Receipt,
@@ -64,6 +57,13 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       label: "Vehicles",
       icon: Car,
       path: "/vehicles",
+      enabled: true,
+    },
+    {
+      id: "payroll",
+      label: "Payroll",
+      icon: Wallet,
+      path: "/payroll",
       enabled: true,
     },
     {
@@ -98,7 +98,7 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
     if (window.innerWidth < 768) {
       setIsCollapsed(true)
     }
-    if (path === "/logout") {
+    if (path === "logout") {
       clearStorage()
     }
   }

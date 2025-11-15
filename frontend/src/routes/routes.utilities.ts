@@ -8,6 +8,7 @@ export const Routes = {
   vehicles: "/vehicles",
   revenue: "/revenue",
   expenses: "/expenses",
+  payroll: "/payroll",
   settings: "/settings",
 
   // Admin routes (if needed in the future)
