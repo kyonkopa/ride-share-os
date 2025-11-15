@@ -11,7 +11,7 @@
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  source               :integer         not null default(0)
-#  vehicle_id           :integer        
+#  vehicle_id           :integer
 #
 # Indexes
 #
@@ -51,16 +51,15 @@ class RevenueRecord < ApplicationRecord
   private
 
   def unique_driver_source_per_day
+    return if source == :off_trip
     return unless shift_assignment_id.present?
 
     # Use the shift assignment's start_time date for uniqueness check
-    shift_date = shift_assignment.start_time.to_date
+    shift_date = shift_assignment.start_time
     existing_record = RevenueRecord
-                      .joins(:shift_assignment)
                       .where(driver_id:)
                       .where(source:)
-                      .where("DATE(shift_assignments.start_time) = ?", shift_date)
-                      .where.not(id:)
+                      .where(created_at: shift_date.beginning_of_day...shift_date.end_of_day)
 
     if existing_record.exists?
       errors.add(:base, "A revenue record already exists for this driver, source (#{source}), and date")
