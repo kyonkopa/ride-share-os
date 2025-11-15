@@ -1,12 +1,4 @@
 module Types
-  module Enums
-    class RevenueSourceEnum < Types::BaseEnum
-      value "bolt", "Bolt"
-      value "uber", "Uber"
-      value "off_trip", "Off trip"
-    end
-  end
-
   class RevenueRecordType < Types::BaseObject
     include Types::Concerns::BaseActiveRecordFields
 

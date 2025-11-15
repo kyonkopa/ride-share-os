@@ -15,19 +15,20 @@ module Mutations
         error!("Driver not found", code: "NOT_FOUND", field: "driver_id")
       end
 
+      vehicle = Vehicle.find_by_global_id(input[:vehicle_id])
+
+      if vehicle.nil?
+        error!("Vehicle not found", code: "NOT_FOUND", field: "vehicle_id")
+      end
+
       # Find shift assignment for the driver on the given date
-      date = Date.parse(input[:date])
+      # GraphQL::Types::ISO8601Date may return a Date object or a string
+      date = input[:date].is_a?(Date) ? input[:date] : Date.parse(input[:date])
       date_range = date.beginning_of_day..date.end_of_day
       shift_assignment = driver.shift_assignments.where(start_time: date_range).first
 
       if shift_assignment.nil?
         error!("No shift assignment found for this driver on the given date, ensure the driver worked on that day", code: "NOT_FOUND", field: "date")
-      end
-
-      vehicle = Vehicle.find_by_global_id(input[:vehicle_id])
-
-      if vehicle.nil?
-        error!("Vehicle not found", code: "NOT_FOUND", field: "vehicle_id")
       end
 
       vehicle_id = vehicle.id
@@ -39,10 +40,15 @@ module Mutations
         total_revenue: input[:total_revenue],
         total_profit: 0.0,
         source: input[:source],
-        reconciled: input[:reconciled] || false
+        reconciled: input[:reconciled] || false,
+        created_at: date.end_of_day
       }
 
-      revenue_record = RevenueRecord.create!(revenue_params)
+      begin
+        revenue_record = RevenueRecord.create!(revenue_params)
+      rescue ActiveRecord::RecordInvalid => e
+        error!("Validation failed: #{e.message}", code: "VALIDATION_ERROR", field: "base")
+      end
 
       { revenue_record: }
     end
