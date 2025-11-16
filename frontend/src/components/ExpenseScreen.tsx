@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from "react"
 import { DateTime } from "luxon"
+import { useGroupedExpenses } from "@/features/expenses/useGroupedExpenses"
 import { useExpenses } from "@/features/expenses/useExpenses"
-import { useExpenseStats } from "@/features/expenses/useExpenseStats"
+import { ExpenseBreakdownView } from "@/features/expenses/ExpenseBreakdownView"
 import { useVehicles } from "@/features/clock-in/useVehicles"
 import { Spinner } from "./ui/spinner"
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
-import { AlertCircleIcon, Receipt, Plus } from "lucide-react"
+import { AlertCircleIcon, Receipt, Plus, BarChart3 } from "lucide-react"
 import {
   Empty,
   EmptyDescription,
@@ -24,7 +25,7 @@ import { Badge } from "./ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs"
 import { Button } from "./ui/button"
 import { ExpenseForm } from "./ExpenseForm"
-import type { Expense } from "@/codegen/graphql"
+import type { GroupedExpensesQueryQuery, Expense } from "@/codegen/graphql"
 import { Paginator } from "./pagination/paginator"
 import {
   Accordion,
@@ -42,14 +43,9 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-type VehicleDateExpenseGroup = {
-  vehicleId: string
-  vehicleName: string
-  date: string
-  totalAmount: number
-  expenseCount: number
-  expenses: Expense[]
-}
+type VehicleDateExpenseGroup = NonNullable<
+  GroupedExpensesQueryQuery["groupedExpenses"]
+>["items"][number]
 
 interface VehicleDateExpenseGroupCardProps {
   group: VehicleDateExpenseGroup
@@ -147,9 +143,56 @@ function ExpensesEmpty() {
   )
 }
 
+interface ExpenseCardProps {
+  expense: Expense
+}
+
+function ExpenseCard({ expense }: ExpenseCardProps) {
+  return (
+    <Card className="gap-2">
+      <CardContent>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="font-medium capitalize">
+                {expense.category.replace(/_/g, " ")}
+              </span>
+              {expense.receiptKey && (
+                <Badge variant="outline" className="text-xs">
+                  Receipt
+                </Badge>
+              )}
+            </div>
+            <CardDescription>
+              {expense.vehicle?.displayName || "No Vehicle"} •{" "}
+              {formatDate(expense.date)}
+            </CardDescription>
+            {expense.category === "other" && expense.description && (
+              <div className="text-sm text-muted-foreground">
+                {expense.description}
+              </div>
+            )}
+            <div className="text-xs text-muted-foreground">
+              {expense.user && (
+                <span>
+                  Added by {expense.user.firstName} {expense.user.lastName}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xl font-bold">
+              {formatCurrency(expense.amount)}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 type ExpenseStats = {
   totalAmount: number
-  count: number
   categoryTotals: Record<string, number>
 }
 
@@ -157,12 +200,14 @@ interface ExpenseStatsBarProps {
   stats: ExpenseStats | null | undefined
   loading: boolean
   periodLabel: string
+  onBreakdownClick: () => void
 }
 
 function ExpenseStatsBar({
   stats,
   loading,
   periodLabel,
+  onBreakdownClick,
 }: ExpenseStatsBarProps) {
   const [animatedValue, setAnimatedValue] = useState(0)
 
@@ -204,6 +249,10 @@ function ExpenseStatsBar({
             <span className="mr-1">GHS</span>
             <NumberFlow value={animatedValue} />
           </p>
+          <Button variant="outline" onClick={onBreakdownClick}>
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Breakdown
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -212,9 +261,10 @@ function ExpenseStatsBar({
 
 export function ExpenseScreen() {
   const [activeTab, setActiveTab] = useState<
-    "this-week" | "this-month" | "all-time"
+    "this-week" | "this-month" | "last-month" | "all-time"
   >("this-week")
   const [showAddExpense, setShowAddExpense] = useState(false)
+  const [showBreakdown, setShowBreakdown] = useState(false)
   const { vehicles } = useVehicles()
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -225,7 +275,9 @@ export function ExpenseScreen() {
 
   // Reset to page 1 when tab changes
   const handleTabChange = (value: string) => {
-    setActiveTab(value as "this-week" | "this-month" | "all-time")
+    setActiveTab(
+      value as "this-week" | "this-month" | "last-month" | "all-time"
+    )
     setCurrentPage(1)
   }
 
@@ -251,6 +303,17 @@ export function ExpenseScreen() {
     }
   }, [])
 
+  // Calculate last month start and end dates
+  const lastMonthDates = useMemo(() => {
+    const now = DateTime.now()
+    const lastMonthStart = now.minus({ months: 1 }).startOf("month")
+    const lastMonthEnd = now.minus({ months: 1 }).endOf("month")
+    return {
+      start: lastMonthStart.toISODate(),
+      end: lastMonthEnd.toISODate(),
+    }
+  }, [])
+
   // Determine date parameters based on active tab
   const dateParams = useMemo(() => {
     if (activeTab === "this-week") {
@@ -265,71 +328,67 @@ export function ExpenseScreen() {
         endDate: monthDates.end,
       }
     }
+    if (activeTab === "last-month") {
+      return {
+        startDate: lastMonthDates.start,
+        endDate: lastMonthDates.end,
+      }
+    }
     return {
       startDate: undefined,
       endDate: undefined,
     }
-  }, [activeTab, weekDates, monthDates])
+  }, [activeTab, weekDates, monthDates, lastMonthDates])
 
-  const { expenses, loading, error, pagination } = useExpenses({
-    startDate: dateParams.startDate,
-    endDate: dateParams.endDate,
+  // Use grouped expenses for this-week and this-month tabs
+  const {
+    groups,
+    loading: groupedLoading,
+    error: groupedError,
+    pagination: groupedPagination,
+    stats,
+  } = useGroupedExpenses({
+    startDate: dateParams.startDate!,
+    endDate: dateParams.endDate!,
     pagination: {
       page: currentPage,
       perPage: itemsPerPage,
     },
+    skip:
+      activeTab === "all-time" || !dateParams.startDate || !dateParams.endDate,
   })
 
-  const { stats, loading: statsLoading } = useExpenseStats(
-    dateParams.startDate,
-    dateParams.endDate
-  )
+  // Use regular expenses query for all-time tab
+  const {
+    expenses,
+    loading: expensesLoading,
+    error: expensesError,
+    pagination: expensesPagination,
+  } = useExpenses({
+    pagination: {
+      page: currentPage,
+      perPage: itemsPerPage,
+    },
+    skip: activeTab !== "all-time",
+  })
 
-  // Merge expenses by vehicle ID and date together
-  const mergedExpenses = useMemo(() => {
-    const groupMap = new Map<string, VehicleDateExpenseGroup>()
+  // Determine which loading/error/pagination to use based on active tab
+  const loading = activeTab === "all-time" ? expensesLoading : groupedLoading
+  const error = activeTab === "all-time" ? expensesError : groupedError
+  const pagination =
+    activeTab === "all-time" ? expensesPagination : groupedPagination
 
-    expenses.forEach((expense) => {
-      // Handle expenses without a vehicle - group them separately
-      const vehicleId = expense.vehicle?.id || "no-vehicle"
-      const vehicleName = expense.vehicle?.displayName || "No Vehicle"
-      const expenseDate = expense.date
-
-      // Create a unique key for vehicle + date combination
-      const groupKey = `${vehicleId}-${expenseDate}`
-
-      let group = groupMap.get(groupKey)
-
-      if (!group) {
-        // Create new vehicle+date group
-        group = {
-          vehicleId,
-          vehicleName,
-          date: expenseDate,
-          totalAmount: 0,
-          expenseCount: 0,
-          expenses: [],
-        }
-        groupMap.set(groupKey, group)
-      }
-
-      // Update totals and add expense
-      group.totalAmount += expense.amount
-      group.expenseCount += 1
-      group.expenses.push(expense)
-    })
-
-    // Sort groups by date descending, then by vehicle name, then by total amount
-    return Array.from(groupMap.values()).sort((a, b) => {
-      const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime()
-      if (dateDiff !== 0) return dateDiff
-
-      const nameDiff = a.vehicleName.localeCompare(b.vehicleName)
-      if (nameDiff !== 0) return nameDiff
-
-      return b.totalAmount - a.totalAmount
-    })
-  }, [expenses])
+  // Show breakdown view if requested
+  if (showBreakdown) {
+    return (
+      <ExpenseBreakdownView
+        stats={stats}
+        startDate={dateParams.startDate}
+        endDate={dateParams.endDate}
+        onBack={() => setShowBreakdown(false)}
+      />
+    )
+  }
 
   if (loading) {
     return (
@@ -371,15 +430,20 @@ export function ExpenseScreen() {
       </div>
 
       {/* Stats Bar */}
-      {(activeTab === "this-week" || activeTab === "this-month") && (
+      {(activeTab === "this-week" ||
+        activeTab === "this-month" ||
+        activeTab === "last-month") && (
         <ExpenseStatsBar
           stats={stats}
-          loading={statsLoading}
+          loading={loading}
           periodLabel={
             activeTab === "this-week"
               ? "Expenses for this week"
-              : "Expenses for this month"
+              : activeTab === "this-month"
+                ? "Expenses for this month"
+                : "Expenses for last month"
           }
+          onBreakdownClick={() => setShowBreakdown(true)}
         />
       )}
 
@@ -388,6 +452,7 @@ export function ExpenseScreen() {
         <TabsList>
           <TabsTrigger value="this-week">This Week</TabsTrigger>
           <TabsTrigger value="this-month">This Month</TabsTrigger>
+          <TabsTrigger value="last-month">Last Month</TabsTrigger>
           <TabsTrigger value="all-time">All Time</TabsTrigger>
         </TabsList>
         <TabsContent value="this-week" className="mt-3">
@@ -398,11 +463,11 @@ export function ExpenseScreen() {
             </p>
           )}
           {/* Expenses List */}
-          {mergedExpenses.length === 0 ? (
+          {groups.length === 0 ? (
             <ExpensesEmpty />
           ) : (
             <div className="flex flex-col gap-4">
-              {mergedExpenses.map((group) => (
+              {groups.map((group) => (
                 <VehicleDateExpenseGroupCard
                   key={`${group.vehicleId}-${group.date}`}
                   group={group}
@@ -430,11 +495,43 @@ export function ExpenseScreen() {
             </p>
           )}
           {/* Expenses List */}
-          {mergedExpenses.length === 0 ? (
+          {groups.length === 0 ? (
             <ExpensesEmpty />
           ) : (
             <div className="flex flex-col gap-4">
-              {mergedExpenses.map((group) => (
+              {groups.map((group) => (
+                <VehicleDateExpenseGroupCard
+                  key={`${group.vehicleId}-${group.date}`}
+                  group={group}
+                />
+              ))}
+              {pagination &&
+                pagination.pageCount != null &&
+                pagination.pageCount > 1 && (
+                  <Paginator
+                    currentPage={currentPage}
+                    totalPages={pagination.pageCount}
+                    onPageChange={(page) => {
+                      setCurrentPage(page)
+                    }}
+                  />
+                )}
+            </div>
+          )}
+        </TabsContent>
+        <TabsContent value="last-month" className="mt-3">
+          {dateParams.startDate && dateParams.endDate && (
+            <p className="text-sm text-muted-foreground mb-4">
+              Showing expenses for {formatDate(dateParams.startDate)} to{" "}
+              {formatDate(dateParams.endDate)}
+            </p>
+          )}
+          {/* Expenses List */}
+          {groups.length === 0 ? (
+            <ExpensesEmpty />
+          ) : (
+            <div className="flex flex-col gap-4">
+              {groups.map((group) => (
                 <VehicleDateExpenseGroupCard
                   key={`${group.vehicleId}-${group.date}`}
                   group={group}
@@ -459,21 +556,18 @@ export function ExpenseScreen() {
             Showing all expenses
           </p>
           {/* Expenses List */}
-          {mergedExpenses.length === 0 ? (
+          {expenses.length === 0 ? (
             <ExpensesEmpty />
           ) : (
             <div className="flex flex-col gap-4">
-              {mergedExpenses.map((group) => (
-                <VehicleDateExpenseGroupCard
-                  key={`${group.vehicleId}-${group.date}`}
-                  group={group}
-                />
+              {expenses.map((expense) => (
+                <ExpenseCard key={expense.id} expense={expense} />
               ))}
               {pagination &&
                 pagination.pageCount != null &&
                 pagination.pageCount > 1 && (
                   <Paginator
-                    currentPage={pagination.currentPage || 1}
+                    currentPage={currentPage}
                     totalPages={pagination.pageCount}
                     onPageChange={(page) => {
                       setCurrentPage(page)
@@ -490,14 +584,28 @@ export function ExpenseScreen() {
         open={showAddExpense}
         onOpenChange={setShowAddExpense}
         vehicles={vehicles}
-        expensesQueryVariables={{
-          startDate: dateParams.startDate,
-          endDate: dateParams.endDate,
-          pagination: {
-            page: currentPage,
-            perPage: itemsPerPage,
-          },
-        }}
+        groupedExpensesQueryVariables={
+          activeTab === "all-time"
+            ? undefined
+            : {
+                startDate: dateParams.startDate,
+                endDate: dateParams.endDate,
+                pagination: {
+                  page: currentPage,
+                  perPage: itemsPerPage,
+                },
+              }
+        }
+        expensesQueryVariables={
+          activeTab === "all-time"
+            ? {
+                pagination: {
+                  page: currentPage,
+                  perPage: itemsPerPage,
+                },
+              }
+            : undefined
+        }
       />
 
       {/* Floating Add Expense Button - Only on small screens */}

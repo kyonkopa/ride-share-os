@@ -1,7 +1,0 @@
-query ExpenseStatsQuery($startDate: ISO8601Date, $endDate: ISO8601Date) {
-  expenseStats(startDate: $startDate, endDate: $endDate) {
-    totalAmount
-    count
-    categoryTotals
-  }
-}

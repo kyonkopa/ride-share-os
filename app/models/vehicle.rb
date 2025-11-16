@@ -12,7 +12,7 @@
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  make                 :string          not null
-#  vehicle_image_path   :string         
+#  vehicle_image_path   :string
 #
 # Indexes
 #
@@ -41,5 +41,9 @@ class Vehicle < ApplicationRecord
 
   def in_use?
     shift_assignments.active.any?
+  end
+
+  def display_name
+    "#{make} #{model} #{license_plate}"
   end
 end

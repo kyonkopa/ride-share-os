@@ -17,10 +17,6 @@ module Types
     field :vehicle_image_url, String, null: true
     field :year_of_manufacture, Integer, null: false
 
-    def display_name
-      "#{object.make} #{object.model} #{object.license_plate}"
-    end
-
     def vehicle_image_url
       return nil if object.vehicle_image_path.blank?
       # Return relative path from public directory

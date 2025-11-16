@@ -3,11 +3,12 @@ import { useMutation } from "../../hooks/useMutation"
 import {
   CreateExpenseMutationDocument,
   ExpensesQueryDocument,
-  ExpenseStatsQueryDocument,
+  GroupedExpensesQueryDocument,
   type CreateExpenseInput,
   type CreateExpenseMutationMutation,
   type CreateExpenseMutationMutationVariables,
   type ExpensesQueryQueryVariables,
+  type GroupedExpensesQueryQueryVariables,
   type Error,
 } from "../../codegen/graphql"
 
@@ -24,12 +25,14 @@ interface UseCreateExpenseMutationOptions {
   onSuccess?: (data: CreateExpenseMutationMutation) => void
   onError?: (errors: Error[]) => void
   expensesQueryVariables?: ExpensesQueryQueryVariables
+  groupedExpensesQueryVariables?: GroupedExpensesQueryQueryVariables
 }
 
 export const useCreateExpenseMutation = ({
   onSuccess,
   onError,
   expensesQueryVariables,
+  groupedExpensesQueryVariables,
 }: UseCreateExpenseMutationOptions = {}) => {
   const [errors, setErrors] = useState<Error[]>([])
 
@@ -51,12 +54,9 @@ export const useCreateExpenseMutation = ({
         ...(expensesQueryVariables && { variables: expensesQueryVariables }),
       },
       {
-        query: ExpenseStatsQueryDocument,
-        ...(expensesQueryVariables && {
-          variables: {
-            startDate: expensesQueryVariables.startDate,
-            endDate: expensesQueryVariables.endDate,
-          },
+        query: GroupedExpensesQueryDocument,
+        ...(groupedExpensesQueryVariables && {
+          variables: groupedExpensesQueryVariables,
         }),
       },
     ],

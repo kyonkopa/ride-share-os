@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_15_125616) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_16_143513) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -62,6 +62,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_15_125616) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.string "tier", default: "tier_1", null: false
     t.index ["phone_number"], name: "index_drivers_on_phone_number", unique: true
     t.index ["user_id"], name: "index_drivers_on_user_id"
     t.index ["verified"], name: "index_drivers_on_verified"

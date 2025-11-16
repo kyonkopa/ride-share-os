@@ -21,6 +21,7 @@ import { Spinner } from "./ui/spinner"
 import type {
   VehicleFragmentFragment,
   ExpensesQueryQueryVariables,
+  GroupedExpensesQueryQueryVariables,
 } from "@/codegen/graphql"
 import {
   ExpenseCategoryEnum,
@@ -38,6 +39,7 @@ interface ExpenseFormProps {
   open: boolean
   onSuccess?: () => void
   expensesQueryVariables?: ExpensesQueryQueryVariables
+  groupedExpensesQueryVariables?: GroupedExpensesQueryQueryVariables
 }
 
 export function ExpenseForm({
@@ -46,6 +48,7 @@ export function ExpenseForm({
   onOpenChange,
   onSuccess,
   expensesQueryVariables,
+  groupedExpensesQueryVariables,
 }: ExpenseFormProps) {
   const [datePickerOpen, setDatePickerOpen] = useState(false)
 
@@ -65,6 +68,7 @@ export function ExpenseForm({
       onSuccess?.()
     },
     expensesQueryVariables,
+    groupedExpensesQueryVariables,
   })
 
   return (

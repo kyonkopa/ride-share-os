@@ -10,6 +10,7 @@
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  user_id              :integer         not null
+#  tier                 :string          not null default(tier_1)
 #
 # Indexes
 #

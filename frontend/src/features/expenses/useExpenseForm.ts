@@ -8,7 +8,10 @@ import {
 } from "./expenseCategoryEnum"
 import { useCreateExpenseMutation } from "./useCreateExpenseMutation"
 import { useNotification } from "@/hooks/useNotification"
-import type { ExpensesQueryQueryVariables } from "../../codegen/graphql"
+import type {
+  ExpensesQueryQueryVariables,
+  GroupedExpensesQueryQueryVariables,
+} from "../../codegen/graphql"
 
 export interface ExpenseFormValues {
   amount: number | null
@@ -22,12 +25,14 @@ interface UseExpenseFormOptions {
   open: boolean
   onSuccess?: () => void
   expensesQueryVariables?: ExpensesQueryQueryVariables
+  groupedExpensesQueryVariables?: GroupedExpensesQueryQueryVariables
 }
 
 export const useExpenseForm = ({
   open,
   onSuccess,
   expensesQueryVariables,
+  groupedExpensesQueryVariables,
 }: UseExpenseFormOptions) => {
   const { addSuccess } = useNotification()
 
@@ -41,6 +46,7 @@ export const useExpenseForm = ({
       onSuccess?.()
     },
     expensesQueryVariables,
+    groupedExpensesQueryVariables,
   })
 
   const validation = yup.object({

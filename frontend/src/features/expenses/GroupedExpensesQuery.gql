@@ -1,0 +1,52 @@
+query GroupedExpensesQuery(
+  $startDate: ISO8601Date!
+  $endDate: ISO8601Date!
+  $pagination: PaginationInput!
+) {
+  groupedExpenses(
+    startDate: $startDate
+    endDate: $endDate
+    pagination: $pagination
+  ) {
+    items {
+      vehicleId
+      vehicleName
+      date
+      totalAmount
+      expenseCount
+      expenses {
+        id
+        globalId
+        amount
+        category
+        date
+        receiptKey
+        description
+        createdAt
+        updatedAt
+        user {
+          id
+          firstName
+          lastName
+          email
+        }
+        vehicle {
+          id
+          displayName
+        }
+      }
+    }
+    pagination {
+      currentPage
+      firstPage
+      lastPage
+      nextPage
+      pageCount
+      pageSize
+      prevPage
+      totalSize
+    }
+    totalAmount
+    categoryTotals
+  }
+}

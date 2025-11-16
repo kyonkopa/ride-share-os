@@ -69,19 +69,16 @@ export const useCreateRevenueRecordMutation = ({
   ) => {
     setErrors([])
 
-    const input: CreateRevenueRecordInput & { vehicleId?: string } = {
+    const input: CreateRevenueRecordInput = {
       driverId: data.driverId,
       date: data.date.toISOString().split("T")[0],
       totalRevenue: parseFloat(data.totalRevenue.toString()),
       source: data.source as CreateRevenueRecordInput["source"], // Type will be updated after schema regeneration
+      vehicleId: data.vehicleId || "",
     }
 
     if (data.reconciled !== undefined) {
       input.reconciled = data.reconciled
-    }
-
-    if (data.vehicleId) {
-      input.vehicleId = data.vehicleId
     }
 
     await createRevenueRecord({
