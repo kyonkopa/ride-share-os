@@ -28,14 +28,12 @@ RSpec.describe Queries::CurrentUserQuery do
         .with_context(context)
         .with_no_errors
         .and_return({
-          currentUser: {
-            id: user.global_id,
-            globalId: user.global_id,
-            email: user.email,
-            firstName: user.first_name,
-            lastName: user.last_name,
-            fullName: user.full_name
-          }
+          id: user.global_id,
+          globalId: user.global_id,
+          email: user.email,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          fullName: user.full_name
         }.with_indifferent_access)
     end
   end
@@ -46,10 +44,7 @@ RSpec.describe Queries::CurrentUserQuery do
     it 'returns nil' do
       expect(query).to execute_as_graphql
         .with_context(context)
-        .with_no_errors
-        .and_return({
-          currentUser: nil
-        }.with_indifferent_access)
+        .with_errors(["Authentication is required"])
     end
   end
 end

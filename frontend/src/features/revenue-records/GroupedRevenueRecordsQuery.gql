@@ -1,0 +1,59 @@
+query GroupedRevenueRecordsQuery(
+  $startDate: ISO8601Date
+  $endDate: ISO8601Date
+  $pagination: PaginationInput!
+) {
+  groupedRevenueRecords(
+    startDate: $startDate
+    endDate: $endDate
+    pagination: $pagination
+  ) {
+    items {
+      driverId
+      driverName
+      date
+      totalRevenue
+      totalProfit
+      allReconciled
+      revenueCount
+      vehicleName
+      sourceBreakdown
+      revenueRecords {
+        id
+        globalId
+        totalRevenue
+        totalProfit
+        reconciled
+        source
+        createdAt
+        updatedAt
+        driver {
+          id
+          fullName
+        }
+        shiftAssignment {
+          id
+          startTime
+          endTime
+          vehicle {
+            id
+            displayName
+          }
+        }
+      }
+    }
+    pagination {
+      currentPage
+      firstPage
+      lastPage
+      nextPage
+      pageCount
+      pageSize
+      prevPage
+      totalSize
+    }
+    totalRevenue
+    totalProfit
+    sourceTotals
+  }
+}

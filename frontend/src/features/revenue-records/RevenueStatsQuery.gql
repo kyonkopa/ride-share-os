@@ -1,8 +1,0 @@
-query RevenueStatsQuery($startDate: ISO8601Date, $endDate: ISO8601Date) {
-  revenueStats(startDate: $startDate, endDate: $endDate) {
-    totalRevenue
-    totalProfit
-    count
-    sourceTotals
-  }
-}

@@ -127,14 +127,14 @@ RSpec.describe Mutations::UpdateVehicle do
         vehicleId: vehicle.global_id
       }
 
-      result = BackendSchema.execute(mutation, variables: enum_variables, context:)
-      data = result["data"]["updateVehicle"]
-
-      expect(result["errors"]).to be_nil.or be_empty
-      expect(data["vehicle"]).to be_present
-
-      vehicle.reload
-      expect(vehicle.telematics_source).to eq("gps_tracker")
+      expect(mutation).to execute_as_graphql
+        .with_variables(enum_variables)
+        .with_context(context)
+        .with_no_errors
+        .with_effects do
+          vehicle.reload
+          expect(vehicle.telematics_source).to eq("gps_tracker")
+        end
     end
 
     it 'updates single field' do
@@ -173,10 +173,10 @@ RSpec.describe Mutations::UpdateVehicle do
       end
 
       it 'returns an error' do
-        result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-
-        expect(result["errors"]).not_to be_empty
-        expect(result["errors"].first["message"]).to match(/An error occurred while fetching the record/)
+        expect(mutation).to execute_as_graphql
+          .with_variables(invalid_variables)
+          .with_context(context)
+          .with_errors(["An error occurred while fetching the record"])
       end
     end
 
@@ -246,16 +246,13 @@ RSpec.describe Mutations::UpdateVehicle do
         end
 
         it 'returns validation errors' do
-          result = BackendSchema.execute(mutation, variables: future_year_variables, context:)
-          data = result["data"]["updateVehicle"]
-
-          aggregate_failures do
-            expect(data["errors"]).not_to be_empty
-            error = data["errors"].find { |e| e["field"] == "year_of_manufacture" }
-            expect(error).to be_present
-            expect(error["message"]).to match(/Year of manufacture must be less than or equal to/)
-            expect(error["code"]).to eq("less_than_or_equal_to")
-          end
+          expect(mutation).to execute_as_graphql
+            .with_variables(future_year_variables)
+            .with_context(context)
+            .with_no_errors
+            .with_mutation_error([
+              { "field" => "year_of_manufacture", "message" => /Year of manufacture must be less than or equal to/, "code" => "less_than_or_equal_to" }
+            ])
         end
       end
 
@@ -372,30 +369,15 @@ RSpec.describe Mutations::UpdateVehicle do
         end
 
         it 'returns all validation errors' do
-          result = BackendSchema.execute(mutation, variables: multiple_errors_variables, context:)
-          data = result["data"]["updateVehicle"]
-
-          aggregate_failures do
-            expect(data["errors"]).not_to be_empty
-            expect(data["errors"].length).to be >= 3
-
-            error_fields = data["errors"].map { |e| e["field"] }
-            expect(error_fields).to include("latest_odometer")
-            expect(error_fields).to include("latest_range")
-            expect(error_fields).to include("year_of_manufacture")
-
-            odometer_error = data["errors"].find { |e| e["field"] == "latest_odometer" }
-            expect(odometer_error["message"]).to match(/Latest odometer must be greater than or equal to 0/)
-            expect(odometer_error["code"]).to eq("greater_than_or_equal_to")
-
-            range_error = data["errors"].find { |e| e["field"] == "latest_range" }
-            expect(range_error["message"]).to match(/Latest range must be greater than or equal to 0/)
-            expect(range_error["code"]).to eq("greater_than_or_equal_to")
-
-            year_error = data["errors"].find { |e| e["field"] == "year_of_manufacture" }
-            expect(year_error["message"]).to match(/Year of manufacture must be greater than 1900/)
-            expect(year_error["code"]).to eq("greater_than")
-          end
+          expect(mutation).to execute_as_graphql
+            .with_variables(multiple_errors_variables)
+            .with_context(context)
+            .with_no_errors
+            .with_mutation_error([
+              { "field" => "latest_odometer", "message" => /Latest odometer must be greater than or equal to 0/, "code" => "greater_than_or_equal_to" },
+              { "field" => "latest_range", "message" => /Latest range must be greater than or equal to 0/, "code" => "greater_than_or_equal_to" },
+              { "field" => "year_of_manufacture", "message" => /Year of manufacture must be greater than 1900/, "code" => "greater_than" }
+            ])
         end
       end
     end
@@ -483,14 +465,14 @@ RSpec.describe Mutations::UpdateVehicle do
           vehicleId: test_vehicle.global_id
         }
 
-        result = BackendSchema.execute(mutation, variables: enum_variables, context:)
-        data = result["data"]["updateVehicle"]
-
-        expect(result["errors"]).to be_nil.or be_empty
-        expect(data["vehicle"]).to be_present
-
-        test_vehicle.reload
-        expect(test_vehicle.telematics_source).to eq(source[:name])
+        expect(mutation).to execute_as_graphql
+          .with_variables(enum_variables)
+          .with_context(context)
+          .with_no_errors
+          .with_effects do
+            test_vehicle.reload
+            expect(test_vehicle.telematics_source).to eq(source[:name])
+          end
       end
     end
   end

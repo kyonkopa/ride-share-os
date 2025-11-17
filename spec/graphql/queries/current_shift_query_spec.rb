@@ -39,20 +39,18 @@ RSpec.describe Queries::CurrentShiftQuery do
         .with_context(context)
         .with_no_errors
         .and_return({
-          currentShift: {
-            id: active_shift.global_id,
-            globalId: active_shift.global_id,
-            status: "active",
-            startTime: active_shift.start_time.iso8601,
-            endTime: active_shift.end_time.iso8601,
-            driver: {
-              id: driver.global_id,
-              fullName: driver.full_name
-            },
-            vehicle: {
-              id: vehicle.global_id,
-              licensePlate: vehicle.license_plate
-            }
+          id: active_shift.global_id,
+          globalId: active_shift.global_id,
+          status: "active",
+          startTime: active_shift.start_time.iso8601,
+          endTime: active_shift.end_time.iso8601,
+          driver: {
+            id: driver.global_id,
+            fullName: driver.full_name
+          },
+          vehicle: {
+            id: vehicle.global_id,
+            licensePlate: vehicle.license_plate
           }
         }.with_indifferent_access)
     end
@@ -66,10 +64,8 @@ RSpec.describe Queries::CurrentShiftQuery do
         .with_context(context)
         .with_no_errors
         .and_return({
-          currentShift: {
-            id: paused_shift.global_id,
-            status: "paused"
-          }
+          id: paused_shift.global_id,
+          status: "paused"
         }.with_indifferent_access)
     end
   end
@@ -85,9 +81,7 @@ RSpec.describe Queries::CurrentShiftQuery do
         .with_context(context)
         .with_no_errors
         .and_return({
-          currentShift: {
-            id: match(/ShiftAssignment:[a-zA-Z0-9]+/)
-          }
+          id: match(/ShiftAssignment:[a-zA-Z0-9]+/)
         }.with_indifferent_access)
     end
   end
@@ -101,9 +95,7 @@ RSpec.describe Queries::CurrentShiftQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .and_return({
-          currentShift: nil
-        }.with_indifferent_access)
+        .and_return(nil)
     end
   end
 
@@ -115,9 +107,7 @@ RSpec.describe Queries::CurrentShiftQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .and_return({
-          currentShift: nil
-        }.with_indifferent_access)
+        .and_return(nil)
     end
   end
 
@@ -127,10 +117,7 @@ RSpec.describe Queries::CurrentShiftQuery do
     it 'returns nil' do
       expect(query).to execute_as_graphql
         .with_context(context)
-        .with_no_errors
-        .and_return({
-          currentShift: nil
-        }.with_indifferent_access)
+        .with_errors(["Authentication is required"])
     end
   end
 end

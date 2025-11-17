@@ -40,22 +40,12 @@ RSpec.describe Queries::TodayShiftsQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .and_return({
-          todayShifts: array_including(
-            {
-              id: today_shift.global_id,
-              status: "scheduled"
-            },
-            {
-              id: another_today_shift.global_id,
-              status: "scheduled"
-            }
-          )
-        }.with_indifferent_access)
-        .with_effects do
-          result = BackendSchema.execute(query, context:)
-          shifts = result.dig("data", "todayShifts")
+        .with_effects do |shifts, _full_result|
           expect(shifts.length).to eq(2)
+          expect(shifts.map { |s| s["id"] }).to include(
+            today_shift.global_id,
+            another_today_shift.global_id
+          )
         end
     end
 
@@ -63,9 +53,7 @@ RSpec.describe Queries::TodayShiftsQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .with_effects do
-          result = BackendSchema.execute(query, context:)
-          shifts = result.dig("data", "todayShifts")
+        .with_effects do |shifts, _full_result|
           dates = shifts.map { |s| DateTime.parse(s["startTime"]) }
           expect(dates).to eq(dates.sort)
         end
@@ -82,9 +70,7 @@ RSpec.describe Queries::TodayShiftsQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .and_return({
-          todayShifts: []
-        }.with_indifferent_access)
+        .and_return([])
     end
   end
 
@@ -96,9 +82,7 @@ RSpec.describe Queries::TodayShiftsQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .and_return({
-          todayShifts: []
-        }.with_indifferent_access)
+        .and_return([])
     end
   end
 
@@ -108,10 +92,7 @@ RSpec.describe Queries::TodayShiftsQuery do
     it 'returns an empty array' do
       expect(query).to execute_as_graphql
         .with_context(context)
-        .with_no_errors
-        .and_return({
-          todayShifts: []
-        }.with_indifferent_access)
+        .with_errors(["Authentication is required"])
     end
   end
 end

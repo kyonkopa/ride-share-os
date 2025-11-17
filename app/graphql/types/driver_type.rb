@@ -14,7 +14,5 @@ module Types
     field :revenue_records, [Types::RevenueRecordType], null: true
     field :shift_assignments, [Types::ShiftAssignmentType], null: true
     field :user, Types::UserType, null: true
-
-    def id = object.id
   end
 end

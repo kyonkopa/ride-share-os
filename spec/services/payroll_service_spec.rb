@@ -254,21 +254,52 @@ RSpec.describe PayrollService do
 
   describe 'private methods' do
     describe '#calculate_amount_due' do
-      it 'calculates 15% for revenue at or below target' do
-        expect(described_class.send(:calculate_amount_due, 0)).to eq(0.0)
-        expect(described_class.send(:calculate_amount_due, 250)).to eq(37.5) # 15% of 250
-        expect(described_class.send(:calculate_amount_due, 500)).to eq(75.0) # 15% of 500
+      let(:tier_1_driver) { create(:driver, tier: 'tier_1') }
+      let(:tier_2_driver) { create(:driver, tier: 'tier_2') }
+
+      context 'with tier_1 driver' do
+        it 'calculates 15% for revenue at or below target' do
+          expect(described_class.send(:calculate_amount_due, driver: tier_1_driver, daily_revenue: 0)).to eq(0.0)
+          expect(described_class.send(:calculate_amount_due, driver: tier_1_driver, daily_revenue: 250)).to eq(37.5) # 15% of 250
+          expect(described_class.send(:calculate_amount_due, driver: tier_1_driver, daily_revenue: 500)).to eq(75.0) # 15% of 500
+        end
+
+        it 'calculates tiered commission for revenue above target' do
+          # 600 GHS: (15% of 500) + (30% of 100) = 75 + 30 = 105
+          expect(described_class.send(:calculate_amount_due, driver: tier_1_driver, daily_revenue: 600)).to eq(105.0)
+
+          # 1000 GHS: (15% of 500) + (30% of 500) = 75 + 150 = 225
+          expect(described_class.send(:calculate_amount_due, driver: tier_1_driver, daily_revenue: 1000)).to eq(225.0)
+
+          # 1500 GHS: (15% of 500) + (30% of 1000) = 75 + 300 = 375
+          expect(described_class.send(:calculate_amount_due, driver: tier_1_driver, daily_revenue: 1500)).to eq(375.0)
+        end
       end
 
-      it 'calculates tiered commission for revenue above target' do
-        # 600 GHS: (15% of 500) + (30% of 100) = 75 + 30 = 105
-        expect(described_class.send(:calculate_amount_due, 600)).to eq(105.0)
+      context 'with tier_2 driver' do
+        it 'calculates 20% for revenue at or below target' do
+          expect(described_class.send(:calculate_amount_due, driver: tier_2_driver, daily_revenue: 0)).to eq(0.0)
+          expect(described_class.send(:calculate_amount_due, driver: tier_2_driver, daily_revenue: 250)).to eq(50.0) # 20% of 250
+          expect(described_class.send(:calculate_amount_due, driver: tier_2_driver, daily_revenue: 500)).to eq(100.0) # 20% of 500
+        end
 
-        # 1000 GHS: (15% of 500) + (30% of 500) = 75 + 150 = 225
-        expect(described_class.send(:calculate_amount_due, 1000)).to eq(225.0)
+        it 'calculates tiered commission for revenue above target' do
+          # 600 GHS: (20% of 500) + (30% of 100) = 100 + 30 = 130
+          expect(described_class.send(:calculate_amount_due, driver: tier_2_driver, daily_revenue: 600)).to eq(130.0)
 
-        # 1500 GHS: (15% of 500) + (30% of 1000) = 75 + 300 = 375
-        expect(described_class.send(:calculate_amount_due, 1500)).to eq(375.0)
+          # 1000 GHS: (20% of 500) + (30% of 500) = 100 + 150 = 250
+          expect(described_class.send(:calculate_amount_due, driver: tier_2_driver, daily_revenue: 1000)).to eq(250.0)
+
+          # 1500 GHS: (20% of 500) + (30% of 1000) = 100 + 300 = 400
+          expect(described_class.send(:calculate_amount_due, driver: tier_2_driver, daily_revenue: 1500)).to eq(400.0)
+        end
+      end
+
+      it 'raises error for invalid tier' do
+        invalid_driver = create(:driver, tier: 'invalid_tier')
+        expect do
+          described_class.send(:calculate_amount_due, driver: invalid_driver, daily_revenue: 500)
+        end.to raise_error(RuntimeError, /Invalid tier/)
       end
     end
 

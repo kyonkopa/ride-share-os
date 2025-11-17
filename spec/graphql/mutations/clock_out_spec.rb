@@ -440,8 +440,8 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            bolt_earnings: 150.50,
-            uber_earnings: 200.75
+            boltEarnings: 150.50,
+            uberEarnings: 200.75
           }
         }
       end
@@ -486,8 +486,8 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            bolt_earnings: 180.25,
-            uber_earnings: 220.50
+            boltEarnings: 180.25,
+            uberEarnings: 220.50
           }
         }
       end
@@ -532,7 +532,7 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            bolt_earnings: 100.00
+            boltEarnings: 100.00
           }
         }
       end
@@ -574,7 +574,7 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            uber_earnings: 175.00
+            uberEarnings: 175.00
           }
         }
       end
@@ -616,7 +616,7 @@ RSpec.describe Mutations::ClockOut do
       let(:variables) do
         {
           input: {
-            bolt_earnings: 120.00
+            boltEarnings: 120.00
           }
         }
       end

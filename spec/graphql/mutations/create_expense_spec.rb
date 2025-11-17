@@ -169,12 +169,16 @@ RSpec.describe Mutations::CreateExpense do
     context 'with different categories' do
       %w[charging maintenance toll insurance other].each do |category|
         it "creates an expense with category '#{category}'" do
+          input_hash = {
+            amount: 100.00,
+            category:,
+            date: Date.current.iso8601
+          }
+          # Description is required for "other" category
+          input_hash[:description] = "Test description" if category == "other"
+
           category_variables = {
-            input: {
-              amount: 100.00,
-              category:,
-              date: Date.current.iso8601
-            }
+            input: input_hash
           }
 
           expect(mutation).to execute_as_graphql
@@ -201,7 +205,8 @@ RSpec.describe Mutations::CreateExpense do
           input: {
             amount: 50.00,
             category: "other",
-            date: past_date.iso8601
+            date: past_date.iso8601,
+            description: "Past expense"
           }
         }
 
@@ -226,7 +231,8 @@ RSpec.describe Mutations::CreateExpense do
           input: {
             amount: 50.00,
             category: "other",
-            date: future_date.iso8601
+            date: future_date.iso8601,
+            description: "Future expense"
           }
         }
 
@@ -260,9 +266,10 @@ RSpec.describe Mutations::CreateExpense do
         end
 
         it 'returns a validation error' do
-          result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-          expect(result["errors"]).to be_present
-          expect(result["errors"].first["message"]).to match(/Expected value to not be null/)
+          expect(mutation).to execute_as_graphql
+            .with_variables(invalid_variables)
+            .with_context(context)
+            .with_errors(["Expected value to not be null"])
         end
       end
 
@@ -277,9 +284,10 @@ RSpec.describe Mutations::CreateExpense do
         end
 
         it 'returns a validation error' do
-          result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-          expect(result["errors"]).to be_present
-          expect(result["errors"].first["message"]).to match(/Expected value to not be null/)
+          expect(mutation).to execute_as_graphql
+            .with_variables(invalid_variables)
+            .with_context(context)
+            .with_errors(["Expected value to not be null"])
         end
       end
 
@@ -294,9 +302,10 @@ RSpec.describe Mutations::CreateExpense do
         end
 
         it 'returns a validation error' do
-          result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-          expect(result["errors"]).to be_present
-          expect(result["errors"].first["message"]).to match(/Expected value to not be null/)
+          expect(mutation).to execute_as_graphql
+            .with_variables(invalid_variables)
+            .with_context(context)
+            .with_errors(["Expected value to not be null"])
         end
       end
     end
@@ -314,14 +323,11 @@ RSpec.describe Mutations::CreateExpense do
         end
 
         it 'returns a validation error' do
-          result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-          data = result["data"]["createExpense"]
-
-          aggregate_failures do
-            expect(data["expense"]).to be_nil
-            expect(data["errors"]).to be_present
-            expect(data["errors"].any? { |e| e["message"].match?(/Amount must be greater than 0/) }).to be true
-          end
+          expect(mutation).to execute_as_graphql
+            .with_variables(invalid_variables)
+            .with_context(context)
+            .with_no_errors
+            .with_mutation_error([/Amount must be greater than 0/])
         end
       end
 
@@ -337,14 +343,11 @@ RSpec.describe Mutations::CreateExpense do
         end
 
         it 'returns a validation error' do
-          result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-          data = result["data"]["createExpense"]
-
-          aggregate_failures do
-            expect(data["expense"]).to be_nil
-            expect(data["errors"]).to be_present
-            expect(data["errors"].any? { |e| e["message"].match?(/Amount must be greater than 0/) }).to be true
-          end
+          expect(mutation).to execute_as_graphql
+            .with_variables(invalid_variables)
+            .with_context(context)
+            .with_no_errors
+            .with_mutation_error([/Amount must be greater than 0/])
         end
       end
     end
@@ -363,17 +366,15 @@ RSpec.describe Mutations::CreateExpense do
       it 'allows any category string (no enum validation at GraphQL level)' do
         # The category validation happens at the model level, not GraphQL level
         # So this should succeed at GraphQL but may fail at model validation
-        result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-
-        # The mutation will succeed but the model validation might catch it
-        # Let's check if it creates the expense or returns an error
-        if result["errors"].present?
-          expect(result["errors"].first["message"]).to be_present
-        else
-          # If it succeeds, the expense should be created
-          expense = Expense.last
-          expect(expense.category).to eq("invalid_category")
-        end
+        expect(mutation).to execute_as_graphql
+          .with_variables(invalid_variables)
+          .with_context(context)
+          .with_effects do
+            # The mutation will succeed but the model validation might catch it
+            # If it succeeds, the expense should be created
+            expense = Expense.last
+            expect(expense.category).to eq("invalid_category") if expense
+          end
       end
     end
 
@@ -389,9 +390,10 @@ RSpec.describe Mutations::CreateExpense do
       end
 
       it 'returns a GraphQL error' do
-        result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-        expect(result["errors"]).to be_present
-        expect(result["errors"].first["message"]).to match(/Could not coerce value/)
+        expect(mutation).to execute_as_graphql
+          .with_variables(invalid_variables)
+          .with_context(context)
+          .with_errors(["Could not coerce value"])
       end
     end
   end
@@ -464,7 +466,8 @@ RSpec.describe Mutations::CreateExpense do
         input: {
           amount: 999999.99,
           category: "other",
-          date: Date.current.iso8601
+          date: Date.current.iso8601,
+          description: "Large expense"
         }
       }
 
@@ -488,7 +491,8 @@ RSpec.describe Mutations::CreateExpense do
         input: {
           amount: 0.01,
           category: "other",
-          date: Date.current.iso8601
+          date: Date.current.iso8601,
+          description: "Small expense"
         }
       }
 
@@ -512,7 +516,8 @@ RSpec.describe Mutations::CreateExpense do
         input: {
           amount: 123.456789,
           category: "other",
-          date: Date.current.iso8601
+          date: Date.current.iso8601,
+          description: "Decimal expense"
         }
       }
 

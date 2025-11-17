@@ -41,32 +41,28 @@ RSpec.describe Queries::VehiclesQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .and_return({
-          vehicles: array_including(
-            {
-              id: toyota_camry.global_id,
-              licensePlate: "ABC-123",
-              make: "Toyota",
-              model: "Camry"
-            },
-            {
-              id: honda_accord.global_id,
-              licensePlate: "XYZ-789",
-              make: "Honda",
-              model: "Accord"
-            },
-            {
-              id: ford_focus.global_id,
-              licensePlate: "DEF-456",
-              make: "Ford",
-              model: "Focus"
-            }
-          )
-        }.with_indifferent_access)
-        .with_effects do
-          result = BackendSchema.execute(query, context:)
-          vehicles = result.dig("data", "vehicles")
+        .with_effects do |vehicles, _full_result|
           expect(vehicles.length).to eq(3)
+          expect(vehicles.map { |v| v["id"] }).to contain_exactly(
+            toyota_camry.global_id,
+            honda_accord.global_id,
+            ford_focus.global_id
+          )
+          expect(vehicles.find { |v| v["id"] == toyota_camry.global_id }).to include(
+            "licensePlate" => "ABC-123",
+            "make" => "Toyota",
+            "model" => "Camry"
+          )
+          expect(vehicles.find { |v| v["id"] == honda_accord.global_id }).to include(
+            "licensePlate" => "XYZ-789",
+            "make" => "Honda",
+            "model" => "Accord"
+          )
+          expect(vehicles.find { |v| v["id"] == ford_focus.global_id }).to include(
+            "licensePlate" => "DEF-456",
+            "make" => "Ford",
+            "model" => "Focus"
+          )
         end
     end
   end
@@ -76,27 +72,18 @@ RSpec.describe Queries::VehiclesQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .and_return({
-          vehicles: []
-        }.with_indifferent_access)
+        .and_return([])
     end
   end
 
   describe 'when user is not authenticated' do
     let(:context) { {} }
 
-    it 'still returns vehicles (no authentication required)' do
+    it 'requires authentication' do
       vehicle = create(:vehicle)
       expect(query).to execute_as_graphql
         .with_context(context)
-        .with_no_errors
-        .and_return({
-          vehicles: array_including(
-            {
-              id: vehicle.global_id
-            }
-          )
-        }.with_indifferent_access)
+        .with_errors(["Authentication is required"])
     end
   end
 end

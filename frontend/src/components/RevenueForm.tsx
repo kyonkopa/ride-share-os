@@ -26,13 +26,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { ChevronDownIcon } from "lucide-react"
 import { InlineErrorAlert } from "./ui/inline-error-alert"
 import { Checkbox } from "./ui/checkbox"
-import type { RevenueRecordsQueryQueryVariables } from "@/codegen/graphql"
+import type {
+  RevenueRecordsQueryQueryVariables,
+  GroupedRevenueRecordsQueryQueryVariables,
+} from "@/codegen/graphql"
 
 interface RevenueFormProps {
   onOpenChange: (open: boolean) => void
   open: boolean
   onSuccess?: () => void
   revenueRecordsQueryVariables?: RevenueRecordsQueryQueryVariables
+  groupedRevenueRecordsQueryVariables?: GroupedRevenueRecordsQueryQueryVariables
 }
 
 export function RevenueForm({
@@ -40,6 +44,7 @@ export function RevenueForm({
   onOpenChange,
   onSuccess,
   revenueRecordsQueryVariables,
+  groupedRevenueRecordsQueryVariables,
 }: RevenueFormProps) {
   const { drivers, loading: driversLoading } = useDrivers()
   const { vehicles, loading: vehiclesLoading } = useVehicles()
@@ -60,6 +65,7 @@ export function RevenueForm({
       onSuccess?.()
     },
     revenueRecordsQueryVariables,
+    groupedRevenueRecordsQueryVariables,
   })
 
   return (

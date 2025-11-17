@@ -45,16 +45,22 @@ RSpec.describe Queries::RevenueRecordsQuery do
 
   describe 'when revenue records exist within the date range' do
     let(:record_in_range) do
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: start_date + 1.day)
+      create(
+        :revenue_record, :bolt, shift_assignment:, driver:,
+                                created_at: start_date + 1.day
+)
     end
     let(:record_at_start) do
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: start_date.beginning_of_day)
+      create(
+        :revenue_record, :uber, shift_assignment:, driver:,
+                                created_at: start_date.beginning_of_day
+)
     end
     let(:record_at_end) do
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: end_date.end_of_day)
+      create(
+        :revenue_record, source: :off_trip, shift_assignment:, driver:,
+                         created_at: end_date.end_of_day
+)
     end
 
     before do
@@ -63,10 +69,15 @@ RSpec.describe Queries::RevenueRecordsQuery do
       record_at_start
       record_at_end
       # Create records outside range to verify they're excluded
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: start_date - 1.day)
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: end_date + 1.day)
+      # Use different sources to avoid uniqueness validation issues
+      create(
+        :revenue_record, source: :off_trip, shift_assignment:, driver:,
+                         created_at: start_date - 1.day
+      )
+      create(
+        :revenue_record, source: :off_trip, shift_assignment:, driver:,
+                         created_at: end_date + 1.day
+      )
     end
 
     it 'returns only revenue records within the date range' do
@@ -74,9 +85,7 @@ RSpec.describe Queries::RevenueRecordsQuery do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .with_effects do
-          result = BackendSchema.execute(query, variables:, context:)
-          records = result.dig("data", "revenueRecords")
+        .with_effects do |records, _full_result|
           expect(records.length).to eq(3)
           record_ids = records.map { |r| r["id"] }
           expect(record_ids).to include(record_in_range.global_id)
@@ -90,9 +99,7 @@ RSpec.describe Queries::RevenueRecordsQuery do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .with_effects do
-          result = BackendSchema.execute(query, variables:, context:)
-          records = result.dig("data", "revenueRecords")
+        .with_effects do |records, _full_result|
           dates = records.map { |r| DateTime.parse(r["createdAt"]) }
           expect(dates).to eq(dates.sort.reverse)
           expect(records.length).to eq(3)
@@ -108,10 +115,14 @@ RSpec.describe Queries::RevenueRecordsQuery do
     end
 
     before do
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: start_date + 1.day)
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: start_date - 1.day)
+      create(
+        :revenue_record, shift_assignment:, driver:,
+                         created_at: start_date + 1.day
+)
+      create(
+        :revenue_record, shift_assignment:, driver:,
+                         created_at: start_date - 1.day
+)
     end
 
     it 'returns all records from start_date onwards' do
@@ -119,9 +130,7 @@ RSpec.describe Queries::RevenueRecordsQuery do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .with_effects do
-          result = BackendSchema.execute(query, variables:, context:)
-          records = result.dig("data", "revenueRecords")
+        .with_effects do |records, _full_result|
           expect(records.length).to eq(1)
         end
     end
@@ -135,10 +144,14 @@ RSpec.describe Queries::RevenueRecordsQuery do
     end
 
     before do
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: end_date - 1.day)
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: end_date + 1.day)
+      create(
+        :revenue_record, shift_assignment:, driver:,
+                         created_at: end_date - 1.day
+)
+      create(
+        :revenue_record, shift_assignment:, driver:,
+                         created_at: end_date + 1.day
+)
     end
 
     it 'returns all records up to end_date' do
@@ -146,9 +159,7 @@ RSpec.describe Queries::RevenueRecordsQuery do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .with_effects do
-          result = BackendSchema.execute(query, variables:, context:)
-          records = result.dig("data", "revenueRecords")
+        .with_effects do |records, _full_result|
           expect(records.length).to eq(1)
         end
     end
@@ -158,12 +169,18 @@ RSpec.describe Queries::RevenueRecordsQuery do
     let(:variables) { {} }
 
     before do
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: start_date - 5.days)
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: start_date + 1.day)
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: end_date + 5.days)
+      create(
+        :revenue_record, shift_assignment:, driver:,
+                         created_at: start_date - 5.days
+)
+      create(
+        :revenue_record, shift_assignment:, driver:,
+                         created_at: start_date + 1.day
+)
+      create(
+        :revenue_record, shift_assignment:, driver:,
+                         created_at: end_date + 5.days
+)
     end
 
     it 'returns all revenue records' do
@@ -171,9 +188,7 @@ RSpec.describe Queries::RevenueRecordsQuery do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .with_effects do
-          result = BackendSchema.execute(query, variables:, context:)
-          records = result.dig("data", "revenueRecords")
+        .with_effects do |records, _full_result|
           expect(records.length).to eq(3)
         end
     end
@@ -181,10 +196,14 @@ RSpec.describe Queries::RevenueRecordsQuery do
 
   describe 'when no revenue records exist in the date range' do
     before do
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: start_date - 1.day)
-      create(:revenue_record, shift_assignment:, driver:,
-                              created_at: end_date + 1.day)
+      create(
+        :revenue_record, shift_assignment:, driver:,
+                         created_at: start_date - 1.day
+)
+      create(
+        :revenue_record, shift_assignment:, driver:,
+                         created_at: end_date + 1.day
+)
     end
 
     it 'returns an empty array' do
@@ -192,11 +211,7 @@ RSpec.describe Queries::RevenueRecordsQuery do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .with_effects do
-          result = BackendSchema.execute(query, variables:, context:)
-          records = result.dig("data", "revenueRecords")
-          expect(records).to eq([])
-        end
+        .and_return([])
     end
   end
 
@@ -215,4 +230,3 @@ RSpec.describe Queries::RevenueRecordsQuery do
     end
   end
 end
-

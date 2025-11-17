@@ -15,15 +15,27 @@ import {
 } from "lucide-react"
 import { useAuthStore } from "@/stores/AuthStore"
 import { Link } from "react-router-dom"
+import { useAuthorizer } from "@/hooks/useAuthorizer"
+import { PermissionEnum } from "@/codegen/graphql"
 
 interface SidebarProps {
   currentPath?: string
 }
 
+interface MenuItem {
+  id: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  path: string
+  enabled: boolean
+}
+
 export function Sidebar({ currentPath = "/" }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(true)
+  const { user } = useAuthStore()
+  const { can } = useAuthorizer()
 
-  const menuItems = [
+  const menuItems: (MenuItem | undefined | null | false)[] = [
     {
       id: "home",
       label: "Home",
@@ -59,11 +71,18 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       path: "/vehicles",
       enabled: true,
     },
-    {
+    can(PermissionEnum.PayrollReadAccess) && {
       id: "payroll",
       label: "Payroll",
       icon: Wallet,
       path: "/payroll",
+      enabled: true,
+    },
+    user?.driver && {
+      id: "myPayroll",
+      label: "My Payroll",
+      icon: Wallet,
+      path: "/my-payroll",
       enabled: true,
     },
     {
@@ -102,8 +121,6 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       clearStorage()
     }
   }
-
-  const { user } = useAuthStore()
 
   return (
     <>
@@ -156,31 +173,38 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
           {/* Main Menu */}
           <nav className="flex-1 space-y-2">
             <div className="space-y-1">
-              {menuItems.map((item) => {
-                const Icon = item.icon
-                const isActive = currentPath === item.path
-
-                return (
-                  <Button
-                    key={item.id}
-                    variant={isActive ? "secondary" : "ghost"}
-                    className={`
-                      w-full justify-start h-12 px-4 rounded-md
-                      ${isActive ? "bg-secondary" : ""}
-                    `}
-                    disabled={!item.enabled}
-                    onClick={() => handleItemClick(item.path)}
-                  >
-                    <Link
-                      to={item.path}
-                      className="w-full flex items-center justify-start"
-                    >
-                      <Icon className="h-6 w-6 mr-4" />
-                      <span className="text-xl font-medium">{item.label}</span>
-                    </Link>
-                  </Button>
+              {menuItems
+                .filter(
+                  (item) =>
+                    item !== undefined && item !== null && item !== false
                 )
-              })}
+                .map((item: MenuItem) => {
+                  const Icon = item.icon
+                  const isActive = currentPath === item.path
+
+                  return (
+                    <Button
+                      key={item.id}
+                      variant={isActive ? "secondary" : "ghost"}
+                      className={`
+                        w-full justify-start h-12 px-4 rounded-md
+                        ${isActive ? "bg-secondary" : ""}
+                      `}
+                      disabled={!item.enabled}
+                      onClick={() => handleItemClick(item.path)}
+                    >
+                      <Link
+                        to={item.path}
+                        className="w-full flex items-center justify-start"
+                      >
+                        <Icon className="h-6 w-6 mr-4" />
+                        <span className="text-xl font-medium">
+                          {item.label}
+                        </span>
+                      </Link>
+                    </Button>
+                  )
+                })}
             </div>
           </nav>
 

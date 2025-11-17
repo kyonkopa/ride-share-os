@@ -1,0 +1,18 @@
+query MyPayrollQuery($startDate: ISO8601Date!, $endDate: ISO8601Date!) {
+  myPayroll(startDate: $startDate, endDate: $endDate) {
+    amountDue
+    startDate
+    dailyBreakdown {
+      date
+      revenue
+      amountDue
+    }
+    driver {
+      id
+      globalId
+      fullName
+      email
+      phoneNumber
+    }
+  }
+}

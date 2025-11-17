@@ -45,22 +45,18 @@ RSpec.describe Queries::TodaysShiftEventsQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .and_return({
-          todaysShiftEvents: array_including(
-            {
-              id: today_clock_in.global_id,
-              eventType: "clock_in"
-            },
-            {
-              id: today_pause.global_id,
-              eventType: "pause"
-            }
-          )
-        }.with_indifferent_access)
-        .with_effects do
-          result = BackendSchema.execute(query, context:)
-          events = result.dig("data", "todaysShiftEvents")
+        .with_effects do |events, _full_result|
           expect(events.length).to eq(3)
+          expect(events.map { |e| e["id"] }).to include(
+            today_clock_in.global_id,
+            today_pause.global_id
+          )
+          expect(events.find { |e| e["id"] == today_clock_in.global_id }).to include(
+            "eventType" => "clock_in"
+          )
+          expect(events.find { |e| e["id"] == today_pause.global_id }).to include(
+            "eventType" => "pause"
+          )
         end
     end
 
@@ -68,9 +64,7 @@ RSpec.describe Queries::TodaysShiftEventsQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .with_effects do
-          result = BackendSchema.execute(query, context:)
-          events = result.dig("data", "todaysShiftEvents")
+        .with_effects do |events, _full_result|
           dates = events.map { |e| DateTime.parse(e["createdAt"]) }
           expect(dates).to eq(dates.sort.reverse)
         end
@@ -87,9 +81,7 @@ RSpec.describe Queries::TodaysShiftEventsQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .and_return({
-          todaysShiftEvents: []
-        }.with_indifferent_access)
+        .and_return([])
     end
   end
 
@@ -101,9 +93,7 @@ RSpec.describe Queries::TodaysShiftEventsQuery do
       expect(query).to execute_as_graphql
         .with_context(context)
         .with_no_errors
-        .and_return({
-          todaysShiftEvents: []
-        }.with_indifferent_access)
+        .and_return([])
     end
   end
 
@@ -113,10 +103,7 @@ RSpec.describe Queries::TodaysShiftEventsQuery do
     it 'returns an empty array' do
       expect(query).to execute_as_graphql
         .with_context(context)
-        .with_no_errors
-        .and_return({
-          todaysShiftEvents: []
-        }.with_indifferent_access)
+        .with_errors(["Authentication is required"])
     end
   end
 end

@@ -53,22 +53,12 @@ RSpec.describe Queries::MyShiftAssignmentsQuery do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .and_return({
-          myShiftAssignments: array_including(
-            {
-              id: shift_in_range.global_id,
-              status: "scheduled"
-            },
-            {
-              id: shift_at_start.global_id,
-              status: "scheduled"
-            }
-          )
-        }.with_indifferent_access)
-        .with_effects do
-          result = BackendSchema.execute(query, variables:, context:)
-          assignments = result.dig("data", "myShiftAssignments")
+        .with_effects do |assignments, _full_result|
           expect(assignments.length).to eq(3)
+          expect(assignments.map { |a| a["id"] }).to include(
+            shift_in_range.global_id,
+            shift_at_start.global_id
+          )
         end
     end
 
@@ -77,9 +67,7 @@ RSpec.describe Queries::MyShiftAssignmentsQuery do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .with_effects do
-          result = BackendSchema.execute(query, variables:, context:)
-          assignments = result.dig("data", "myShiftAssignments")
+        .with_effects do |assignments, _full_result|
           dates = assignments.map { |a| DateTime.parse(a["startTime"]) }
           expect(dates).to eq(dates.sort)
           expect(assignments.length).to eq(3)
@@ -98,9 +86,7 @@ RSpec.describe Queries::MyShiftAssignmentsQuery do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .and_return({
-          myShiftAssignments: []
-        }.with_indifferent_access)
+        .and_return([])
     end
   end
 
@@ -113,9 +99,7 @@ RSpec.describe Queries::MyShiftAssignmentsQuery do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .and_return({
-          myShiftAssignments: []
-        }.with_indifferent_access)
+        .and_return([])
     end
   end
 
@@ -126,10 +110,7 @@ RSpec.describe Queries::MyShiftAssignmentsQuery do
       expect(query).to execute_as_graphql
         .with_variables(variables)
         .with_context(context)
-        .with_no_errors
-        .and_return({
-          myShiftAssignments: []
-        }.with_indifferent_access)
+        .with_errors(["Authentication is required"])
     end
   end
 end

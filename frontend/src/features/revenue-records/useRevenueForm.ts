@@ -7,6 +7,7 @@ import { useNotification } from "@/hooks/useNotification"
 import type {
   RevenueSourceEnum,
   RevenueRecordsQueryQueryVariables,
+  GroupedRevenueRecordsQueryQueryVariables,
 } from "@/codegen/graphql"
 
 export interface RevenueFormValues {
@@ -22,12 +23,14 @@ interface UseRevenueFormOptions {
   open: boolean
   onSuccess?: () => void
   revenueRecordsQueryVariables?: RevenueRecordsQueryQueryVariables
+  groupedRevenueRecordsQueryVariables?: GroupedRevenueRecordsQueryQueryVariables
 }
 
 export const useRevenueForm = ({
   open,
   onSuccess,
   revenueRecordsQueryVariables,
+  groupedRevenueRecordsQueryVariables,
 }: UseRevenueFormOptions) => {
   const { addSuccess } = useNotification()
 
@@ -41,6 +44,7 @@ export const useRevenueForm = ({
       onSuccess?.()
     },
     revenueRecordsQueryVariables,
+    groupedRevenueRecordsQueryVariables,
   })
 
   const validation = yup.object({

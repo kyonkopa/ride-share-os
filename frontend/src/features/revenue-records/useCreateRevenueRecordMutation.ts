@@ -3,11 +3,12 @@ import { useMutation } from "../../hooks/useMutation"
 import {
   CreateRevenueRecordMutationDocument,
   RevenueRecordsQueryDocument,
-  RevenueStatsQueryDocument,
+  GroupedRevenueRecordsQueryDocument,
   type CreateRevenueRecordInput,
   type CreateRevenueRecordMutationMutation,
   type CreateRevenueRecordMutationMutationVariables,
   type RevenueRecordsQueryQueryVariables,
+  type GroupedRevenueRecordsQueryQueryVariables,
   type Error,
 } from "../../codegen/graphql"
 
@@ -24,12 +25,14 @@ interface UseCreateRevenueRecordMutationOptions {
   onSuccess?: (data: CreateRevenueRecordMutationMutation) => void
   onError?: (errors: Error[]) => void
   revenueRecordsQueryVariables?: RevenueRecordsQueryQueryVariables
+  groupedRevenueRecordsQueryVariables?: GroupedRevenueRecordsQueryQueryVariables
 }
 
 export const useCreateRevenueRecordMutation = ({
   onSuccess,
   onError,
   revenueRecordsQueryVariables,
+  groupedRevenueRecordsQueryVariables,
 }: UseCreateRevenueRecordMutationOptions = {}) => {
   const [errors, setErrors] = useState<Error[]>([])
 
@@ -52,15 +55,14 @@ export const useCreateRevenueRecordMutation = ({
           variables: revenueRecordsQueryVariables,
         }),
       },
-      {
-        query: RevenueStatsQueryDocument,
-        ...(revenueRecordsQueryVariables && {
-          variables: {
-            startDate: revenueRecordsQueryVariables.startDate,
-            endDate: revenueRecordsQueryVariables.endDate,
-          },
-        }),
-      },
+      ...(groupedRevenueRecordsQueryVariables
+        ? [
+            {
+              query: GroupedRevenueRecordsQueryDocument,
+              variables: groupedRevenueRecordsQueryVariables,
+            },
+          ]
+        : []),
     ],
   })
 

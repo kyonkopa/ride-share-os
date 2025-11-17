@@ -69,30 +69,6 @@ RSpec.describe Mutations::CreateRevenueRecord do
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
-        .and_return({
-          revenueRecord: {
-            id: /RevenueRecord:[a-zA-Z0-9]+/,
-            globalId: /RevenueRecord:[a-zA-Z0-9]+/,
-            totalRevenue: 150.50,
-            totalProfit: 0.0,
-            reconciled: false,
-            source: "bolt",
-            driver: {
-              id: driver.global_id,
-              fullName: driver.full_name
-            },
-            shiftAssignment: {
-              id: shift_assignment.global_id,
-              startTime: shift_assignment.start_time.iso8601,
-              endTime: shift_assignment.end_time.iso8601,
-              vehicle: {
-                id: vehicle.global_id,
-                displayName: "#{vehicle.make} #{vehicle.model} #{vehicle.license_plate}"
-              }
-            }
-          },
-          errors: []
-        }.with_indifferent_access)
         .with_effects do
           revenue_record = RevenueRecord.last
           aggregate_failures do
@@ -115,11 +91,6 @@ RSpec.describe Mutations::CreateRevenueRecord do
         .with_variables(reconciled_variables)
         .with_context(context)
         .with_no_errors
-        .and_return({
-          revenueRecord: {
-            reconciled: true
-          }
-        }.with_indifferent_access)
         .with_effects do
           revenue_record = RevenueRecord.last
           expect(revenue_record.reconciled).to eq(true)
@@ -135,11 +106,6 @@ RSpec.describe Mutations::CreateRevenueRecord do
             .with_variables(source_variables)
             .with_context(context)
             .with_no_errors
-            .and_return({
-              revenueRecord: {
-                source:
-              }
-            }.with_indifferent_access)
             .with_effects do
               revenue_record = RevenueRecord.last
               expect(revenue_record.source).to eq(source)
@@ -161,13 +127,6 @@ RSpec.describe Mutations::CreateRevenueRecord do
           .with_variables(past_date_variables)
           .with_context(context)
           .with_no_errors
-          .and_return({
-            revenueRecord: {
-              shiftAssignment: {
-                id: past_shift_assignment.global_id
-              }
-            }
-          }.with_indifferent_access)
           .with_effects do
             revenue_record = RevenueRecord.last
             expect(revenue_record.shift_assignment.start_time.to_date).to eq(past_date)
@@ -221,16 +180,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
         expect(mutation).to execute_as_graphql
           .with_variables(invalid_variables)
           .with_context(context)
-          .and_return({
-            revenueRecord: nil,
-            errors: array_including(
-              hash_including(
-                message: "Driver not found",
-                field: "driver_id",
-                code: "NOT_FOUND"
-              )
-            )
-          }.with_indifferent_access)
+          .with_no_errors
+          .with_mutation_error([
+            { "message" => "Driver not found", "field" => "driver_id", "code" => "NOT_FOUND" }
+          ])
       end
     end
 
@@ -243,16 +196,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
         expect(mutation).to execute_as_graphql
           .with_variables(invalid_variables)
           .with_context(context)
-          .and_return({
-            revenueRecord: nil,
-            errors: array_including(
-              hash_including(
-                message: "Driver not found",
-                field: "driver_id",
-                code: "NOT_FOUND"
-              )
-            )
-          }.with_indifferent_access)
+          .with_no_errors
+          .with_mutation_error([
+            { "message" => "Driver not found" }
+          ])
       end
     end
 
@@ -265,16 +212,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
         expect(mutation).to execute_as_graphql
           .with_variables(invalid_variables)
           .with_context(context)
-          .and_return({
-            revenueRecord: nil,
-            errors: array_including(
-              hash_including(
-                message: "Vehicle not found",
-                field: "vehicle_id",
-                code: "NOT_FOUND"
-              )
-            )
-          }.with_indifferent_access)
+          .with_no_errors
+          .with_mutation_error([
+            { "message" => "Vehicle not found", "field" => "vehicle_id", "code" => "NOT_FOUND" }
+          ])
       end
     end
 
@@ -287,16 +228,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
         expect(mutation).to execute_as_graphql
           .with_variables(invalid_variables)
           .with_context(context)
-          .and_return({
-            revenueRecord: nil,
-            errors: array_including(
-              hash_including(
-                message: "Vehicle not found",
-                field: "vehicle_id",
-                code: "NOT_FOUND"
-              )
-            )
-          }.with_indifferent_access)
+          .with_no_errors
+          .with_mutation_error([
+            { "message" => "Vehicle not found" }
+          ])
       end
     end
 
@@ -309,16 +244,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
         expect(mutation).to execute_as_graphql
           .with_variables(no_shift_variables)
           .with_context(context)
-          .and_return({
-            revenueRecord: nil,
-            errors: array_including(
-              hash_including(
-                message: match(/No shift assignment found for this driver on the given date/),
-                field: "date",
-                code: "NOT_FOUND"
-              )
-            )
-          }.with_indifferent_access)
+          .with_no_errors
+          .with_mutation_error([
+            { "message" => /No shift assignment found for this driver on the given date/, "field" => "date", "code" => "NOT_FOUND" }
+          ])
       end
     end
 
@@ -358,9 +287,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
         end
 
         it 'returns a GraphQL validation error' do
-          result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-          expect(result["errors"]).to be_present
-          expect(result["errors"].first["message"]).to match(/Expected value to not be null/)
+          expect(mutation).to execute_as_graphql
+            .with_variables(invalid_variables)
+            .with_context(context)
+            .with_errors(["Expected value to not be null"])
         end
       end
 
@@ -377,9 +307,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
         end
 
         it 'returns a GraphQL validation error' do
-          result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-          expect(result["errors"]).to be_present
-          expect(result["errors"].first["message"]).to match(/Expected value to not be null/)
+          expect(mutation).to execute_as_graphql
+            .with_variables(invalid_variables)
+            .with_context(context)
+            .with_errors(["Expected value to not be null"])
         end
       end
 
@@ -396,9 +327,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
         end
 
         it 'returns a GraphQL validation error' do
-          result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-          expect(result["errors"]).to be_present
-          expect(result["errors"].first["message"]).to match(/Expected value to not be null/)
+          expect(mutation).to execute_as_graphql
+            .with_variables(invalid_variables)
+            .with_context(context)
+            .with_errors(["Expected value to not be null"])
         end
       end
 
@@ -415,9 +347,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
         end
 
         it 'returns a GraphQL validation error' do
-          result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-          expect(result["errors"]).to be_present
-          expect(result["errors"].first["message"]).to match(/Expected value to not be null/)
+          expect(mutation).to execute_as_graphql
+            .with_variables(invalid_variables)
+            .with_context(context)
+            .with_errors(["Expected value to not be null"])
         end
       end
     end
@@ -428,9 +361,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
       end
 
       it 'returns a GraphQL validation error' do
-        result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-        expect(result["errors"]).to be_present
-        expect(result["errors"].first["message"]).to match(/Expected type RevenueSourceEnum/)
+        expect(mutation).to execute_as_graphql
+          .with_variables(invalid_variables)
+          .with_context(context)
+          .with_errors(["Expected"])
       end
     end
 
@@ -440,9 +374,10 @@ RSpec.describe Mutations::CreateRevenueRecord do
       end
 
       it 'returns a GraphQL error' do
-        result = BackendSchema.execute(mutation, variables: invalid_variables, context:)
-        expect(result["errors"]).to be_present
-        expect(result["errors"].first["message"]).to match(/Could not coerce value/)
+        expect(mutation).to execute_as_graphql
+          .with_variables(invalid_variables)
+          .with_context(context)
+          .with_errors(["Could not coerce value"])
       end
     end
   end

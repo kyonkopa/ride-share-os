@@ -9,6 +9,7 @@ export const Routes = {
   revenue: "/revenue",
   expenses: "/expenses",
   payroll: "/payroll",
+  myPayroll: "/my-payroll",
   settings: "/settings",
 
   // Admin routes (if needed in the future)

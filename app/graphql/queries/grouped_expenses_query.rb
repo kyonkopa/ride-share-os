@@ -78,7 +78,7 @@ module Queries
           total_size: total_count,
           page_size: per_page
         },
-        total_amount: grouped_expenses_total_amount,
+        total_amount: grouped_expenses_total_amount.to_f,
         category_totals:
       }
     end

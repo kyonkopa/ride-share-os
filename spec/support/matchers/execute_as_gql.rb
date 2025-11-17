@@ -111,8 +111,13 @@ RSpec::Matchers.define :execute_as_graphql do
 
     if @expected_no_mutation_error && actual_errors.present?
       @failures << "Expected no mutation error, but got:\n#{actual_errors}"
-    elsif @expected_mutation_error && (actual_errors.nil? || actual_errors != @expected_mutation_error)
-      @failures << "Expected mutation error '#{@expected_mutation_error}', but got '#{actual_errors}' instead."
+    elsif @expected_mutation_error
+      if actual_errors.nil?
+        @failures << "Expected mutation error '#{@expected_mutation_error}', but got nil instead."
+      elsif !deep_match?(@expected_mutation_error, actual_errors)
+        @failures << "Expected mutation error '#{@expected_mutation_error}', but got '#{actual_errors}' instead."
+        @failures << differ.diff_as_string(actual_errors.pretty_inspect, @expected_mutation_error.pretty_inspect)
+      end
     end
   end
 
@@ -137,7 +142,17 @@ RSpec::Matchers.define :execute_as_graphql do
     when Array
       return false unless actual.is_a?(Array)
 
-      expected.each_with_index.all? { |v, i| deep_match?(v, actual[i]) }
+      # For arrays, check if all expected items match any actual item (order-independent)
+      # This allows for flexible matching of error arrays
+      if expected.first.is_a?(Hash) && actual.first.is_a?(Hash)
+        # For arrays of hashes (like error arrays), check if all expected items are present
+        expected.all? do |expected_item|
+          actual.any? { |actual_item| deep_match?(expected_item, actual_item) }
+        end && actual.length == expected.length
+      else
+        # For other arrays, check order-dependent matching
+        expected.each_with_index.all? { |v, i| deep_match?(v, actual[i]) }
+      end
     when Regexp
       expected.match?(actual.to_s)
     when RSpec::Matchers::BuiltIn::Match
@@ -148,7 +163,15 @@ RSpec::Matchers.define :execute_as_graphql do
   end
 
   def run_side_effects
-    @side_effects_expectation.call
+    query_key = @result["data"]&.keys&.first
+    result_data = query_key ? @result.dig("data", query_key) : nil
+
+    # Support both old style (no params) and new style (with params)
+    if @side_effects_expectation.arity == 0
+      @side_effects_expectation.call
+    else
+      @side_effects_expectation.call(result_data, @result)
+    end
   rescue RSpec::Expectations::ExpectationNotMetError => e
     @failures << "Expected side effects but got:\n#{e.message}"
   end

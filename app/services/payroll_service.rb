@@ -3,6 +3,9 @@
 class PayrollService
   # Daily revenue target in GHS for calculating driver commission tiers
   DAILY_DRIVER_REVENUE_TARGET = 500
+  DRIVER_COMMISSION_FIRST_BAND_TIER_1 = 0.15
+  DRIVER_COMMISSION_FIRST_BAND_TIER_2 = 0.20
+  DRIVER_COMMISSION_SECOND_BAND = 0.30
 
   class << self
     # Calculate payroll for all drivers within a date range
@@ -80,7 +83,7 @@ class PayrollService
         {
           date: date_string.is_a?(String) ? Date.parse(date_string) : date_string.to_date,
           revenue: revenue.to_f,
-          amount_due: calculate_amount_due(revenue.to_f)
+          amount_due: calculate_amount_due(driver:, daily_revenue: revenue.to_f)
         }
       end.sort_by { |breakdown| breakdown[:date] }
     end
@@ -98,16 +101,30 @@ class PayrollService
 
     # Calculate amount due based on revenue for a single day
     # Formula:
-    # - 15% of first GHS 500 (DAILY_DRIVER_REVENUE_TARGET)
-    # - 30% of surplus above GHS 500 (DAILY_DRIVER_REVENUE_TARGET)
+    # - Tier 1: 15% of first GHS 500, then 30% of surplus above GHS 500
+    # - Tier 2: 20% of first GHS 500, then 30% of surplus above GHS 500
     #
+    # @param driver [Driver] The driver to calculate amount for
     # @param daily_revenue [Float] Total revenue amount for a single day
     # @return [Float] Amount due to the driver for that day
-    def calculate_amount_due(daily_revenue)
-      if daily_revenue <= DAILY_DRIVER_REVENUE_TARGET
-        daily_revenue * 0.15
+    def calculate_amount_due(driver:, daily_revenue:)
+      # Determine commission rate based on tier
+      first_band_rate = case driver.tier
+      when "tier_1"
+        DRIVER_COMMISSION_FIRST_BAND_TIER_1
+      when "tier_2"
+        DRIVER_COMMISSION_FIRST_BAND_TIER_2
       else
-        (DAILY_DRIVER_REVENUE_TARGET * 0.15) + ((daily_revenue - DAILY_DRIVER_REVENUE_TARGET) * 0.30)
+        raise "Invalid tier: #{driver.tier}"
+      end
+
+      # Calculate amount due
+      if daily_revenue <= DAILY_DRIVER_REVENUE_TARGET
+        daily_revenue * first_band_rate
+      else
+        target_amount = DAILY_DRIVER_REVENUE_TARGET * first_band_rate
+        surplus_amount = (daily_revenue - DAILY_DRIVER_REVENUE_TARGET) * DRIVER_COMMISSION_SECOND_BAND
+        target_amount + surplus_amount
       end
     end
 

@@ -131,8 +131,8 @@ RSpec.describe RevenueService do
         create(:revenue_record, driver: driver2, shift_assignment: shift2, total_revenue: 600.0, created_at: start_date.beginning_of_day + 10.hours)
 
         # Create expenses
-        create(:expense, amount: 10000, created_at: start_date.beginning_of_day + 12.hours) # 100.00
-        create(:expense, amount: 5000, created_at: (start_date + 1.day).beginning_of_day + 12.hours) # 50.00
+        create(:expense, amount: 10000, date: start_date) # 100.00
+        create(:expense, amount: 5000, date: start_date + 1.day) # 50.00
 
         result = described_class.calculate_company_earnings(start_date:, end_date:)
 
@@ -149,7 +149,7 @@ RSpec.describe RevenueService do
       it 'returns all components of the calculation' do
         shift = create(:shift_assignment, driver: driver1, start_time: start_date.beginning_of_day + 8.hours)
         create(:revenue_record, driver: driver1, shift_assignment: shift, total_revenue: 500.0, created_at: start_date.beginning_of_day + 10.hours)
-        create(:expense, amount: 20000, created_at: start_date.beginning_of_day + 12.hours) # 200.00
+        create(:expense, amount: 20000, date: start_date) # 200.00
 
         result = described_class.calculate_company_earnings(start_date:, end_date:)
 
@@ -171,7 +171,7 @@ RSpec.describe RevenueService do
 
       it 'handles zero payroll correctly' do
         # Create expenses but no revenue (no payroll)
-        create(:expense, amount: 10000, created_at: start_date.beginning_of_day + 12.hours) # 100.00
+        create(:expense, amount: 10000, date: start_date) # 100.00
 
         result = described_class.calculate_company_earnings(start_date:, end_date:)
 
@@ -182,7 +182,7 @@ RSpec.describe RevenueService do
       end
 
       it 'handles zero revenue correctly' do
-        create(:expense, amount: 10000, created_at: start_date.beginning_of_day + 12.hours) # 100.00
+        create(:expense, amount: 10000, date: start_date) # 100.00
 
         result = described_class.calculate_company_earnings(start_date:, end_date:)
 
@@ -196,17 +196,17 @@ RSpec.describe RevenueService do
         # Within range
         shift1 = create(:shift_assignment, driver: driver1, start_time: start_date.beginning_of_day + 8.hours)
         create(:revenue_record, driver: driver1, shift_assignment: shift1, total_revenue: 300.0, created_at: start_date.beginning_of_day + 10.hours)
-        create(:expense, amount: 10000, created_at: start_date.beginning_of_day + 12.hours) # 100.00
+        create(:expense, amount: 10000, date: start_date) # 100.00
 
         # Before range
         shift_before = create(:shift_assignment, driver: driver1, start_time: (start_date - 1.day).beginning_of_day + 8.hours)
         create(:revenue_record, driver: driver1, shift_assignment: shift_before, total_revenue: 200.0, created_at: (start_date - 1.day).beginning_of_day + 10.hours)
-        create(:expense, amount: 5000, created_at: (start_date - 1.day).beginning_of_day + 12.hours) # 50.00
+        create(:expense, amount: 5000, date: start_date - 1.day) # 50.00
 
-        # After range
+        # After range - ExpenseService uses exclusive end, so end_date expenses are excluded
         shift_after = create(:shift_assignment, driver: driver1, start_time: (end_date + 1.day).beginning_of_day + 8.hours)
         create(:revenue_record, driver: driver1, shift_assignment: shift_after, total_revenue: 400.0, created_at: (end_date + 1.day).beginning_of_day + 10.hours)
-        create(:expense, amount: 15000, created_at: (end_date + 1.day).beginning_of_day + 12.hours) # 150.00
+        create(:expense, amount: 15000, date: end_date + 1.day) # 150.00
 
         result = described_class.calculate_company_earnings(start_date:, end_date:)
 
@@ -222,17 +222,19 @@ RSpec.describe RevenueService do
       it 'handles negative earnings when expenses exceed revenue' do
         shift = create(:shift_assignment, driver: driver1, start_time: start_date.beginning_of_day + 8.hours)
         create(:revenue_record, driver: driver1, shift_assignment: shift, total_revenue: 100.0, created_at: start_date.beginning_of_day + 10.hours)
-        create(:expense, amount: 50000, created_at: start_date.beginning_of_day + 12.hours) # 500.00
+        create(:expense, amount: 50000, date: start_date) # 500.00
 
         result = described_class.calculate_company_earnings(start_date:, end_date:)
 
-        expect(result[:earnings]).to be < 0
+        # Revenue: 100, Payroll: 15 (15% of 100), Expenses: 500
+        # Earnings: 100 - 15 - 500 = -415
+        expect(result[:earnings]).to eq(-415.0)
       end
 
       it 'handles very large amounts correctly' do
         shift = create(:shift_assignment, driver: driver1, start_time: start_date.beginning_of_day + 8.hours)
         create(:revenue_record, driver: driver1, shift_assignment: shift, total_revenue: 10000.0, created_at: start_date.beginning_of_day + 10.hours)
-        create(:expense, amount: 100000, created_at: start_date.beginning_of_day + 12.hours) # 1000.00
+        create(:expense, amount: 100000, date: start_date) # 1000.00
 
         result = described_class.calculate_company_earnings(start_date:, end_date:)
 

@@ -91,10 +91,10 @@ RSpec.describe Mutations::ResumeShift do
         shift_assignment.update!(status: :active)
       end
 
-      it 'returns a not paused error' do
+      it 'returns a no paused shift error' do
         expect(mutation).to execute_as_graphql
           .with_context(context)
-          .with_mutation_error([{ "message" => "Shift is not paused", "field" => nil, "code" => "NOT_PAUSED" }])
+          .with_mutation_error([{ "message" => "No paused shift found", "field" => "shift_assignment_id", "code" => "NO_PAUSED_SHIFT" }])
       end
     end
 
@@ -108,10 +108,10 @@ RSpec.describe Mutations::ResumeShift do
         ShiftAssignment.where(driver:).update_all(status: :active)
       end
 
-      it 'returns a permission denied error' do
+      it 'returns a no paused shift error' do
         expect(mutation).to execute_as_graphql
           .with_context(context)
-          .with_mutation_error([{ "message" => "You don't have permission to resume this shift", "field" => nil, "code" => "PERMISSION_DENIED" }])
+          .with_mutation_error([{ "message" => "No paused shift found", "field" => "shift_assignment_id", "code" => "NO_PAUSED_SHIFT" }])
       end
     end
   end
