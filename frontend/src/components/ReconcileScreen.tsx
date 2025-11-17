@@ -131,11 +131,11 @@ export function ReconcileScreen() {
   const balance = totalRevenue - totalExpenses
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Reconcile</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl font-bold">Reconcile</h1>
+        <p className="text-muted-foreground text-sm">
           View revenue and expenses summary with balance calculation
         </p>
       </div>
