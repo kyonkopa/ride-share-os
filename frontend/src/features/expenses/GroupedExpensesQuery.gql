@@ -2,11 +2,13 @@ query GroupedExpensesQuery(
   $startDate: ISO8601Date!
   $endDate: ISO8601Date!
   $pagination: PaginationInput!
+  $driverId: String
 ) {
   groupedExpenses(
     startDate: $startDate
     endDate: $endDate
     pagination: $pagination
+    driverId: $driverId
   ) {
     items {
       vehicleId

@@ -12,6 +12,7 @@ import {
   X,
   Car,
   Wallet,
+  Calculator,
 } from "lucide-react"
 import { useAuthStore } from "@/stores/AuthStore"
 import { Link } from "react-router-dom"
@@ -69,6 +70,13 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       label: "Vehicles",
       icon: Car,
       path: "/vehicles",
+      enabled: true,
+    },
+    {
+      id: "reconcile",
+      label: "Reconcile",
+      icon: Calculator,
+      path: "/reconcile",
       enabled: true,
     },
     can(PermissionEnum.PayrollReadAccess) && {

@@ -8,6 +8,7 @@ import {
 interface UseGroupedExpensesOptions {
   startDate: string
   endDate: string
+  driverId?: string
   pagination?: {
     page: number
     perPage: number
@@ -19,6 +20,7 @@ export const useGroupedExpenses = (options: UseGroupedExpensesOptions) => {
   const {
     startDate,
     endDate,
+    driverId,
     pagination = { page: 1, perPage: 10 },
     skip,
   } = options
@@ -30,6 +32,7 @@ export const useGroupedExpenses = (options: UseGroupedExpensesOptions) => {
     variables: {
       startDate,
       endDate,
+      driverId: driverId || undefined,
       pagination: {
         page: pagination.page,
         perPage: pagination.perPage,

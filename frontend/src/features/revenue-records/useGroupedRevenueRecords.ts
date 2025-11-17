@@ -8,6 +8,7 @@ import {
 interface UseGroupedRevenueRecordsOptions {
   startDate?: string
   endDate?: string
+  driverId?: string
   pagination?: {
     page: number
     perPage: number
@@ -21,6 +22,7 @@ export const useGroupedRevenueRecords = (
   const {
     startDate,
     endDate,
+    driverId,
     pagination = { page: 1, perPage: 20 },
     skip,
   } = options
@@ -32,6 +34,7 @@ export const useGroupedRevenueRecords = (
     variables: {
       startDate: startDate || undefined,
       endDate: endDate || undefined,
+      driverId: driverId || undefined,
       pagination: {
         page: pagination.page,
         perPage: pagination.perPage,

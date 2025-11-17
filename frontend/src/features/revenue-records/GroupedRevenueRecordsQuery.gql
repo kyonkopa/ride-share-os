@@ -2,11 +2,13 @@ query GroupedRevenueRecordsQuery(
   $startDate: ISO8601Date
   $endDate: ISO8601Date
   $pagination: PaginationInput!
+  $driverId: String
 ) {
   groupedRevenueRecords(
     startDate: $startDate
     endDate: $endDate
     pagination: $pagination
+    driverId: $driverId
   ) {
     items {
       driverId

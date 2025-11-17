@@ -8,6 +8,7 @@ export const Routes = {
   vehicles: "/vehicles",
   revenue: "/revenue",
   expenses: "/expenses",
+  reconcile: "/reconcile",
   payroll: "/payroll",
   myPayroll: "/my-payroll",
   settings: "/settings",

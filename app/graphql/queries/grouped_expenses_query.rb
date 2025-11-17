@@ -4,16 +4,29 @@ module Queries
   class GroupedExpensesQuery < Resolvers::BaseResolver
     description "Get expenses grouped by vehicle and date within a date range"
 
+    argument :driver_id, String, required: false, description: "Optional driver global ID to filter expenses"
     argument :end_date, GraphQL::Types::ISO8601Date, required: true, description: "End date for the date range"
     argument :pagination, Types::Inputs::PaginationInput, required: true, description: "Pagination options"
     argument :start_date, GraphQL::Types::ISO8601Date, required: true, description: "Start date for the date range"
 
     type Types::GroupedExpensesResultType, null: false
 
-    def resolve(start_date:, end_date:, pagination:)
-      expenses = Expense.includes(:vehicle, :user).where(date: start_date..end_date)
+    def resolve(start_date:, end_date:, pagination:, driver_id: nil)
+      expenses = Expense.includes(:vehicle, :user).where(date: start_date...end_date)
 
-      grouped_expenses_total_amount = ExpenseService.aggregate_expenses(start_date:, end_date:)
+      # Filter by driver if driver_id is provided
+      if driver_id.present?
+        driver = Driver.find_by_global_id(driver_id)
+        if driver&.user_id
+          expenses = expenses.where(user_id: driver.user_id)
+        else
+          # If driver not found or has no user, return empty result
+          expenses = expenses.none
+        end
+      end
+
+      # Calculate total amount for filtered expenses
+      grouped_expenses_total_amount = expenses.sum(:amount) / 100.0
 
       # Group by category - amounts are in cents, convert to dollars
       category_totals_cents = expenses.group(:category).sum(:amount)

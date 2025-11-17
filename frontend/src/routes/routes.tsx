@@ -16,6 +16,7 @@ const CalendarScreenWrapper = lazy(
 const VehiclesScreenPage = lazy(() => import("../pages/VehiclesScreenPage"))
 const RevenueScreenPage = lazy(() => import("../pages/RevenueScreenPage"))
 const ExpenseScreenPage = lazy(() => import("../pages/ExpenseScreenPage"))
+const ReconcileScreenPage = lazy(() => import("../pages/ReconcileScreenPage"))
 const PayrollScreenPage = lazy(() => import("../pages/PayrollScreenPage"))
 const MyPayrollScreenPage = lazy(() => import("../pages/MyPayrollScreenPage"))
 const SettingsPage = lazy(() => import("../pages/SettingsPage"))
@@ -65,6 +66,10 @@ export const routes: RouteObject[] = [
           {
             path: Routes.expenses,
             element: <ExpenseScreenPage />,
+          },
+          {
+            path: Routes.reconcile,
+            element: <ReconcileScreenPage />,
           },
           {
             path: Routes.payroll,

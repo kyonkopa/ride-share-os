@@ -4,13 +4,14 @@ module Queries
   class GroupedRevenueRecordsQuery < Resolvers::BaseResolver
     description "Get revenue records grouped by driver and date within a date range"
 
+    argument :driver_id, String, required: false, description: "Optional driver global ID to filter revenue records"
     argument :end_date, GraphQL::Types::ISO8601Date, required: false, description: "End date for the date range"
     argument :pagination, Types::Inputs::PaginationInput, required: true, description: "Pagination options"
     argument :start_date, GraphQL::Types::ISO8601Date, required: false, description: "Start date for the date range"
 
     type Types::GroupedRevenueRecordsResultType, null: false
 
-    def resolve(start_date: nil, end_date: nil, pagination:)
+    def resolve(start_date: nil, end_date: nil, pagination:, driver_id: nil)
       # Set defaults if dates are not provided
       start_date ||= Date.new(1970, 1, 1) # Epoch start
       end_date ||= Date.current
@@ -19,8 +20,23 @@ module Queries
                         .includes(:driver, :vehicle, :shift_assignment)
                         .where(created_at: start_date.beginning_of_day..end_date.end_of_day)
 
-      # Calculate totals
-      grouped_revenue_total = RevenueService.aggregate_revenue(start_date:, end_date:)
+      # Filter by driver if driver_id is provided
+      if driver_id.present?
+        driver = Driver.find_by_global_id(driver_id)
+        if driver
+          revenue_records = revenue_records.where(driver_id: driver.id)
+        else
+          # If driver not found, return empty result
+          revenue_records = revenue_records.none
+        end
+      end
+
+      # Calculate totals using RevenueService
+      grouped_revenue_total = RevenueService.aggregate_revenue(
+        start_date:,
+        end_date:,
+        driver_id:
+      )
       grouped_profit_total = revenue_records.sum(:total_profit).to_f
 
       # Group by source - calculate totals

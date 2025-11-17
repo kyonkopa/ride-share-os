@@ -1,0 +1,38 @@
+mutation UpdateRevenueRecordMutation(
+  $revenueRecordId: ID!
+  $reconciled: Boolean!
+) {
+  updateRevenueRecord(
+    revenueRecordId: $revenueRecordId
+    reconciled: $reconciled
+  ) {
+    revenueRecord {
+      id
+      globalId
+      totalRevenue
+      totalProfit
+      reconciled
+      source
+      createdAt
+      updatedAt
+      driver {
+        id
+        fullName
+      }
+      shiftAssignment {
+        id
+        startTime
+        endTime
+        vehicle {
+          id
+          displayName
+        }
+      }
+    }
+    errors {
+      message
+      field
+      code
+    }
+  }
+}
