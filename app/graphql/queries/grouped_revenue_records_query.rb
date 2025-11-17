@@ -36,7 +36,7 @@ module Queries
 
       # Group revenue records by driver_id and date
       grouped_revenue_records = revenue_records.group_by do |record|
-        driver_id = record.driver_id || "no-driver"
+        driver_id = record.driver.global_id || "no-driver"
         # Use created_at date for grouping (consistent with frontend behavior)
         date = record.created_at.to_date
         [driver_id, date]
@@ -73,7 +73,7 @@ module Queries
         vehicle_name = vehicle&.display_name
 
         {
-          driver_id: driver_id.is_a?(String) ? driver_id : driver_id.to_s,
+          driver_id:,
           driver_name:,
           date:,
           total_revenue:,

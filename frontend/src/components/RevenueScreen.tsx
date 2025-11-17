@@ -42,6 +42,9 @@ import { FinanceDetailsBreakdownView } from "./FinanceDetailsBreakdownView"
 import { Building2 } from "lucide-react"
 import { useAuthorizer } from "@/hooks/useAuthorizer"
 import { PermissionEnum } from "@/codegen/graphql"
+import { Switch } from "./ui/switch"
+import { useAuthStore } from "@/stores/AuthStore"
+import { Label } from "./ui/label"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -224,12 +227,14 @@ function RevenueStatsBar({
 
 export function RevenueScreen() {
   const { can } = useAuthorizer()
+  const { user } = useAuthStore()
   const [activeTab, setActiveTab] = useState<
     "this-week" | "last-week" | "this-month" | "all-time"
   >("this-week")
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [showAddRevenue, setShowAddRevenue] = useState(false)
   const [showFinanceDetails, setShowFinanceDetails] = useState(false)
+  const [showOnlyMyRevenue, setShowOnlyMyRevenue] = useState(false)
 
   // Calculate current week start and end dates
   const weekDates = useMemo(() => {
@@ -316,10 +321,61 @@ export function RevenueScreen() {
 
   const statsLoading = loading
 
-  // Use grouped revenue records directly
+  // Get current driver id if user has a driver profile
+  const currentDriverId = useMemo(() => {
+    return user?.driver?.id || null
+  }, [user?.driver?.id])
+
+  // Use grouped revenue records directly, filtered by driver if switch is enabled
   const revenueGroups = useMemo(() => {
-    return (groupedRevenueRecords || []) as DriverDateRevenueGroup[]
-  }, [groupedRevenueRecords])
+    const groups = (groupedRevenueRecords || []) as DriverDateRevenueGroup[]
+
+    if (showOnlyMyRevenue && currentDriverId) {
+      return groups.filter((group) => group.driverId === currentDriverId)
+    }
+
+    return groups
+  }, [groupedRevenueRecords, showOnlyMyRevenue, currentDriverId])
+
+  // Recalculate stats when filtering
+  const filteredStats = useMemo(() => {
+    if (!showOnlyMyRevenue || !currentDriverId) {
+      return stats
+    }
+
+    // Recalculate stats from filtered groups
+    const filteredGroups = revenueGroups as DriverDateRevenueGroup[]
+    const totalRevenue = filteredGroups.reduce(
+      (sum, group) => sum + group.totalRevenue,
+      0
+    )
+    const totalProfit = filteredGroups.reduce(
+      (sum, group) => sum + group.totalProfit,
+      0
+    )
+
+    // Recalculate source totals from filtered groups
+    const sourceTotals: Record<string, { revenue: number; profit: number }> = {}
+    filteredGroups.forEach((group) => {
+      const sourceBreakdown = (group.sourceBreakdown || {}) as Record<
+        string,
+        { revenue: number; profit: number }
+      >
+      Object.entries(sourceBreakdown).forEach(([source, data]) => {
+        if (!sourceTotals[source]) {
+          sourceTotals[source] = { revenue: 0, profit: 0 }
+        }
+        sourceTotals[source].revenue += data.revenue || 0
+        sourceTotals[source].profit += data.profit || 0
+      })
+    })
+
+    return {
+      totalRevenue,
+      totalProfit,
+      sourceTotals,
+    }
+  }, [stats, showOnlyMyRevenue, currentDriverId, revenueGroups])
 
   const isLoading = loading
 
@@ -365,8 +421,8 @@ export function RevenueScreen() {
         startDate={dateParams.startDate}
         endDate={dateParams.endDate}
         onBack={() => setShowBreakdown(false)}
-        sourceTotals={stats?.sourceTotals}
-        totalRevenue={stats?.totalRevenue}
+        sourceTotals={filteredStats?.sourceTotals}
+        totalRevenue={filteredStats?.totalRevenue}
       />
     )
   }
@@ -407,9 +463,27 @@ export function RevenueScreen() {
         </Card>
       )}
 
+      {/* Filter Switch - Only show if user has a driver profile */}
+      {currentDriverId && (
+        <Card className="border-dashed py-3">
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-only-my-revenue" className="cursor-pointer">
+                Show only my revenue
+              </Label>
+              <Switch
+                id="show-only-my-revenue"
+                checked={showOnlyMyRevenue}
+                onCheckedChange={setShowOnlyMyRevenue}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats Bar */}
       <RevenueStatsBar
-        stats={stats}
+        stats={filteredStats}
         loading={statsLoading || false}
         onBreakdownClick={() => setShowBreakdown(true)}
         periodLabel={

@@ -43,7 +43,7 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       path: "/",
       enabled: true,
     },
-    {
+    user?.driver && {
       id: "calendar",
       label: "My Calendar",
       icon: Calendar,
