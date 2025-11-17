@@ -176,9 +176,7 @@ export function MyPayrollScreen() {
           {selectedMonth && myPayroll && (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">
-                  Total Amount Due
-                </p>
+                <p className="text-sm text-muted-foreground">Take Home Pay</p>
                 <p className="text-3xl font-bold text-primary">
                   {formatCurrency(myPayroll.amountDue)}
                 </p>
