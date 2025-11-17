@@ -234,7 +234,7 @@ export function RevenueScreen() {
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [showAddRevenue, setShowAddRevenue] = useState(false)
   const [showFinanceDetails, setShowFinanceDetails] = useState(false)
-  const [showOnlyMyRevenue, setShowOnlyMyRevenue] = useState(false)
+  const [showOnlyMyRevenue, setShowOnlyMyRevenue] = useState(true)
 
   // Calculate current week start and end dates
   const weekDates = useMemo(() => {
