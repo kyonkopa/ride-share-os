@@ -14,6 +14,7 @@ import { useTodaysShiftEvents } from "@/features/todays-shift-events/useTodaysSh
 import { useAuthStore } from "@/stores/AuthStore"
 import { parseGraphQLDateTime } from "@/utils/dateUtils"
 import { useNavigate } from "react-router-dom"
+import { Routes } from "@/routes/routes.utilities"
 import type { ShiftAssignment } from "@/codegen/graphql"
 interface HomeScreenProps {
   children?: React.ReactNode
@@ -109,7 +110,7 @@ export function HomeScreen({ children }: HomeScreenProps) {
                 </div>
               </div>
               <Button
-                onClick={() => navigate("/scheduled-trips")}
+                onClick={() => navigate(Routes.scheduledTripRequest)}
                 variant="default"
               >
                 Schedule Trip

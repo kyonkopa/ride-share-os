@@ -1,0 +1,51 @@
+query ScheduledTripsQuery(
+  $filter: ScheduledTripsFilterInput
+  $pagination: PaginationInput!
+) {
+  scheduledTrips(filter: $filter, pagination: $pagination) {
+    items {
+      id
+      globalId
+      clientEmail
+      clientName
+      clientPhone
+      dropoffLocation
+      pickupLocation
+      pickupDatetime
+      notes
+      price
+      recurrenceConfig
+      state
+      createdAt
+      updatedAt
+      reviewedAt
+      reviewedBy {
+        id
+        firstName
+        lastName
+        email
+      }
+      auditLogs {
+        id
+        newState
+        previousState
+        createdAt
+        changedBy {
+          id
+          firstName
+          lastName
+        }
+      }
+    }
+    pagination {
+      currentPage
+      firstPage
+      lastPage
+      nextPage
+      pageCount
+      pageSize
+      prevPage
+      totalSize
+    }
+  }
+}

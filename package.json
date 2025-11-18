@@ -8,7 +8,8 @@
     "prepare": "is-ci || husky",
     "dev": "cd frontend && yarn dev",
     "serve": "rails s",
-    "codegen": "cd frontend && yarn codegen"
+    "codegen": "cd frontend && yarn codegen",
+    "lint": "cd frontend && yarn lint"
   },
   "engines": {
     "node": ">=18.0.0",

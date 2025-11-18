@@ -1,0 +1,22 @@
+mutation CreateScheduledTripRequestMutation(
+  $input: CreateScheduledTripRequestInput!
+) {
+  createScheduledTripRequest(input: $input) {
+    scheduledTrip {
+      id
+      state
+      clientName
+      clientEmail
+      clientPhone
+      pickupLocation
+      dropoffLocation
+      pickupDatetime
+      recurrenceConfig
+    }
+    errors {
+      message
+      field
+      code
+    }
+  }
+}

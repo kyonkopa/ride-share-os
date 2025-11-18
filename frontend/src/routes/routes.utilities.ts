@@ -14,6 +14,8 @@ export const Routes = {
   payroll: "/payroll",
   myPayroll: "/my-payroll",
   settings: "/settings",
+  scheduledTrips: "/scheduled-trips",
+  scheduledTripRequest: "/scheduled-trips/request",
 
   // Admin routes (if needed in the future)
   adminDashboard: "/admin/dashboard",

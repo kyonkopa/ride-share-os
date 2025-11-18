@@ -23,6 +23,10 @@ const ReconcileScreenPage = lazy(() => import("../pages/ReconcileScreenPage"))
 const PayrollScreenPage = lazy(() => import("../pages/PayrollScreenPage"))
 const MyPayrollScreenPage = lazy(() => import("../pages/MyPayrollScreenPage"))
 const SettingsPage = lazy(() => import("../pages/SettingsPage"))
+const ScheduledTripsPage = lazy(() => import("../pages/ScheduledTripsPage"))
+const ScheduledTripRequestPage = lazy(
+  () => import("../pages/ScheduledTripRequestPage")
+)
 
 export const routes: RouteObject[] = [
   {
@@ -101,6 +105,14 @@ export const routes: RouteObject[] = [
           {
             path: Routes.settings,
             element: <SettingsPage />,
+          },
+          {
+            path: Routes.scheduledTrips,
+            element: <ScheduledTripsPage />,
+          },
+          {
+            path: Routes.scheduledTripRequest,
+            element: <ScheduledTripRequestPage />,
           },
         ],
       },
