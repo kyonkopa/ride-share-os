@@ -12,7 +12,6 @@ module Queries
     type Types::GroupedRevenueRecordsResultType, null: false
 
     def resolve(start_date: nil, end_date: nil, pagination:, driver_id: nil)
-      # Set defaults if dates are not provided
       start_date ||= Date.new(1970, 1, 1) # Epoch start
       end_date ||= Date.current
 
