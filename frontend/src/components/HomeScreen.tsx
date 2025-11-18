@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/StatusBadge"
 import { ClockInForm } from "./ClockInForm"
 import { TodaysShifts } from "./TodaysShifts"
 import { TodaysActivity } from "./TodaysActivity"
 import { CurrentShift } from "@/features/current-shift"
 import { useShift } from "../hooks/useShift"
-import { Calendar } from "lucide-react"
+import { Calendar, CalendarClock } from "lucide-react"
 import { useVehicles } from "@/features/clock-in/useVehicles"
 import { useTodayShifts } from "@/features/today-shifts/useTodayShifts"
 import { useTodaysShiftEvents } from "@/features/todays-shift-events/useTodaysShiftEvents"
 import { useAuthStore } from "@/stores/AuthStore"
 import { parseGraphQLDateTime } from "@/utils/dateUtils"
+import { useNavigate } from "react-router-dom"
 import type { ShiftAssignment } from "@/codegen/graphql"
 interface HomeScreenProps {
   children?: React.ReactNode
@@ -21,6 +23,7 @@ export function HomeScreen({ children }: HomeScreenProps) {
   const { vehicles } = useVehicles()
   const { currentShift } = useShift()
   const [showClockIn, setShowClockIn] = useState(false)
+  const navigate = useNavigate()
 
   const { getTodayShifts, data: todayShiftsData } = useTodayShifts()
   const { getTodaysShiftEvents, data: todaysShiftEventsData } =
@@ -91,6 +94,29 @@ export function HomeScreen({ children }: HomeScreenProps) {
       <div className="space-y-6">
         {/* Status Badge */}
         {user?.driver && <StatusBadge isOnline={!!currentShift} />}
+
+        {/* Scheduled Trips Entry Point */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CalendarClock className="h-6 w-6 text-primary" />
+                <div>
+                  <h3 className="font-semibold text-lg">Schedule a Trip</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Request a future or recurring ride
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => navigate("/scheduled-trips")}
+                variant="default"
+              >
+                Schedule Trip
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Current Shift Status */}
         {user?.driver && (

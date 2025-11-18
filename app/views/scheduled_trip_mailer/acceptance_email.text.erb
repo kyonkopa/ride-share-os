@@ -1,0 +1,18 @@
+Your Scheduled Trip Has Been Accepted
+
+Dear <%= @scheduled_trip.client_name %>,
+
+Thank you for accepting your scheduled trip. We look forward to serving you!
+
+Trip Details:
+- Pickup Location: <%= @scheduled_trip.pickup_location %>
+- Drop-off Location: <%= @scheduled_trip.dropoff_location %>
+- Pickup Date: <%= @scheduled_trip.pickup_datetime.strftime("%B %d, %Y") %>
+- Pickup Time: <%= @scheduled_trip.pickup_datetime.strftime("%I:%M %p") %>
+- Price: GHS <%= @scheduled_trip.price&.to_f || "TBD" %>
+
+We will see you at the scheduled pickup time and location.
+
+Best regards,
+KED Transport Services
+

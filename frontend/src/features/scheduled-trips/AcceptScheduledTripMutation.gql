@@ -1,0 +1,15 @@
+mutation AcceptScheduledTripMutation($token: String!) {
+  acceptScheduledTrip(token: $token) {
+    scheduledTrip {
+      id
+      state
+      clientName
+      pickupDatetime
+    }
+    errors {
+      message
+      field
+      code
+    }
+  }
+}

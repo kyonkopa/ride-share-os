@@ -1,6 +1,8 @@
 export const Routes = {
   // Public routes
   login: "/login",
+  scheduledTripAccept: "/scheduled-trips/:token/accept",
+  scheduledTripDecline: "/scheduled-trips/:token/decline",
 
   // Protected routes
   home: "/",

@@ -9,6 +9,9 @@ import ErrorBoundary from "@/components/ErrorBoundary"
 
 // Lazy load components for better performance
 const LoginPage = lazy(() => import("../pages/LoginPage"))
+const ScheduledTripActionPage = lazy(
+  () => import("../pages/ScheduledTripActionPage")
+)
 const HomeScreenWrapper = lazy(() => import("../pages/HomeScreenPage"))
 const CalendarScreenWrapper = lazy(
   () => import("../components/CalendarScreenWrapper")
@@ -34,6 +37,22 @@ export const routes: RouteObject[] = [
             <UnauthenticatedRoute>
               <LoginPage />
             </UnauthenticatedRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/scheduled-trips/:token/accept",
+        element: (
+          <Suspense fallback={<SuspenseFallback />}>
+            <ScheduledTripActionPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/scheduled-trips/:token/decline",
+        element: (
+          <Suspense fallback={<SuspenseFallback />}>
+            <ScheduledTripActionPage />
           </Suspense>
         ),
       },

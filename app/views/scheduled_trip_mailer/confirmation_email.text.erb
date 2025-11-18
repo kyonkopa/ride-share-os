@@ -1,0 +1,29 @@
+Your Scheduled Trip Request Has Been Confirmed
+
+Dear <%= @scheduled_trip.client_name %>,
+
+Your scheduled trip request has been reviewed and confirmed by our team.
+
+Trip Details:
+- Pickup Location: <%= @scheduled_trip.pickup_location %>
+- Drop-off Location: <%= @scheduled_trip.dropoff_location %>
+- Pickup Date: <%= @scheduled_trip.pickup_datetime.strftime("%B %d, %Y") %>
+- Pickup Time: <%= @scheduled_trip.pickup_datetime.strftime("%I:%M %p") %>
+- Price: GHS <%= @scheduled_trip.price&.to_f || "TBD" %>
+
+<% if @scheduled_trip.notes.present? %>
+Notes: <%= @scheduled_trip.notes %>
+<% end %>
+
+Please confirm your acceptance or decline this trip by visiting one of the links below:
+
+Accept Trip: <%= @acceptance_url %>
+Decline Trip: <%= @decline_url %>
+
+Important: Please respond within 2 hours of your pickup time, otherwise this trip will be automatically declined.
+
+If you have any questions, please contact us at your earliest convenience.
+
+Best regards,
+KED Transport Services
+
