@@ -15,7 +15,7 @@ module Queries
       # Get all shift events from today's shifts for this driver
       ShiftEvent.joins(:shift_assignment)
                 .where(driver_scope)
-                .where(created_at: today.beginning_of_day...today.end_of_day)
+                .where(created_at: today.beginning_of_day..today.end_of_day)
                 .order(created_at: :desc)
     end
   end

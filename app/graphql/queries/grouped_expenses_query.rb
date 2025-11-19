@@ -12,9 +12,8 @@ module Queries
     type Types::GroupedExpensesResultType, null: false
 
     def resolve(start_date:, end_date:, pagination:, driver_id: nil)
-      expenses = Expense.includes(:vehicle, :user).where(date: start_date...end_date)
+      expenses = Expense.includes(:vehicle, :user).where(date: start_date..end_date)
 
-      # Filter by driver if driver_id is provided
       if driver_id.present?
         driver = Driver.find_by_global_id(driver_id)
         if driver&.user_id

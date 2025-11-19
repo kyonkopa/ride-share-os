@@ -1,20 +1,17 @@
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/StatusBadge"
 import { ClockInForm } from "./ClockInForm"
 import { TodaysShifts } from "./TodaysShifts"
 import { TodaysActivity } from "./TodaysActivity"
 import { CurrentShift } from "@/features/current-shift"
 import { useShift } from "../hooks/useShift"
-import { Calendar, CalendarClock } from "lucide-react"
+import { Calendar } from "lucide-react"
 import { useVehicles } from "@/features/clock-in/useVehicles"
 import { useTodayShifts } from "@/features/today-shifts/useTodayShifts"
 import { useTodaysShiftEvents } from "@/features/todays-shift-events/useTodaysShiftEvents"
 import { useAuthStore } from "@/stores/AuthStore"
 import { parseGraphQLDateTime } from "@/utils/dateUtils"
-import { useNavigate } from "react-router-dom"
-import { Routes } from "@/routes/routes.utilities"
 import type { ShiftAssignment } from "@/codegen/graphql"
 interface HomeScreenProps {
   children?: React.ReactNode
@@ -24,7 +21,6 @@ export function HomeScreen({ children }: HomeScreenProps) {
   const { vehicles } = useVehicles()
   const { currentShift } = useShift()
   const [showClockIn, setShowClockIn] = useState(false)
-  const navigate = useNavigate()
 
   const { getTodayShifts, data: todayShiftsData } = useTodayShifts()
   const { getTodaysShiftEvents, data: todaysShiftEventsData } =
@@ -96,8 +92,8 @@ export function HomeScreen({ children }: HomeScreenProps) {
         {/* Status Badge */}
         {user?.driver && <StatusBadge isOnline={!!currentShift} />}
 
-        {/* Scheduled Trips Entry Point */}
-        <Card>
+        {/* Scheduled Trips Entry Point - Hidden for now */}
+        {/* <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -117,7 +113,7 @@ export function HomeScreen({ children }: HomeScreenProps) {
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Current Shift Status */}
         {user?.driver && (
