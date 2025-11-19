@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  </head>
+  <body>
+    <h2>Your Scheduled Trip Has Been Accepted</h2>
+    
+    <p>Dear <%= @scheduled_trip.client_name %>,</p>
+    
+    <p>Thank you for accepting your scheduled trip. We look forward to serving you!</p>
+    
+    <h3>Trip Details:</h3>
+    <ul>
+      <li><strong>Pickup Location:</strong> <%= @scheduled_trip.pickup_location %></li>
+      <li><strong>Drop-off Location:</strong> <%= @scheduled_trip.dropoff_location %></li>
+      <li><strong>Pickup Date:</strong> <%= @scheduled_trip.pickup_datetime.strftime("%B %d, %Y") %></li>
+      <li><strong>Pickup Time:</strong> <%= @scheduled_trip.pickup_datetime.strftime("%I:%M %p") %></li>
+      <li><strong>Price:</strong> GHS <%= @scheduled_trip.price&.to_f || "TBD" %></li>
+    </ul>
+    
+    <p>We will see you at the scheduled pickup time and location.</p>
+    
+    <p>Best regards,<br>KED Transport Services</p>
+  </body>
+</html>
+

@@ -11,13 +11,13 @@ import {
 } from "../../codegen/graphql"
 
 export interface ClockOutFormData {
-  odometer: number
-  gpsLat: number
-  gpsLon: number
-  range: number
+  odometer: number | null
+  gpsLat: number | null
+  gpsLon: number | null
+  range: number | null
   notes?: string
-  boltEarnings: number
-  uberEarnings: number
+  boltEarnings: number | null
+  uberEarnings: number | null
   shiftAssignmentId?: string
 }
 
@@ -56,17 +56,19 @@ export const useClockOutForm = ({
     setErrors([])
 
     const input: ClockOutInput = {
-      odometer: Math.round(data.odometer),
-      gpsLat: data.gpsLat,
-      gpsLon: data.gpsLon,
-      vehicleRange: Math.round(data.range),
+      odometer: data.odometer !== null ? Math.round(data.odometer) : 0,
+      gpsLat: data.gpsLat ?? 0,
+      gpsLon: data.gpsLon ?? 0,
+      vehicleRange: data.range !== null ? Math.round(data.range) : 0,
       notes: data.notes || undefined,
-      boltEarnings: data.boltEarnings
-        ? parseFloat(data.boltEarnings.toString())
-        : undefined,
-      uberEarnings: data.uberEarnings
-        ? parseFloat(data.uberEarnings.toString())
-        : undefined,
+      boltEarnings:
+        data.boltEarnings !== null
+          ? parseFloat(data.boltEarnings.toString())
+          : undefined,
+      uberEarnings:
+        data.uberEarnings !== null
+          ? parseFloat(data.uberEarnings.toString())
+          : undefined,
     }
 
     await clockOut({

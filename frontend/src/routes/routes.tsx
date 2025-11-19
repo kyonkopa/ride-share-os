@@ -9,6 +9,9 @@ import ErrorBoundary from "@/components/ErrorBoundary"
 
 // Lazy load components for better performance
 const LoginPage = lazy(() => import("../pages/LoginPage"))
+const ScheduledTripActionPage = lazy(
+  () => import("../pages/ScheduledTripActionPage")
+)
 const HomeScreenWrapper = lazy(() => import("../pages/HomeScreenPage"))
 const CalendarScreenWrapper = lazy(
   () => import("../components/CalendarScreenWrapper")
@@ -20,6 +23,10 @@ const ReconcileScreenPage = lazy(() => import("../pages/ReconcileScreenPage"))
 const PayrollScreenPage = lazy(() => import("../pages/PayrollScreenPage"))
 const MyPayrollScreenPage = lazy(() => import("../pages/MyPayrollScreenPage"))
 const SettingsPage = lazy(() => import("../pages/SettingsPage"))
+const ScheduledTripsPage = lazy(() => import("../pages/ScheduledTripsPage"))
+const ScheduledTripRequestPage = lazy(
+  () => import("../pages/ScheduledTripRequestPage")
+)
 
 export const routes: RouteObject[] = [
   {
@@ -34,6 +41,22 @@ export const routes: RouteObject[] = [
             <UnauthenticatedRoute>
               <LoginPage />
             </UnauthenticatedRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "/scheduled-trips/:token/accept",
+        element: (
+          <Suspense fallback={<SuspenseFallback />}>
+            <ScheduledTripActionPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "/scheduled-trips/:token/decline",
+        element: (
+          <Suspense fallback={<SuspenseFallback />}>
+            <ScheduledTripActionPage />
           </Suspense>
         ),
       },
@@ -82,6 +105,14 @@ export const routes: RouteObject[] = [
           {
             path: Routes.settings,
             element: <SettingsPage />,
+          },
+          {
+            path: Routes.scheduledTrips,
+            element: <ScheduledTripsPage />,
+          },
+          {
+            path: Routes.scheduledTripRequest,
+            element: <ScheduledTripRequestPage />,
           },
         ],
       },

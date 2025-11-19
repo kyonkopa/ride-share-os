@@ -41,13 +41,13 @@ export function ClockOutForm({
   onOpenChange,
 }: ClockOutFormProps) {
   const [formData, setFormData] = useState<ClockOutFormData>({
-    odometer: 0,
-    gpsLat: 0,
-    gpsLon: 0,
-    range: 0,
+    odometer: null,
+    gpsLat: null,
+    gpsLon: null,
+    range: null,
     notes: "",
-    boltEarnings: 0,
-    uberEarnings: 0,
+    boltEarnings: null,
+    uberEarnings: null,
     shiftAssignmentId: currentShift.id,
   })
 
@@ -86,14 +86,41 @@ export function ClockOutForm({
     } else if (open && !navigator.geolocation) {
       setLocationError("Geolocation is not supported by this browser.")
     } else if (!open) {
-      // Reset location state when modal is closed
+      // Reset location state and form data when modal is closed
       setLocation(null)
       setLocationError(null)
+      setFormData({
+        odometer: null,
+        gpsLat: null,
+        gpsLon: null,
+        range: null,
+        notes: "",
+        boltEarnings: null,
+        uberEarnings: null,
+        shiftAssignmentId: currentShift.id,
+      })
     }
   }, [open])
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    // Convert empty strings to null, numeric strings to numbers
+    const numericFields = [
+      "odometer",
+      "gpsLat",
+      "gpsLon",
+      "range",
+      "boltEarnings",
+      "uberEarnings",
+    ]
+    if (numericFields.includes(field)) {
+      const numValue = value === "" ? null : Number(value)
+      setFormData((prev) => ({
+        ...prev,
+        [field]: isNaN(numValue as number) ? null : numValue,
+      }))
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: value }))
+    }
   }
 
   const { addSuccess } = useNotification()
@@ -181,12 +208,12 @@ export function ClockOutForm({
                 id="odometer"
                 type="number"
                 min={clockInShiftEvent?.odometer ?? 0}
-                value={formData.odometer}
+                value={formData.odometer ?? ""}
                 onChange={(e) => handleInputChange("odometer", e.target.value)}
                 placeholder="Enter final odometer reading"
                 required
               />
-              {!!formData.odometer &&
+              {formData.odometer !== null &&
                 !!currentShift?.vehicle?.latestOdometer && (
                   <p className="text-sm text-muted-foreground">
                     Distance driven:{" "}
@@ -204,7 +231,7 @@ export function ClockOutForm({
               <Input
                 id="range"
                 type="number"
-                value={formData.range}
+                value={formData.range ?? ""}
                 onChange={(e) => handleInputChange("range", e.target.value)}
                 placeholder="Enter final range in km"
                 required
@@ -234,7 +261,7 @@ export function ClockOutForm({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={formData.boltEarnings}
+                      value={formData.boltEarnings ?? ""}
                       onChange={(e) =>
                         handleInputChange("boltEarnings", e.target.value)
                       }
@@ -263,7 +290,7 @@ export function ClockOutForm({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={formData.uberEarnings}
+                      value={formData.uberEarnings ?? ""}
                       onChange={(e) =>
                         handleInputChange("uberEarnings", e.target.value)
                       }

@@ -1,0 +1,17 @@
+Your Scheduled Trip Has Been Declined
+
+Dear <%= @scheduled_trip.client_name %>,
+
+We have received your request to decline the scheduled trip.
+
+Trip Details:
+- Pickup Location: <%= @scheduled_trip.pickup_location %>
+- Drop-off Location: <%= @scheduled_trip.dropoff_location %>
+- Pickup Date: <%= @scheduled_trip.pickup_datetime.strftime("%B %d, %Y") %>
+- Pickup Time: <%= @scheduled_trip.pickup_datetime.strftime("%I:%M %p") %>
+
+If you would like to schedule another trip, please feel free to submit a new request.
+
+Best regards,
+KED Transport Services
+

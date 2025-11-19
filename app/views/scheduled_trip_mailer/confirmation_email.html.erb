@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  </head>
+  <body>
+    <h2>Your Scheduled Trip Request Has Been Confirmed</h2>
+    
+    <p>Dear <%= @scheduled_trip.client_name %>,</p>
+    
+    <p>Your scheduled trip request has been reviewed and confirmed by our team.</p>
+    
+    <h3>Trip Details:</h3>
+    <ul>
+      <li><strong>Pickup Location:</strong> <%= @scheduled_trip.pickup_location %></li>
+      <li><strong>Drop-off Location:</strong> <%= @scheduled_trip.dropoff_location %></li>
+      <li><strong>Pickup Date:</strong> <%= @scheduled_trip.pickup_datetime.strftime("%B %d, %Y") %></li>
+      <li><strong>Pickup Time:</strong> <%= @scheduled_trip.pickup_datetime.strftime("%I:%M %p") %></li>
+      <li><strong>Price:</strong> GHS <%= @scheduled_trip.price&.to_f || "TBD" %></li>
+    </ul>
+    
+    <% if @scheduled_trip.notes.present? %>
+      <p><strong>Notes:</strong> <%= @scheduled_trip.notes %></p>
+    <% end %>
+    
+    <p>Please confirm your acceptance or decline this trip by clicking one of the links below:</p>
+    
+    <p>
+      <a href="<%= @acceptance_url %>" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-right: 10px;">Accept Trip</a>
+      <a href="<%= @decline_url %>" style="background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Decline Trip</a>
+    </p>
+    
+    <p><strong>Important:</strong> Please respond within 2 hours of your pickup time, otherwise this trip will be automatically declined.</p>
+    
+    <p>If you have any questions, please contact us at your earliest convenience.</p>
+    
+    <p>Best regards,<br>KED Transport Services</p>
+  </body>
+</html>
+

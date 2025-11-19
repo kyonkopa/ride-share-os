@@ -1,0 +1,17 @@
+Your Scheduled Trip Has Been Automatically Declined
+
+Dear <%= @scheduled_trip.client_name %>,
+
+Unfortunately, your scheduled trip has been automatically declined because no response was received within 2 hours of the scheduled pickup time.
+
+Trip Details:
+- Pickup Location: <%= @scheduled_trip.pickup_location %>
+- Drop-off Location: <%= @scheduled_trip.dropoff_location %>
+- Pickup Date: <%= @scheduled_trip.pickup_datetime.strftime("%B %d, %Y") %>
+- Pickup Time: <%= @scheduled_trip.pickup_datetime.strftime("%I:%M %p") %>
+
+If you would like to schedule another trip, please feel free to submit a new request.
+
+Best regards,
+KED Transport Services
+

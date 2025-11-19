@@ -2,13 +2,17 @@
 
 module Types
   class MutationType < Types::BaseObject
+    field :accept_scheduled_trip, mutation: Mutations::AcceptScheduledTrip
     field :clock_in, mutation: Mutations::ClockIn
     field :clock_out, mutation: Mutations::ClockOut
     field :create_expense, mutation: Mutations::CreateExpense
     field :create_revenue_record, mutation: Mutations::CreateRevenueRecord
+    field :create_scheduled_trip_request, mutation: Mutations::CreateScheduledTripRequest
     field :create_session, mutation: Mutations::CreateSession
+    field :decline_scheduled_trip, mutation: Mutations::DeclineScheduledTrip
     field :pause_shift, mutation: Mutations::PauseShift
     field :resume_shift, mutation: Mutations::ResumeShift
+    field :review_scheduled_trip, mutation: Mutations::ReviewScheduledTrip
     field :update_revenue_record, mutation: Mutations::UpdateRevenueRecord
     field :update_vehicle, mutation: Mutations::UpdateVehicle
   end

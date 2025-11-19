@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_16_143513) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_18_160216) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -112,6 +112,45 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_16_143513) do
     t.index ["vehicle_id"], name: "index_revenue_records_on_vehicle_id"
   end
 
+  create_table "scheduled_trip_audit_logs", force: :cascade do |t|
+    t.bigint "scheduled_trip_id", null: false
+    t.string "previous_state"
+    t.string "new_state", null: false
+    t.bigint "changed_by_id"
+    t.string "change_reason"
+    t.jsonb "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["changed_by_id"], name: "index_scheduled_trip_audit_logs_on_changed_by_id"
+    t.index ["created_at"], name: "index_scheduled_trip_audit_logs_on_created_at"
+    t.index ["scheduled_trip_id"], name: "index_scheduled_trip_audit_logs_on_scheduled_trip_id"
+  end
+
+  create_table "scheduled_trips", force: :cascade do |t|
+    t.string "client_name", null: false
+    t.string "client_email", null: false
+    t.string "client_phone", null: false
+    t.string "pickup_location", null: false
+    t.string "dropoff_location", null: false
+    t.datetime "pickup_datetime", null: false
+    t.jsonb "recurrence_config", default: {}
+    t.decimal "price", precision: 10, scale: 2
+    t.integer "state", default: 0, null: false
+    t.string "acceptance_token", null: false
+    t.string "decline_token", null: false
+    t.bigint "reviewed_by_id"
+    t.datetime "reviewed_at"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["acceptance_token"], name: "index_scheduled_trips_on_acceptance_token", unique: true
+    t.index ["client_email"], name: "index_scheduled_trips_on_client_email"
+    t.index ["decline_token"], name: "index_scheduled_trips_on_decline_token", unique: true
+    t.index ["pickup_datetime"], name: "index_scheduled_trips_on_pickup_datetime"
+    t.index ["reviewed_by_id"], name: "index_scheduled_trips_on_reviewed_by_id"
+    t.index ["state"], name: "index_scheduled_trips_on_state"
+  end
+
   create_table "shift_assignments", force: :cascade do |t|
     t.integer "city", null: false
     t.bigint "driver_id", null: false
@@ -207,6 +246,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_16_143513) do
   add_foreign_key "revenue_records", "drivers"
   add_foreign_key "revenue_records", "shift_assignments"
   add_foreign_key "revenue_records", "vehicles"
+  add_foreign_key "scheduled_trip_audit_logs", "scheduled_trips"
+  add_foreign_key "scheduled_trip_audit_logs", "users", column: "changed_by_id"
+  add_foreign_key "scheduled_trips", "users", column: "reviewed_by_id"
   add_foreign_key "shift_assignments", "drivers"
   add_foreign_key "shift_assignments", "vehicles"
   add_foreign_key "shift_events", "shift_assignments"

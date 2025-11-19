@@ -11,7 +11,7 @@
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  source               :integer         not null default(0)
-#  vehicle_id           :integer
+#  vehicle_id           :integer        
 #
 # Indexes
 #

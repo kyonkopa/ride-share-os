@@ -1,0 +1,15 @@
+mutation DeclineScheduledTripMutation($token: String!) {
+  declineScheduledTrip(token: $token) {
+    scheduledTrip {
+      id
+      state
+      clientName
+      pickupDatetime
+    }
+    errors {
+      message
+      field
+      code
+    }
+  }
+}

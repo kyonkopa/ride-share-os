@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  </head>
+  <body>
+    <h2>Your Scheduled Trip Has Been Automatically Declined</h2>
+    
+    <p>Dear <%= @scheduled_trip.client_name %>,</p>
+    
+    <p>Unfortunately, your scheduled trip has been automatically declined because no response was received within 2 hours of the scheduled pickup time.</p>
+    
+    <h3>Trip Details:</h3>
+    <ul>
+      <li><strong>Pickup Location:</strong> <%= @scheduled_trip.pickup_location %></li>
+      <li><strong>Drop-off Location:</strong> <%= @scheduled_trip.dropoff_location %></li>
+      <li><strong>Pickup Date:</strong> <%= @scheduled_trip.pickup_datetime.strftime("%B %d, %Y") %></li>
+      <li><strong>Pickup Time:</strong> <%= @scheduled_trip.pickup_datetime.strftime("%I:%M %p") %></li>
+    </ul>
+    
+    <p>If you would like to schedule another trip, please feel free to submit a new request.</p>
+    
+    <p>Best regards,<br>KED Transport Services</p>
+  </body>
+</html>
+
