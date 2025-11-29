@@ -1,12 +1,12 @@
-import { useState, useMemo, useEffect } from "react"
-import { DateTime } from "luxon"
+import { useState, useMemo } from "react"
 import { useGroupedExpenses } from "@/features/expenses/useGroupedExpenses"
-import { useExpenses } from "@/features/expenses/useExpenses"
+import { useDateParams, type DateTab } from "@/hooks/useDateParams"
 import { ExpenseBreakdownView } from "@/features/expenses/ExpenseBreakdownView"
 import { useVehicles } from "@/features/clock-in/useVehicles"
+import { EXPENSE_CATEGORIES } from "@/features/expenses/expenseCategoryEnum"
 import { Spinner } from "./ui/spinner"
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
-import { AlertCircleIcon, Receipt, Plus, BarChart3 } from "lucide-react"
+import { AlertCircleIcon, Receipt, Plus } from "lucide-react"
 import {
   Empty,
   EmptyDescription,
@@ -25,7 +25,16 @@ import { Badge } from "./ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs"
 import { Button } from "./ui/button"
 import { ExpenseForm } from "./ExpenseForm"
-import type { GroupedExpensesQueryQuery, Expense } from "@/codegen/graphql"
+import { ExpenseStatsBar } from "./ExpenseStatsBar"
+import {
+  FilterDialog,
+  ActiveFilters,
+  FilterButton,
+  useFilters,
+  type FilterConfig,
+  DateFilterValue,
+} from "./filters"
+import type { GroupedExpensesQueryQuery } from "@/codegen/graphql"
 import { Paginator } from "./pagination/paginator"
 import {
   Accordion,
@@ -33,7 +42,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion"
-import NumberFlow from "@number-flow/react"
 import { formatDate } from "@/utils/dateUtils"
 
 function formatCurrency(amount: number): string {
@@ -143,204 +151,82 @@ function ExpensesEmpty() {
   )
 }
 
-interface ExpenseCardProps {
-  expense: Expense
-}
-
-function ExpenseCard({ expense }: ExpenseCardProps) {
-  return (
-    <Card className="gap-2">
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <span className="font-medium capitalize">
-                {expense.category.replace(/_/g, " ")}
-              </span>
-              {expense.receiptKey && (
-                <Badge variant="outline" className="text-xs">
-                  Receipt
-                </Badge>
-              )}
-            </div>
-            <CardDescription>
-              {expense.vehicle?.displayName || "No Vehicle"} •{" "}
-              {formatDate(expense.date)}
-            </CardDescription>
-            {expense.category === "other" && expense.description && (
-              <div className="text-sm text-muted-foreground">
-                {expense.description}
-              </div>
-            )}
-            <div className="text-xs text-muted-foreground">
-              {expense.user && (
-                <span>
-                  Added by {expense.user.firstName} {expense.user.lastName}
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xl font-bold">
-              {formatCurrency(expense.amount)}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-type ExpenseStats = {
-  totalAmount: number
-  categoryTotals: Record<string, number>
-}
-
-interface ExpenseStatsBarProps {
-  stats: ExpenseStats | null | undefined
-  loading: boolean
-  periodLabel: string
-  onBreakdownClick: () => void
-}
-
-function ExpenseStatsBar({
-  stats,
-  loading,
-  periodLabel,
-  onBreakdownClick,
-}: ExpenseStatsBarProps) {
-  const [animatedValue, setAnimatedValue] = useState(0)
-
-  useEffect(() => {
-    if (stats) {
-      setAnimatedValue(0)
-
-      // After 100ms, set to the actual value
-      const timer = setTimeout(() => {
-        setAnimatedValue(stats.totalAmount)
-      }, 100)
-
-      return () => clearTimeout(timer)
-    }
-  }, [stats])
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <Spinner />
-          <span className="ml-2">Loading expense stats...</span>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!stats) return null
-
-  return (
-    <Card className="gap-2">
-      <CardHeader>
-        <CardTitle>Expense Summary</CardTitle>
-        <CardDescription>{periodLabel}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <p className="text-2xl font-bold text-primary">
-            <span className="mr-1">GHS</span>
-            <NumberFlow value={animatedValue} />
-          </p>
-          <Button variant="outline" onClick={onBreakdownClick}>
-            <BarChart3 className="mr-2 h-4 w-4" />
-            Breakdown
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 export function ExpenseScreen() {
-  const [activeTab, setActiveTab] = useState<
-    "this-week" | "this-month" | "last-month" | "all-time"
-  >("this-week")
+  const [activeTab, setActiveTab] = useState<DateTab>("this-week")
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [showBreakdown, setShowBreakdown] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const { vehicles } = useVehicles()
   const [currentPage, setCurrentPage] = useState(1)
 
-  // Determine items per page based on active tab
+  // Define filter configuration
+  const filterConfigs: FilterConfig[] = useMemo(
+    () => [
+      {
+        type: "select",
+        key: "vehicleId",
+        label: "Vehicle",
+        options: vehicles.map((v) => ({
+          value: v.id,
+          label: v.displayName,
+        })),
+        placeholder: "All vehicles",
+      },
+      {
+        type: "select",
+        key: "category",
+        label: "Category",
+        options: EXPENSE_CATEGORIES.map((category) => ({
+          value: category,
+          label: category
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase()),
+        })),
+        placeholder: "All categories",
+      },
+      {
+        type: "date",
+        key: "startDate",
+        label: "Start Date",
+        placeholder: "Select start date",
+        max: "endDate", // Can't select dates after end date
+      },
+      {
+        type: "date",
+        key: "endDate",
+        label: "End Date",
+        placeholder: "Select end date",
+        max: DateFilterValue.now, // Can't select dates in the future
+        min: "startDate", // Can't select dates before start date
+      },
+    ],
+    [vehicles]
+  )
+
+  const { filters, hasActiveFilters, setFilters, clearFilters } = useFilters({
+    filterConfigs,
+    onFiltersChange: () => {
+      setCurrentPage(1) // Reset to first page when filters change
+    },
+  })
+
   const itemsPerPage = useMemo(() => {
-    return activeTab === "all-time" ? 10 : 100
-  }, [activeTab])
+    return 10
+  }, [])
 
   // Reset to page 1 when tab changes
   const handleTabChange = (value: string) => {
-    setActiveTab(
-      value as "this-week" | "this-month" | "last-month" | "all-time"
-    )
+    setActiveTab(value as DateTab)
     setCurrentPage(1)
   }
 
-  // Calculate current week start and end dates
-  const weekDates = useMemo(() => {
-    const now = DateTime.now()
-    const weekStart = now.startOf("week")
-    const weekEnd = now.endOf("week")
-    return {
-      start: weekStart.toISODate(),
-      end: weekEnd.toISODate(),
-    }
-  }, [])
+  // Calculate date parameters based on active tab and filters
+  const dateParams = useDateParams({
+    activeTab,
+    filters,
+    hasActiveFilters,
+  })
 
-  // Calculate current month start and end dates
-  const monthDates = useMemo(() => {
-    const now = DateTime.now()
-    const monthStart = now.startOf("month")
-    const monthEnd = now.endOf("month")
-    return {
-      start: monthStart.toISODate(),
-      end: monthEnd.toISODate(),
-    }
-  }, [])
-
-  // Calculate last month start and end dates
-  const lastMonthDates = useMemo(() => {
-    const now = DateTime.now()
-    const lastMonthStart = now.minus({ months: 1 }).startOf("month")
-    const lastMonthEnd = now.minus({ months: 1 }).endOf("month")
-    return {
-      start: lastMonthStart.toISODate(),
-      end: lastMonthEnd.toISODate(),
-    }
-  }, [])
-
-  // Determine date parameters based on active tab
-  const dateParams = useMemo(() => {
-    if (activeTab === "this-week") {
-      return {
-        startDate: weekDates.start,
-        endDate: weekDates.end,
-      }
-    }
-    if (activeTab === "this-month") {
-      return {
-        startDate: monthDates.start,
-        endDate: monthDates.end,
-      }
-    }
-    if (activeTab === "last-month") {
-      return {
-        startDate: lastMonthDates.start,
-        endDate: lastMonthDates.end,
-      }
-    }
-    return {
-      startDate: undefined,
-      endDate: undefined,
-    }
-  }, [activeTab, weekDates, monthDates, lastMonthDates])
-
-  // Use grouped expenses for this-week and this-month tabs
   const {
     groups,
     loading: groupedLoading,
@@ -348,37 +234,20 @@ export function ExpenseScreen() {
     pagination: groupedPagination,
     stats,
   } = useGroupedExpenses({
-    startDate: dateParams.startDate!,
-    endDate: dateParams.endDate!,
+    startDate: dateParams.startDate,
+    endDate: dateParams.endDate,
+    vehicleId: filters.vehicleId as string | undefined,
+    category: filters.category as string | undefined,
     pagination: {
       page: currentPage,
       perPage: itemsPerPage,
     },
-    skip:
-      activeTab === "all-time" || !dateParams.startDate || !dateParams.endDate,
   })
 
-  // Use regular expenses query for all-time tab
-  const {
-    expenses,
-    loading: expensesLoading,
-    error: expensesError,
-    pagination: expensesPagination,
-  } = useExpenses({
-    pagination: {
-      page: currentPage,
-      perPage: itemsPerPage,
-    },
-    skip: activeTab !== "all-time",
-  })
+  const loading = groupedLoading
+  const error = groupedError
+  const pagination = groupedPagination
 
-  // Determine which loading/error/pagination to use based on active tab
-  const loading = activeTab === "all-time" ? expensesLoading : groupedLoading
-  const error = activeTab === "all-time" ? expensesError : groupedError
-  const pagination =
-    activeTab === "all-time" ? expensesPagination : groupedPagination
-
-  // Show breakdown view if requested
   if (showBreakdown) {
     return (
       <ExpenseBreakdownView
@@ -387,26 +256,6 @@ export function ExpenseScreen() {
         endDate={dateParams.endDate}
         onBack={() => setShowBreakdown(false)}
       />
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Spinner />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircleIcon />
-        <AlertTitle>Error loading expenses</AlertTitle>
-        <AlertDescription>
-          <p>Error: {error.message}</p>
-        </AlertDescription>
-      </Alert>
     )
   }
 
@@ -420,164 +269,276 @@ export function ExpenseScreen() {
             View and manage your expenses
           </p>
         </div>
-        <Button
-          onClick={() => setShowAddExpense(true)}
-          className="hidden md:flex"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Expense
-        </Button>
+        <div className="flex items-center gap-2">
+          <FilterButton
+            onClick={() => setShowFilters(true)}
+            filterConfigs={filterConfigs}
+            filters={filters}
+            className="hidden md:flex"
+          />
+          <Button
+            onClick={() => setShowAddExpense(true)}
+            className="hidden md:flex"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Expense
+          </Button>
+        </div>
       </div>
 
       {/* Stats Bar */}
-      {(activeTab === "this-week" ||
-        activeTab === "this-month" ||
-        activeTab === "last-month") && (
-        <ExpenseStatsBar
-          stats={stats}
-          loading={loading}
-          periodLabel={
-            activeTab === "this-week"
-              ? "Expenses for this week"
-              : activeTab === "this-month"
-                ? "Expenses for this month"
-                : "Expenses for last month"
+      <ExpenseStatsBar
+        stats={stats}
+        loading={loading}
+        periodLabel={(() => {
+          if (hasActiveFilters) {
+            return "Summary for filters applied"
           }
-          onBreakdownClick={() => setShowBreakdown(true)}
-        />
+          switch (activeTab) {
+            case "this-week":
+              return "Expenses for this week"
+            case "this-month":
+              return "Expenses for this month"
+            case "last-month":
+              return "Expenses for last month"
+            default:
+              return "All expenses"
+          }
+        })()}
+        onBreakdownClick={() => setShowBreakdown(true)}
+      />
+
+      {/* Tabs or Clear Filters Button */}
+      {hasActiveFilters ? (
+        <>
+          <ActiveFilters
+            filterConfigs={filterConfigs}
+            filters={filters}
+            onFilterChange={setFilters}
+            onClearAll={clearFilters}
+          />
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-8">
+              <Spinner />
+              <span className="ml-2">Loading expenses...</span>
+            </div>
+          )}
+          {/* Error State */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircleIcon />
+              <AlertTitle>Error loading expenses</AlertTitle>
+              <AlertDescription>
+                <p>Error: {error.message}</p>
+              </AlertDescription>
+            </Alert>
+          )}
+          {/* Filtered Expenses List */}
+          {!loading && !error && (
+            <div className="mt-3">
+              {dateParams.startDate && dateParams.endDate && (
+                <p className="text-sm text-muted-foreground mb-4">
+                  Showing expenses for {formatDate(dateParams.startDate)} to{" "}
+                  {formatDate(dateParams.endDate)}
+                </p>
+              )}
+              {groups.length === 0 ? (
+                <ExpensesEmpty />
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {groups.map((group) => (
+                    <VehicleDateExpenseGroupCard
+                      key={`${group?.vehicleId}-${group?.date}`}
+                      group={group as VehicleDateExpenseGroup}
+                    />
+                  ))}
+                  {pagination &&
+                    pagination.pageCount != null &&
+                    pagination.pageCount > 1 && (
+                      <Paginator
+                        currentPage={currentPage}
+                        totalPages={pagination.pageCount}
+                        onPageChange={(page) => {
+                          setCurrentPage(page)
+                        }}
+                      />
+                    )}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <TabsList>
+            <TabsTrigger value="this-week">This Week</TabsTrigger>
+            <TabsTrigger value="this-month">This Month</TabsTrigger>
+            <TabsTrigger value="last-month">Last Month</TabsTrigger>
+            <TabsTrigger value="all-time">All Time</TabsTrigger>
+          </TabsList>
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-8">
+              <Spinner />
+              <span className="ml-2">Loading expenses...</span>
+            </div>
+          )}
+          {/* Error State */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircleIcon />
+              <AlertTitle>Error loading expenses</AlertTitle>
+              <AlertDescription>
+                <p>Error: {error.message}</p>
+              </AlertDescription>
+            </Alert>
+          )}
+          {!loading && !error && (
+            <>
+              <TabsContent value="this-week" className="mt-3">
+                {dateParams.startDate && dateParams.endDate && (
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Showing expenses for {formatDate(dateParams.startDate)} to{" "}
+                    {formatDate(dateParams.endDate)}
+                  </p>
+                )}
+                {/* Expenses List */}
+                {groups.length === 0 ? (
+                  <ExpensesEmpty />
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {groups.map((group) => (
+                      <VehicleDateExpenseGroupCard
+                        key={`${group?.vehicleId}-${group?.date}`}
+                        group={group as VehicleDateExpenseGroup}
+                      />
+                    ))}
+                    {pagination &&
+                      pagination.pageCount != null &&
+                      pagination.pageCount > 1 && (
+                        <Paginator
+                          currentPage={currentPage}
+                          totalPages={pagination.pageCount}
+                          onPageChange={(page) => {
+                            setCurrentPage(page)
+                          }}
+                        />
+                      )}
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="this-month" className="mt-3">
+                {dateParams.startDate && dateParams.endDate && (
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Showing expenses for {formatDate(dateParams.startDate)} to{" "}
+                    {formatDate(dateParams.endDate)}
+                  </p>
+                )}
+                {/* Expenses List */}
+                {groups.length === 0 ? (
+                  <ExpensesEmpty />
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {groups.map((group) => (
+                      <VehicleDateExpenseGroupCard
+                        key={`${group?.vehicleId}-${group?.date}`}
+                        group={group as VehicleDateExpenseGroup}
+                      />
+                    ))}
+                    {pagination &&
+                      pagination.pageCount != null &&
+                      pagination.pageCount > 1 && (
+                        <Paginator
+                          currentPage={currentPage}
+                          totalPages={pagination.pageCount}
+                          onPageChange={(page) => {
+                            setCurrentPage(page)
+                          }}
+                        />
+                      )}
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="last-month" className="mt-3">
+                {dateParams.startDate && dateParams.endDate && (
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Showing expenses for {formatDate(dateParams.startDate)} to{" "}
+                    {formatDate(dateParams.endDate)}
+                  </p>
+                )}
+                {/* Expenses List */}
+                {groups.length === 0 ? (
+                  <ExpensesEmpty />
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {groups.map((group) => (
+                      <VehicleDateExpenseGroupCard
+                        key={`${group?.vehicleId}-${group?.date}`}
+                        group={group as VehicleDateExpenseGroup}
+                      />
+                    ))}
+                    {pagination &&
+                      pagination.pageCount != null &&
+                      pagination.pageCount > 1 && (
+                        <Paginator
+                          currentPage={currentPage}
+                          totalPages={pagination.pageCount}
+                          onPageChange={(page) => {
+                            setCurrentPage(page)
+                          }}
+                        />
+                      )}
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="all-time" className="mt-3">
+                {dateParams.startDate && dateParams.endDate && (
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Showing expenses for {formatDate(dateParams.startDate)} to{" "}
+                    {formatDate(dateParams.endDate)}
+                  </p>
+                )}
+                {/* Expenses List */}
+                {groups.length === 0 ? (
+                  <ExpensesEmpty />
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {groups.map((group) => (
+                      <VehicleDateExpenseGroupCard
+                        key={`${group?.vehicleId}-${group?.date}`}
+                        group={group as VehicleDateExpenseGroup}
+                      />
+                    ))}
+                    {pagination &&
+                      pagination.pageCount != null &&
+                      pagination.pageCount > 1 && (
+                        <Paginator
+                          currentPage={currentPage}
+                          totalPages={pagination.pageCount}
+                          onPageChange={(page) => {
+                            setCurrentPage(page)
+                          }}
+                        />
+                      )}
+                  </div>
+                )}
+              </TabsContent>
+            </>
+          )}
+        </Tabs>
       )}
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList>
-          <TabsTrigger value="this-week">This Week</TabsTrigger>
-          <TabsTrigger value="this-month">This Month</TabsTrigger>
-          <TabsTrigger value="last-month">Last Month</TabsTrigger>
-          <TabsTrigger value="all-time">All Time</TabsTrigger>
-        </TabsList>
-        <TabsContent value="this-week" className="mt-3">
-          {dateParams.startDate && dateParams.endDate && (
-            <p className="text-sm text-muted-foreground mb-4">
-              Showing expenses for {formatDate(dateParams.startDate)} to{" "}
-              {formatDate(dateParams.endDate)}
-            </p>
-          )}
-          {/* Expenses List */}
-          {groups.length === 0 ? (
-            <ExpensesEmpty />
-          ) : (
-            <div className="flex flex-col gap-4">
-              {groups.map((group) => (
-                <VehicleDateExpenseGroupCard
-                  key={`${group.vehicleId}-${group.date}`}
-                  group={group}
-                />
-              ))}
-              {pagination &&
-                pagination.pageCount != null &&
-                pagination.pageCount > 1 && (
-                  <Paginator
-                    currentPage={currentPage}
-                    totalPages={pagination.pageCount}
-                    onPageChange={(page) => {
-                      setCurrentPage(page)
-                    }}
-                  />
-                )}
-            </div>
-          )}
-        </TabsContent>
-        <TabsContent value="this-month" className="mt-3">
-          {dateParams.startDate && dateParams.endDate && (
-            <p className="text-sm text-muted-foreground mb-4">
-              Showing expenses for {formatDate(dateParams.startDate)} to{" "}
-              {formatDate(dateParams.endDate)}
-            </p>
-          )}
-          {/* Expenses List */}
-          {groups.length === 0 ? (
-            <ExpensesEmpty />
-          ) : (
-            <div className="flex flex-col gap-4">
-              {groups.map((group) => (
-                <VehicleDateExpenseGroupCard
-                  key={`${group.vehicleId}-${group.date}`}
-                  group={group}
-                />
-              ))}
-              {pagination &&
-                pagination.pageCount != null &&
-                pagination.pageCount > 1 && (
-                  <Paginator
-                    currentPage={currentPage}
-                    totalPages={pagination.pageCount}
-                    onPageChange={(page) => {
-                      setCurrentPage(page)
-                    }}
-                  />
-                )}
-            </div>
-          )}
-        </TabsContent>
-        <TabsContent value="last-month" className="mt-3">
-          {dateParams.startDate && dateParams.endDate && (
-            <p className="text-sm text-muted-foreground mb-4">
-              Showing expenses for {formatDate(dateParams.startDate)} to{" "}
-              {formatDate(dateParams.endDate)}
-            </p>
-          )}
-          {/* Expenses List */}
-          {groups.length === 0 ? (
-            <ExpensesEmpty />
-          ) : (
-            <div className="flex flex-col gap-4">
-              {groups.map((group) => (
-                <VehicleDateExpenseGroupCard
-                  key={`${group.vehicleId}-${group.date}`}
-                  group={group}
-                />
-              ))}
-              {pagination &&
-                pagination.pageCount != null &&
-                pagination.pageCount > 1 && (
-                  <Paginator
-                    currentPage={currentPage}
-                    totalPages={pagination.pageCount}
-                    onPageChange={(page) => {
-                      setCurrentPage(page)
-                    }}
-                  />
-                )}
-            </div>
-          )}
-        </TabsContent>
-        <TabsContent value="all-time" className="mt-3">
-          <p className="text-sm text-muted-foreground mb-4">
-            Showing all expenses
-          </p>
-          {/* Expenses List */}
-          {expenses.length === 0 ? (
-            <ExpensesEmpty />
-          ) : (
-            <div className="flex flex-col gap-4">
-              {expenses.map((expense) => (
-                <ExpenseCard key={expense.id} expense={expense} />
-              ))}
-              {pagination &&
-                pagination.pageCount != null &&
-                pagination.pageCount > 1 && (
-                  <Paginator
-                    currentPage={currentPage}
-                    totalPages={pagination.pageCount}
-                    onPageChange={(page) => {
-                      setCurrentPage(page)
-                    }}
-                  />
-                )}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Filters Dialog */}
+      <FilterDialog
+        open={showFilters}
+        onOpenChange={setShowFilters}
+        title="Filter Expenses"
+        description="Filter expenses by vehicle, category, and date range"
+        filterConfigs={filterConfigs}
+        appliedFilters={filters}
+        onChange={setFilters}
+      />
 
       {/* Add Expense Modal */}
       <ExpenseForm
@@ -599,6 +560,8 @@ export function ExpenseScreen() {
         expensesQueryVariables={
           activeTab === "all-time"
             ? {
+                startDate: dateParams.startDate,
+                endDate: dateParams.endDate,
                 pagination: {
                   page: currentPage,
                   perPage: itemsPerPage,
@@ -608,19 +571,33 @@ export function ExpenseScreen() {
         }
       />
 
-      {/* Floating Add Expense Button - Only on small screens */}
-      <Button
-        onClick={() => setShowAddExpense(true)}
-        className="fixed bottom-6 right-6 shadow-2xl z-50 md:hidden"
-        style={{
-          boxShadow:
-            "0 10px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.3)",
-        }}
-        size="lg"
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Add Expense
-      </Button>
+      {/* Floating Action Buttons - Only on small screens */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 md:hidden">
+        <FilterButton
+          onClick={() => setShowFilters(true)}
+          filterConfigs={filterConfigs}
+          filters={filters}
+          variant="outline"
+          size="lg"
+          className="shadow-2xl"
+          style={{
+            boxShadow:
+              "0 10px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.3)",
+          }}
+        />
+        <Button
+          onClick={() => setShowAddExpense(true)}
+          className="shadow-2xl"
+          style={{
+            boxShadow:
+              "0 10px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.3)",
+          }}
+          size="lg"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Expense
+        </Button>
+      </div>
     </div>
   )
 }

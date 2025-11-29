@@ -6,9 +6,11 @@ import {
 } from "../../codegen/graphql"
 
 interface UseGroupedExpensesOptions {
-  startDate: string
-  endDate: string
+  startDate?: string
+  endDate?: string
   driverId?: string
+  vehicleId?: string
+  category?: string
   pagination?: {
     page: number
     perPage: number
@@ -21,6 +23,8 @@ export const useGroupedExpenses = (options: UseGroupedExpensesOptions) => {
     startDate,
     endDate,
     driverId,
+    vehicleId,
+    category,
     pagination = { page: 1, perPage: 10 },
     skip,
   } = options
@@ -30,9 +34,11 @@ export const useGroupedExpenses = (options: UseGroupedExpensesOptions) => {
     GroupedExpensesQueryQueryVariables
   >(GroupedExpensesQueryDocument, {
     variables: {
-      startDate,
-      endDate,
+      startDate: startDate,
+      endDate: endDate,
       driverId: driverId || undefined,
+      vehicleId: vehicleId || undefined,
+      category: category || undefined,
       pagination: {
         page: pagination.page,
         perPage: pagination.perPage,
@@ -41,7 +47,7 @@ export const useGroupedExpenses = (options: UseGroupedExpensesOptions) => {
     fetchPolicy: "cache-and-network",
     errorPolicy: "all",
     notifyOnNetworkStatusChange: true,
-    skip: skip || !startDate || !endDate,
+    skip: skip,
   })
 
   // Type assertion needed until GraphQL codegen is run to update types

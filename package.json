@@ -7,8 +7,8 @@
     "postinstall": "cd frontend && yarn install --production=false && yarn build && cp -r dist/* ../public/",
     "prepare": "is-ci || husky",
     "dev": "cd frontend && yarn dev",
-    "serve": "rails s",
-    "codegen": "cd frontend && yarn codegen",
+    "server": "rails s",
+    "codegen": "bundle exec rake graphql:update_schema && cd frontend && yarn codegen",
     "lint": "cd frontend && yarn lint"
   },
   "engines": {

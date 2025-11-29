@@ -4,14 +4,19 @@ module Queries
   class GroupedExpensesQuery < Resolvers::BaseResolver
     description "Get expenses grouped by vehicle and date within a date range"
 
+    argument :category, String, required: false, description: "Optional expense category to filter expenses"
     argument :driver_id, String, required: false, description: "Optional driver global ID to filter expenses"
-    argument :end_date, GraphQL::Types::ISO8601Date, required: true, description: "End date for the date range"
+    argument :end_date, GraphQL::Types::ISO8601Date, required: false, description: "End date for the date range"
     argument :pagination, Types::Inputs::PaginationInput, required: true, description: "Pagination options"
-    argument :start_date, GraphQL::Types::ISO8601Date, required: true, description: "Start date for the date range"
+    argument :start_date, GraphQL::Types::ISO8601Date, required: false, description: "Start date for the date range"
+    argument :vehicle_id, String, required: false, description: "Optional vehicle global ID to filter expenses"
 
     type Types::GroupedExpensesResultType, null: false
 
-    def resolve(start_date:, end_date:, pagination:, driver_id: nil)
+    def resolve(start_date: nil, end_date: nil, pagination:, driver_id: nil, vehicle_id: nil, category: nil)
+      start_date ||= Date.new(1970, 1, 1) # Epoch start
+      end_date ||= Date.current
+
       expenses = Expense.includes(:vehicle, :user).where(date: start_date..end_date)
 
       if driver_id.present?
@@ -22,6 +27,20 @@ module Queries
           # If driver not found or has no user, return empty result
           expenses = expenses.none
         end
+      end
+
+      if vehicle_id.present?
+        vehicle = Vehicle.find_by_global_id(vehicle_id)
+        if vehicle
+          expenses = expenses.where(vehicle_id: vehicle.id)
+        else
+          # If vehicle not found, return empty result
+          expenses = expenses.none
+        end
+      end
+
+      if category.present?
+        expenses = expenses.where(category:)
       end
 
       # Calculate total amount for filtered expenses

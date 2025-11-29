@@ -7,11 +7,13 @@ module Queries
     argument :driver_id, String, required: false, description: "Optional driver global ID to filter revenue records"
     argument :end_date, GraphQL::Types::ISO8601Date, required: false, description: "End date for the date range"
     argument :pagination, Types::Inputs::PaginationInput, required: true, description: "Pagination options"
+    argument :source, String, required: false, description: "Optional source to filter revenue records"
     argument :start_date, GraphQL::Types::ISO8601Date, required: false, description: "Start date for the date range"
+    argument :vehicle_id, String, required: false, description: "Optional vehicle global ID to filter revenue records"
 
     type Types::GroupedRevenueRecordsResultType, null: false
 
-    def resolve(start_date: nil, end_date: nil, pagination:, driver_id: nil)
+    def resolve(start_date: nil, end_date: nil, pagination:, driver_id: nil, vehicle_id: nil, source: nil)
       start_date ||= Date.new(1970, 1, 1) # Epoch start
       end_date ||= Date.current
 
@@ -28,6 +30,20 @@ module Queries
           # If driver not found, return empty result
           revenue_records = revenue_records.none
         end
+      end
+
+      if vehicle_id.present?
+        vehicle = Vehicle.find_by_global_id(vehicle_id)
+        if vehicle
+          revenue_records = revenue_records.where(vehicle_id: vehicle.id)
+        else
+          # If vehicle not found, return empty result
+          revenue_records = revenue_records.none
+        end
+      end
+
+      if source.present?
+        revenue_records = revenue_records.where(source:)
       end
 
       # Calculate totals using RevenueService

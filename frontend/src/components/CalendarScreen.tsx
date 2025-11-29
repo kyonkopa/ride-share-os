@@ -174,6 +174,7 @@ export function CalendarScreen({ shifts, vehicles }: CalendarScreenProps) {
                 missed: "text-red-800",
                 upcoming: "text-blue-800",
               }}
+              timeZone="UTC"
               components={{
                 DayButton: ({ children, modifiers, day, ...props }) => {
                   const isWorked = modifiers.worked

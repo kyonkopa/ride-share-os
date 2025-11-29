@@ -9,6 +9,7 @@ import {
 interface UseExpensesOptions {
   startDate?: string
   endDate?: string
+  vehicleId?: string
   pagination?: {
     page: number
     perPage: number
@@ -20,6 +21,7 @@ export const useExpenses = (options: UseExpensesOptions = {}) => {
   const {
     startDate,
     endDate,
+    vehicleId,
     pagination = { page: 1, perPage: 10 },
     skip,
   } = options
@@ -31,6 +33,7 @@ export const useExpenses = (options: UseExpensesOptions = {}) => {
     variables: {
       startDate: startDate || undefined,
       endDate: endDate || undefined,
+      vehicleId: vehicleId || undefined,
       pagination: {
         page: pagination.page,
         perPage: pagination.perPage,

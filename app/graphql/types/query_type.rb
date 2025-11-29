@@ -3,12 +3,7 @@
 module Types
   class QueryType < Types::BaseObject
     field :current_shift, resolver: Queries::CurrentShiftQuery, description: "Get the current shift"
-
-    field :grouped_expenses, Types::GroupedExpensesResultType, resolver: Queries::GroupedExpensesQuery, description: "Get expenses grouped by vehicle and date within a date range" do
-      argument :pagination, Types::Inputs::PaginationInput, required: true, description: "Pagination options"
-    end
-
-
+    field :grouped_expenses, Types::GroupedExpensesResultType, resolver: Queries::GroupedExpensesQuery, description: "Get expenses grouped by vehicle and date within a date range"
     field :grouped_revenue_records, Types::GroupedRevenueRecordsResultType, resolver: Queries::GroupedRevenueRecordsQuery, description: "Get revenue records grouped by driver and date within a date range" do
       argument :pagination, Types::Inputs::PaginationInput, required: true, description: "Pagination options"
     end

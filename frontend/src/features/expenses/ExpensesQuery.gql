@@ -2,8 +2,9 @@ query ExpensesQuery(
   $startDate: ISO8601Date
   $endDate: ISO8601Date
   $pagination: PaginationInput!
+  $vehicleId: String
 ) {
-  expenses(startDate: $startDate, endDate: $endDate, pagination: $pagination) {
+  expenses(startDate: $startDate, endDate: $endDate, pagination: $pagination, vehicleId: $vehicleId) {
     items {
       id
       globalId
