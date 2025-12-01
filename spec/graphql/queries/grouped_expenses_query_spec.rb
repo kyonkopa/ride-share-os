@@ -91,24 +91,26 @@ RSpec.describe Queries::GroupedExpensesQuery do
         .with_no_errors
         .with_effects do |result, _full_result|
           items = result["items"]
-          expect(items.length).to eq(2) # Two groups: toyota_camry on day1, honda_accord on day2
+          aggregate_failures do
+            expect(items.length).to eq(2) # Two groups: toyota_camry on day1, honda_accord on day2
 
-          # Check first group (toyota_camry, start_date + 1.day)
-          group1 = items.find { |g| g["vehicleId"] == toyota_camry.id.to_s }
-          expect(group1).to be_present
-          expect(group1["vehicleName"]).to eq("Toyota Camry ABC-123")
-          expect(group1["date"]).to eq((start_date + 1.day).iso8601)
-          expect(group1["expenseCount"]).to eq(2)
-          expect(group1["totalAmount"]).to eq(80.0) # (5000 + 3000) / 100
-          expect(group1["expenses"].length).to eq(2)
+            # Check first group (toyota_camry, start_date + 1.day)
+            group1 = items.find { |g| g["vehicleId"] == toyota_camry.id.to_s }
+            expect(group1).to be_present
+            expect(group1["vehicleName"]).to eq("Toyota Camry ABC-123")
+            expect(group1["date"]).to eq((start_date + 1.day).iso8601)
+            expect(group1["expenseCount"]).to eq(2)
+            expect(group1["totalAmount"]).to eq(80.0) # (5000 + 3000) / 100
+            expect(group1["expenses"].length).to eq(2)
 
-          # Check second group (honda_accord, start_date + 2.days)
-          group2 = items.find { |g| g["vehicleId"] == honda_accord.id.to_s }
-          expect(group2).to be_present
-          expect(group2["vehicleName"]).to eq("Honda Accord XYZ-789")
-          expect(group2["date"]).to eq((start_date + 2.days).iso8601)
-          expect(group2["expenseCount"]).to eq(1)
-          expect(group2["totalAmount"]).to eq(40.0) # 4000 / 100
+            # Check second group (honda_accord, start_date + 2.days)
+            group2 = items.find { |g| g["vehicleId"] == honda_accord.id.to_s }
+            expect(group2).to be_present
+            expect(group2["vehicleName"]).to eq("Honda Accord XYZ-789")
+            expect(group2["date"]).to eq((start_date + 2.days).iso8601)
+            expect(group2["expenseCount"]).to eq(1)
+            expect(group2["totalAmount"]).to eq(40.0) # 4000 / 100
+          end
         end
     end
 

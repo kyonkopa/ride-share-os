@@ -120,24 +120,26 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
         .with_no_errors
         .with_effects do |result, _full_result|
           items = result["items"]
-          expect(items.length).to eq(2) # Two groups: driver on day1, driver on day2
+          aggregate_failures do
+            expect(items.length).to eq(2) # Two groups: driver on day1, driver on day2
 
-          # Check first group (driver, start_date + 1.day)
-          group1 = items.find { |g| g["date"] == (start_date + 1.day).iso8601 }
-          expect(group1).to be_present
-          expect(group1["driverId"]).to eq(driver.global_id)
-          expect(group1["driverName"]).to eq(driver.full_name)
-          expect(group1["revenueCount"]).to eq(2)
-          expect(group1["totalRevenue"]).to eq(250.0) # 100 + 150
-          expect(group1["totalProfit"]).to eq(200.0) # 80 + 120
-          expect(group1["revenueRecords"].length).to eq(2)
+            # Check first group (driver, start_date + 1.day)
+            group1 = items.find { |g| g["date"] == (start_date + 1.day).iso8601 }
+            expect(group1).to be_present
+            expect(group1["driverId"]).to eq(driver.global_id)
+            expect(group1["driverName"]).to eq(driver.full_name)
+            expect(group1["revenueCount"]).to eq(2)
+            expect(group1["totalRevenue"]).to eq(250.0) # 100 + 150
+            expect(group1["totalProfit"]).to eq(200.0) # 80 + 120
+            expect(group1["revenueRecords"].length).to eq(2)
 
-          # Check second group (driver, start_date + 2.days)
-          group2 = items.find { |g| g["date"] == (start_date + 2.days).iso8601 }
-          expect(group2).to be_present
-          expect(group2["revenueCount"]).to eq(1)
-          expect(group2["totalRevenue"]).to eq(200.0)
-          expect(group2["totalProfit"]).to eq(160.0)
+            # Check second group (driver, start_date + 2.days)
+            group2 = items.find { |g| g["date"] == (start_date + 2.days).iso8601 }
+            expect(group2).to be_present
+            expect(group2["revenueCount"]).to eq(1)
+            expect(group2["totalRevenue"]).to eq(200.0)
+            expect(group2["totalProfit"]).to eq(160.0)
+          end
         end
     end
 
