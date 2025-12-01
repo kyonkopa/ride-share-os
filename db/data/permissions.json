@@ -12,5 +12,7 @@
   { "name": "View Users", "slug": "user_read_access" },
   { "name": "Manage Users", "slug": "user_write_access" },
   { "name": "View Payroll", "slug": "payroll_read_access" },
-  { "name": "Manage Payroll", "slug": "payroll_write_access" }
+  { "name": "Manage Payroll", "slug": "payroll_write_access" },
+  { "name": "View Scheduled Trips", "slug": "scheduled_trip_read_access" },
+  { "name": "Manage Scheduled Trips", "slug": "scheduled_trip_write_access" }
 ]

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_18_160216) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_29_224841) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -135,7 +135,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_18_160216) do
     t.datetime "pickup_datetime", null: false
     t.jsonb "recurrence_config", default: {}
     t.decimal "price", precision: 10, scale: 2
-    t.integer "state", default: 0, null: false
     t.string "acceptance_token", null: false
     t.string "decline_token", null: false
     t.bigint "reviewed_by_id"
@@ -143,9 +142,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_18_160216) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "state", default: "pending", null: false
+    t.bigint "driver_id"
     t.index ["acceptance_token"], name: "index_scheduled_trips_on_acceptance_token", unique: true
     t.index ["client_email"], name: "index_scheduled_trips_on_client_email"
     t.index ["decline_token"], name: "index_scheduled_trips_on_decline_token", unique: true
+    t.index ["driver_id"], name: "index_scheduled_trips_on_driver_id"
     t.index ["pickup_datetime"], name: "index_scheduled_trips_on_pickup_datetime"
     t.index ["reviewed_by_id"], name: "index_scheduled_trips_on_reviewed_by_id"
     t.index ["state"], name: "index_scheduled_trips_on_state"
@@ -248,6 +250,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_18_160216) do
   add_foreign_key "revenue_records", "vehicles"
   add_foreign_key "scheduled_trip_audit_logs", "scheduled_trips"
   add_foreign_key "scheduled_trip_audit_logs", "users", column: "changed_by_id"
+  add_foreign_key "scheduled_trips", "drivers"
   add_foreign_key "scheduled_trips", "users", column: "reviewed_by_id"
   add_foreign_key "shift_assignments", "drivers"
   add_foreign_key "shift_assignments", "vehicles"

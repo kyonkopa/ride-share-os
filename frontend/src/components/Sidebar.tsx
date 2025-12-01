@@ -13,6 +13,7 @@ import {
   Car,
   Wallet,
   Calculator,
+  CalendarClock,
 } from "lucide-react"
 import { useAuthStore } from "@/stores/AuthStore"
 import { Link } from "react-router-dom"
@@ -49,6 +50,13 @@ export function Sidebar({ currentPath = "/" }: SidebarProps) {
       label: "My Calendar",
       icon: Calendar,
       path: "/calendar",
+      enabled: true,
+    },
+    {
+      id: "trips",
+      label: "Trips",
+      icon: CalendarClock,
+      path: "/scheduled-trips",
       enabled: true,
     },
     {

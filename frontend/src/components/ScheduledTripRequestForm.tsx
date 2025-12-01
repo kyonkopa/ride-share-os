@@ -123,7 +123,9 @@ export function ScheduledTripRequestForm() {
     return result
   }
 
-  const handleNext = async () => {
+  const handleNext = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault()
+    e?.stopPropagation()
     const isValid = await validateStep(currentStep)
     if (isValid) {
       if (currentStep === 2 && !isRecurring) {
@@ -624,7 +626,7 @@ export function ScheduledTripRequestForm() {
             </div>
 
             <div className="space-y-4">
-              <Card>
+              <Card className="border-dashed shadow-none">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5" />
@@ -651,7 +653,7 @@ export function ScheduledTripRequestForm() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-dashed shadow-none">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <MapPin className="h-5 w-5" />
@@ -683,7 +685,7 @@ export function ScheduledTripRequestForm() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-dashed shadow-none">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CalendarClock className="h-5 w-5" />
@@ -777,7 +779,17 @@ export function ScheduledTripRequestForm() {
         </CardContent>
       </Card>
 
-      <form onSubmit={handleSubmit(onSubmitForm)}>
+      <form
+        onSubmit={(e) => {
+          if (currentStep < STEPS.length) {
+            e.preventDefault()
+            e.stopPropagation()
+            return false
+          } else {
+            handleSubmit(onSubmitForm)(e)
+          }
+        }}
+      >
         <Card className="min-h-[400px]">
           <CardContent className="pt-6">{renderStepContent()}</CardContent>
         </Card>

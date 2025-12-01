@@ -25,6 +25,12 @@ query ScheduledTripsQuery(
         lastName
         email
       }
+      driver {
+        id
+        globalId
+        fullName
+        phoneNumber
+      }
       auditLogs {
         id
         newState

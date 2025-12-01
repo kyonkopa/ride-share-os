@@ -67,50 +67,42 @@ RSpec.describe Queries::GroupedExpensesQuery do
 
   let(:context) { { current_user: user } }
 
-  describe 'when expenses exist within the date range' do
-    let!(:expense1) do
-      create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, amount: 5000, category: "charging")
-    end
-    let!(:expense2) do
-      create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, amount: 3000, category: "maintenance")
-    end
-    let!(:expense3) do
-      create(:expense, vehicle: honda_accord, user:, date: start_date + 2.days, amount: 4000, category: "toll")
-    end
-
+  describe 'when expenses exist within the date range' do # rubocop:disable RSpec/MultipleMemoizedHelpers
     before do
+      # Create expenses within range
+      create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, amount: 5000, category: "charging")
+      create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, amount: 3000, category: "maintenance")
+      create(:expense, vehicle: honda_accord, user:, date: start_date + 2.days, amount: 4000, category: "toll")
       # Create expenses outside range to verify they're excluded
       create(:expense, vehicle: toyota_camry, user:, date: start_date - 1.day)
       create(:expense, vehicle: toyota_camry, user:, date: end_date + 1.day)
     end
 
-    it 'returns grouped expenses within the date range' do
+    it 'returns grouped expenses within the date range' do # rubocop:disable RSpec/MultipleExpectations
       expect(query).to execute_as_graphql
         .with_variables(variables)
         .with_context(context)
         .with_no_errors
         .with_effects do |result, _full_result|
           items = result["items"]
-          aggregate_failures do
-            expect(items.length).to eq(2) # Two groups: toyota_camry on day1, honda_accord on day2
+          expect(items.length).to eq(2) # Two groups: toyota_camry on day1, honda_accord on day2
 
-            # Check first group (toyota_camry, start_date + 1.day)
-            group1 = items.find { |g| g["vehicleId"] == toyota_camry.id.to_s }
-            expect(group1).to be_present
-            expect(group1["vehicleName"]).to eq("Toyota Camry ABC-123")
-            expect(group1["date"]).to eq((start_date + 1.day).iso8601)
-            expect(group1["expenseCount"]).to eq(2)
-            expect(group1["totalAmount"]).to eq(80.0) # (5000 + 3000) / 100
-            expect(group1["expenses"].length).to eq(2)
+          # Check first group (toyota_camry, start_date + 1.day)
+          group1 = items.find { |g| g["vehicleId"] == toyota_camry.id.to_s }
+          expect(group1).to be_present
+          expect(group1["vehicleName"]).to eq("Toyota Camry ABC-123")
+          expect(group1["date"]).to eq((start_date + 1.day).iso8601)
+          expect(group1["expenseCount"]).to eq(2)
+          expect(group1["totalAmount"]).to eq(80.0) # (5000 + 3000) / 100
+          expect(group1["expenses"].length).to eq(2)
 
-            # Check second group (honda_accord, start_date + 2.days)
-            group2 = items.find { |g| g["vehicleId"] == honda_accord.id.to_s }
-            expect(group2).to be_present
-            expect(group2["vehicleName"]).to eq("Honda Accord XYZ-789")
-            expect(group2["date"]).to eq((start_date + 2.days).iso8601)
-            expect(group2["expenseCount"]).to eq(1)
-            expect(group2["totalAmount"]).to eq(40.0) # 4000 / 100
-          end
+          # Check second group (honda_accord, start_date + 2.days)
+          group2 = items.find { |g| g["vehicleId"] == honda_accord.id.to_s }
+          expect(group2).to be_present
+          expect(group2["vehicleName"]).to eq("Honda Accord XYZ-789")
+          expect(group2["date"]).to eq((start_date + 2.days).iso8601)
+          expect(group2["expenseCount"]).to eq(1)
+          expect(group2["totalAmount"]).to eq(40.0) # 4000 / 100
         end
     end
 
@@ -152,9 +144,11 @@ RSpec.describe Queries::GroupedExpensesQuery do
     end
   end
 
-  describe 'filtering by vehicle_id' do
-    let!(:expense1) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day) }
-    let!(:expense2) { create(:expense, vehicle: honda_accord, user:, date: start_date + 1.day) }
+  describe 'filtering by vehicle_id' do # rubocop:disable RSpec/MultipleMemoizedHelpers
+    before do
+      create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day)
+      create(:expense, vehicle: honda_accord, user:, date: start_date + 1.day)
+    end
 
     let(:variables) do
       {
@@ -178,10 +172,12 @@ RSpec.describe Queries::GroupedExpensesQuery do
     end
   end
 
-  describe 'filtering by category' do
-    let!(:expense1) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, category: "charging") }
-    let!(:expense2) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, category: "maintenance") }
-    let!(:expense3) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 2.days, category: "charging") }
+  describe 'filtering by category' do # rubocop:disable RSpec/MultipleMemoizedHelpers
+    before do
+      create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, category: "charging")
+      create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, category: "maintenance")
+      create(:expense, vehicle: toyota_camry, user:, date: start_date + 2.days, category: "charging")
+    end
 
     let(:variables) do
       {
@@ -211,13 +207,10 @@ RSpec.describe Queries::GroupedExpensesQuery do
     end
   end
 
-  describe 'filtering by driver_id' do
+  describe 'filtering by driver_id' do # rubocop:disable RSpec/MultipleMemoizedHelpers
     let(:other_user) { create(:user, :confirmed, :with_driver) }
     let(:other_driver) { other_user.driver }
-
-    let!(:expense1) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, category: "charging") }
-    let!(:expense2) { create(:expense, vehicle: toyota_camry, user: other_user, date: start_date + 1.day, category: "maintenance") }
-
+    let(:expense_for_driver) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, category: "charging") }
     let(:variables) do
       {
         startDate: start_date.iso8601,
@@ -225,6 +218,11 @@ RSpec.describe Queries::GroupedExpensesQuery do
         pagination:,
         driverId: driver.global_id
       }
+    end
+
+    before do
+      expense_for_driver
+      create(:expense, vehicle: toyota_camry, user: other_user, date: start_date + 1.day, category: "maintenance")
     end
 
     it 'returns only expenses for the specified driver' do
@@ -236,7 +234,7 @@ RSpec.describe Queries::GroupedExpensesQuery do
           items = result["items"]
           expect(items.length).to eq(1)
           expect(items.first["expenses"].length).to eq(1)
-          expect(items.first["expenses"].first["id"]).to eq(expense1.global_id)
+          expect(items.first["expenses"].first["id"]).to eq(expense_for_driver.global_id)
         end
     end
   end
@@ -336,8 +334,8 @@ RSpec.describe Queries::GroupedExpensesQuery do
     end
   end
 
-  describe 'expenses without vehicle' do
-    let!(:expense_without_vehicle) do
+  describe 'expenses without vehicle' do # rubocop:disable RSpec/MultipleMemoizedHelpers
+    before do
       create(:expense, :with_user, user:, vehicle: nil, date: start_date + 1.day)
     end
 

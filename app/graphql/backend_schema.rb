@@ -26,6 +26,12 @@ class BackendSchema < GraphQL::Schema
   # Limit the size of incoming queries:
   max_query_string_tokens(5000)
 
+  # Limit query complexity to prevent expensive queries:
+  max_complexity(200)
+
+  # Limit query depth to prevent deeply nested queries:
+  max_depth(15)
+
   # Stop validating when it encounters this many errors:
   validate_max_errors(100)
 
@@ -33,12 +39,8 @@ class BackendSchema < GraphQL::Schema
   max_complexity(200)
   max_depth(15)
 
-  # Relay-style Object Identification:
-
-  # Return a string UUID for `object`
   def self.id_from_object(object, type_definition, query_ctx)
-    # For example, use Rails' GlobalID library (https://github.com/rails/globalid):
-    object.to_gid_param
+    object.global_id
   end
 
   # Given a string UUID, find the object

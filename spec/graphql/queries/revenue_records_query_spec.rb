@@ -43,7 +43,7 @@ RSpec.describe Queries::RevenueRecordsQuery do
 
   let(:context) { { current_user: user } }
 
-  describe 'when revenue records exist within the date range' do
+  describe 'when revenue records exist within the date range' do # rubocop:disable RSpec/MultipleMemoizedHelpers
     let(:record_in_range) do
       create(
         :revenue_record, :bolt, shift_assignment:, driver:,

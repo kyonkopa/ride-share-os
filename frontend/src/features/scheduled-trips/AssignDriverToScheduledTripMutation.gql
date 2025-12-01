@@ -1,0 +1,26 @@
+mutation AssignDriverToScheduledTrip(
+  $input: AssignDriverToScheduledTripInput!
+  $scheduledTripId: ID!
+) {
+  assignDriverToScheduledTrip(
+    input: $input
+    scheduledTripId: $scheduledTripId
+  ) {
+    scheduledTrip {
+      id
+      globalId
+      state
+      driver {
+        id
+        globalId
+        fullName
+        phoneNumber
+      }
+    }
+    errors {
+      field
+      message
+      code
+    }
+  }
+}

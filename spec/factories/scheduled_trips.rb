@@ -1,19 +1,33 @@
 FactoryBot.define do
   factory :scheduled_trip do
-    client_name { "MyString" }
-    client_email { "MyString" }
-    client_phone { "MyString" }
-    pickup_location { "MyString" }
-    dropoff_location { "MyString" }
-    pickup_date { "2025-11-18" }
-    pickup_time { "2025-11-18 17:02:06" }
-    recurrence_config { "" }
-    price { "9.99" }
-    state { "MyString" }
-    acceptance_token { "MyString" }
-    decline_token { "MyString" }
-    reviewed_by_id { "" }
-    reviewed_at { "2025-11-18 17:02:06" }
-    notes { "MyText" }
+    client_name { "John Doe" }
+    client_email { "john@example.com" }
+    client_phone { "1234567890" }
+    pickup_location { "Location A" }
+    dropoff_location { "Location B" }
+    pickup_datetime { 2.days.from_now }
+    recurrence_config { {} }
+    state { "pending" }
+    notes { nil }
+
+    trait :confirmed do
+      state { "confirmed" }
+    end
+
+    trait :accepted do
+      state { "accepted" }
+    end
+
+    trait :declined do
+      state { "declined" }
+    end
+
+    trait :auto_declined do
+      state { "auto_declined" }
+    end
+
+    trait :recurring do
+      recurrence_config { { frequency: "weekly", interval: 1 } }
+    end
   end
 end

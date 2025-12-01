@@ -89,43 +89,13 @@ export function HomeScreen({ children }: HomeScreenProps) {
   return (
     <>
       <div className="space-y-6">
-        {/* Status Badge */}
         {user?.driver && <StatusBadge isOnline={!!currentShift} />}
 
-        {/* Scheduled Trips Entry Point - Hidden for now */}
-        {/* <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <CalendarClock className="h-6 w-6 text-primary" />
-                <div>
-                  <h3 className="font-semibold text-lg">Schedule a Trip</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Request a future or recurring ride
-                  </p>
-                </div>
-              </div>
-              <Button
-                onClick={() => navigate(Routes.scheduledTripRequest)}
-                variant="default"
-              >
-                Schedule Trip
-              </Button>
-            </div>
-          </CardContent>
-        </Card> */}
-
-        {/* Current Shift Status */}
         {user?.driver && (
           <CurrentShift onClockIn={onClockIn} vehicles={vehicles} />
         )}
-
-        {/* Today's Shifts */}
         <TodaysShifts shifts={todayShiftsData?.todayShifts || []} />
-
-        {/* Today's Activity */}
         <TodaysActivity events={todaysShiftEventsData?.todaysShiftEvents} />
-
         {/* Today's Summary */}
         <Card>
           <CardHeader>
@@ -163,7 +133,6 @@ export function HomeScreen({ children }: HomeScreenProps) {
             </div>
           </CardContent>
         </Card>
-
         {children}
       </div>
 

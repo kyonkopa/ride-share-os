@@ -23,8 +23,6 @@
 #  fk_rails_...  (changed_by_id => users.id)
 #  fk_rails_...  (scheduled_trip_id => scheduled_trips.id)
 #
-# frozen_string_literal: true
-
 
 class ScheduledTripAuditLog < ApplicationRecord
   belongs_to :scheduled_trip

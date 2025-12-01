@@ -19,6 +19,7 @@ module Types
 
     # Associations
     field :audit_logs, [Types::ScheduledTripAuditLogType], null: true
+    field :driver, Types::DriverType, null: true
     field :reviewed_at, GraphQL::Types::ISO8601DateTime, null: true
     field :reviewed_by, Types::UserType, null: true
 

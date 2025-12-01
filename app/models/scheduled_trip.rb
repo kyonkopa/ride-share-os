@@ -11,7 +11,6 @@
 #  pickup_datetime      :datetime        not null
 #  recurrence_config    :jsonb           default({})
 #  price                :decimal
-#  state                :integer         not null default(0)
 #  acceptance_token     :string          not null
 #  decline_token        :string          not null
 #  reviewed_by_id       :integer
@@ -19,12 +18,15 @@
 #  notes                :text
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
+#  state                :string          not null default(pending)
+#  driver_id            :integer
 #
 # Indexes
 #
 #  index_index_scheduled_trips_on_acceptance_token (acceptance_token) UNIQUE
 #  index_index_scheduled_trips_on_client_email (client_email)
 #  index_index_scheduled_trips_on_decline_token (decline_token) UNIQUE
+#  index_index_scheduled_trips_on_driver_id (driver_id)
 #  index_index_scheduled_trips_on_pickup_datetime (pickup_datetime)
 #  index_index_scheduled_trips_on_reviewed_by_id (reviewed_by_id)
 #  index_index_scheduled_trips_on_state (state)
@@ -32,14 +34,13 @@
 # Foreign Keys
 #
 #  fk_rails_...  (reviewed_by_id => users.id)
+#  fk_rails_...  (driver_id => drivers.id)
 #
-# frozen_string_literal: true
-
 
 class ScheduledTrip < ApplicationRecord
   include AASM
 
-  aasm column: :state, enum: true, whiny_transitions: false do
+  aasm column: :state do
     state :pending, initial: true
     state :confirmed
     state :accepted
@@ -64,6 +65,7 @@ class ScheduledTrip < ApplicationRecord
   end
 
   belongs_to :reviewed_by, class_name: "User", optional: true
+  belongs_to :driver, optional: true
   has_many :audit_logs, class_name: "ScheduledTripAuditLog", dependent: :destroy
 
   validates :client_name, presence: true

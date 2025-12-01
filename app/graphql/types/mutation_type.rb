@@ -3,6 +3,8 @@
 module Types
   class MutationType < Types::BaseObject
     field :accept_scheduled_trip, mutation: Mutations::AcceptScheduledTrip
+    field :assign_driver_to_scheduled_trip, mutation: Mutations::AssignDriverToScheduledTrip
+    field :cancel_scheduled_trip, mutation: Mutations::CancelScheduledTrip
     field :clock_in, mutation: Mutations::ClockIn
     field :clock_out, mutation: Mutations::ClockOut
     field :create_expense, mutation: Mutations::CreateExpense

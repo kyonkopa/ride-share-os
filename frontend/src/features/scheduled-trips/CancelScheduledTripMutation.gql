@@ -1,0 +1,14 @@
+mutation CancelScheduledTrip($scheduledTripId: ID!, $reason: String) {
+  cancelScheduledTrip(scheduledTripId: $scheduledTripId, reason: $reason) {
+    scheduledTrip {
+      id
+      globalId
+      state
+    }
+    errors {
+      field
+      message
+      code
+    }
+  }
+}

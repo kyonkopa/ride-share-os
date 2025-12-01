@@ -10,7 +10,7 @@ module Queries
     type Types::PaginatedResultType.for(Types::ScheduledTripType), null: false
 
     def scope(**args)
-      ScheduledTrip.all.order(pickup_datetime: :asc)
+      ScheduledTrip.where.not(state: [:auto_declined, :declined]).order(pickup_datetime: :asc)
     end
 
     def apply_state_filter(scope, state)
