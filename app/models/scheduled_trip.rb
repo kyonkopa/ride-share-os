@@ -10,13 +10,13 @@
 #  dropoff_location     :string          not null
 #  pickup_datetime      :datetime        not null
 #  recurrence_config    :jsonb           default({})
-#  price                :decimal        
+#  price                :decimal
 #  state                :integer         not null default(0)
 #  acceptance_token     :string          not null
 #  decline_token        :string          not null
-#  reviewed_by_id       :integer        
-#  reviewed_at          :datetime       
-#  notes                :text           
+#  reviewed_by_id       :integer
+#  reviewed_at          :datetime
+#  notes                :text
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #

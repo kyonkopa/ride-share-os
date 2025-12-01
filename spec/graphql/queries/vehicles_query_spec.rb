@@ -42,27 +42,29 @@ RSpec.describe Queries::VehiclesQuery do
         .with_context(context)
         .with_no_errors
         .with_effects do |vehicles, _full_result|
-          expect(vehicles.length).to eq(3)
-          expect(vehicles.map { |v| v["id"] }).to contain_exactly(
-            toyota_camry.global_id,
-            honda_accord.global_id,
-            ford_focus.global_id
-          )
-          expect(vehicles.find { |v| v["id"] == toyota_camry.global_id }).to include(
-            "licensePlate" => "ABC-123",
-            "make" => "Toyota",
-            "model" => "Camry"
-          )
-          expect(vehicles.find { |v| v["id"] == honda_accord.global_id }).to include(
-            "licensePlate" => "XYZ-789",
-            "make" => "Honda",
-            "model" => "Accord"
-          )
-          expect(vehicles.find { |v| v["id"] == ford_focus.global_id }).to include(
-            "licensePlate" => "DEF-456",
-            "make" => "Ford",
-            "model" => "Focus"
-          )
+          aggregate_failures do
+            expect(vehicles.length).to eq(3)
+            expect(vehicles.map { |v| v["id"] }).to contain_exactly(
+              toyota_camry.global_id,
+              honda_accord.global_id,
+              ford_focus.global_id
+            )
+            expect(vehicles.find { |v| v["id"] == toyota_camry.global_id }).to include(
+              "licensePlate" => "ABC-123",
+              "make" => "Toyota",
+              "model" => "Camry"
+            )
+            expect(vehicles.find { |v| v["id"] == honda_accord.global_id }).to include(
+              "licensePlate" => "XYZ-789",
+              "make" => "Honda",
+              "model" => "Accord"
+            )
+            expect(vehicles.find { |v| v["id"] == ford_focus.global_id }).to include(
+              "licensePlate" => "DEF-456",
+              "make" => "Ford",
+              "model" => "Focus"
+            )
+          end
         end
     end
   end

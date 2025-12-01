@@ -29,6 +29,10 @@ class BackendSchema < GraphQL::Schema
   # Stop validating when it encounters this many errors:
   validate_max_errors(100)
 
+  # Limit query complexity and depth:
+  max_complexity(200)
+  max_depth(15)
+
   # Relay-style Object Identification:
 
   # Return a string UUID for `object`

@@ -26,4 +26,3 @@ class UserPermission < ApplicationRecord
 
   validates :user_id, uniqueness: { scope: :permission_id }
 end
-

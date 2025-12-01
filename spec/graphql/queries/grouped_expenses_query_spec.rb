@@ -5,8 +5,8 @@ require 'rails_helper'
 RSpec.describe Queries::GroupedExpensesQuery do
   let(:user) { create(:user, :confirmed, :with_driver) }
   let(:driver) { user.driver }
-  let(:vehicle1) { create(:vehicle, make: "Toyota", model: "Camry", license_plate: "ABC-123") }
-  let(:vehicle2) { create(:vehicle, make: "Honda", model: "Accord", license_plate: "XYZ-789") }
+  let(:toyota_camry) { create(:vehicle, make: "Toyota", model: "Camry", license_plate: "ABC-123") }
+  let(:honda_accord) { create(:vehicle, make: "Honda", model: "Accord", license_plate: "XYZ-789") }
 
   let(:query) do
     <<~GQL
@@ -61,7 +61,7 @@ RSpec.describe Queries::GroupedExpensesQuery do
     {
       startDate: start_date.iso8601,
       endDate: end_date.iso8601,
-      pagination: pagination
+      pagination:
     }
   end
 
@@ -69,19 +69,19 @@ RSpec.describe Queries::GroupedExpensesQuery do
 
   describe 'when expenses exist within the date range' do
     let!(:expense1) do
-      create(:expense, vehicle: vehicle1, user: user, date: start_date + 1.day, amount: 5000, category: "charging")
+      create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, amount: 5000, category: "charging")
     end
     let!(:expense2) do
-      create(:expense, vehicle: vehicle1, user: user, date: start_date + 1.day, amount: 3000, category: "maintenance")
+      create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, amount: 3000, category: "maintenance")
     end
     let!(:expense3) do
-      create(:expense, vehicle: vehicle2, user: user, date: start_date + 2.days, amount: 4000, category: "toll")
+      create(:expense, vehicle: honda_accord, user:, date: start_date + 2.days, amount: 4000, category: "toll")
     end
 
     before do
       # Create expenses outside range to verify they're excluded
-      create(:expense, vehicle: vehicle1, user: user, date: start_date - 1.day)
-      create(:expense, vehicle: vehicle1, user: user, date: end_date + 1.day)
+      create(:expense, vehicle: toyota_camry, user:, date: start_date - 1.day)
+      create(:expense, vehicle: toyota_camry, user:, date: end_date + 1.day)
     end
 
     it 'returns grouped expenses within the date range' do
@@ -91,10 +91,10 @@ RSpec.describe Queries::GroupedExpensesQuery do
         .with_no_errors
         .with_effects do |result, _full_result|
           items = result["items"]
-          expect(items.length).to eq(2) # Two groups: vehicle1 on day1, vehicle2 on day2
+          expect(items.length).to eq(2) # Two groups: toyota_camry on day1, honda_accord on day2
 
-          # Check first group (vehicle1, start_date + 1.day)
-          group1 = items.find { |g| g["vehicleId"] == vehicle1.id.to_s }
+          # Check first group (toyota_camry, start_date + 1.day)
+          group1 = items.find { |g| g["vehicleId"] == toyota_camry.id.to_s }
           expect(group1).to be_present
           expect(group1["vehicleName"]).to eq("Toyota Camry ABC-123")
           expect(group1["date"]).to eq((start_date + 1.day).iso8601)
@@ -102,8 +102,8 @@ RSpec.describe Queries::GroupedExpensesQuery do
           expect(group1["totalAmount"]).to eq(80.0) # (5000 + 3000) / 100
           expect(group1["expenses"].length).to eq(2)
 
-          # Check second group (vehicle2, start_date + 2.days)
-          group2 = items.find { |g| g["vehicleId"] == vehicle2.id.to_s }
+          # Check second group (honda_accord, start_date + 2.days)
+          group2 = items.find { |g| g["vehicleId"] == honda_accord.id.to_s }
           expect(group2).to be_present
           expect(group2["vehicleName"]).to eq("Honda Accord XYZ-789")
           expect(group2["date"]).to eq((start_date + 2.days).iso8601)
@@ -151,15 +151,15 @@ RSpec.describe Queries::GroupedExpensesQuery do
   end
 
   describe 'filtering by vehicle_id' do
-    let!(:expense1) { create(:expense, vehicle: vehicle1, user: user, date: start_date + 1.day) }
-    let!(:expense2) { create(:expense, vehicle: vehicle2, user: user, date: start_date + 1.day) }
+    let!(:expense1) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day) }
+    let!(:expense2) { create(:expense, vehicle: honda_accord, user:, date: start_date + 1.day) }
 
     let(:variables) do
       {
         startDate: start_date.iso8601,
         endDate: end_date.iso8601,
-        pagination: pagination,
-        vehicleId: vehicle1.global_id
+        pagination:,
+        vehicleId: toyota_camry.global_id
       }
     end
 
@@ -171,21 +171,21 @@ RSpec.describe Queries::GroupedExpensesQuery do
         .with_effects do |result, _full_result|
           items = result["items"]
           expect(items.length).to eq(1)
-          expect(items.first["vehicleId"]).to eq(vehicle1.id.to_s)
+          expect(items.first["vehicleId"]).to eq(toyota_camry.id.to_s)
         end
     end
   end
 
   describe 'filtering by category' do
-    let!(:expense1) { create(:expense, vehicle: vehicle1, user: user, date: start_date + 1.day, category: "charging") }
-    let!(:expense2) { create(:expense, vehicle: vehicle1, user: user, date: start_date + 1.day, category: "maintenance") }
-    let!(:expense3) { create(:expense, vehicle: vehicle1, user: user, date: start_date + 2.days, category: "charging") }
+    let!(:expense1) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, category: "charging") }
+    let!(:expense2) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, category: "maintenance") }
+    let!(:expense3) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 2.days, category: "charging") }
 
     let(:variables) do
       {
         startDate: start_date.iso8601,
         endDate: end_date.iso8601,
-        pagination: pagination,
+        pagination:,
         category: "charging"
       }
     end
@@ -213,14 +213,14 @@ RSpec.describe Queries::GroupedExpensesQuery do
     let(:other_user) { create(:user, :confirmed, :with_driver) }
     let(:other_driver) { other_user.driver }
 
-    let!(:expense1) { create(:expense, vehicle: vehicle1, user: user, date: start_date + 1.day, category: "charging") }
-    let!(:expense2) { create(:expense, vehicle: vehicle1, user: other_user, date: start_date + 1.day, category: "maintenance") }
+    let!(:expense1) { create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day, category: "charging") }
+    let!(:expense2) { create(:expense, vehicle: toyota_camry, user: other_user, date: start_date + 1.day, category: "maintenance") }
 
     let(:variables) do
       {
         startDate: start_date.iso8601,
         endDate: end_date.iso8601,
-        pagination: pagination,
+        pagination:,
         driverId: driver.global_id
       }
     end
@@ -241,8 +241,8 @@ RSpec.describe Queries::GroupedExpensesQuery do
 
   describe 'when no expenses exist in the date range' do
     before do
-      create(:expense, vehicle: vehicle1, user: user, date: start_date - 1.day)
-      create(:expense, vehicle: vehicle1, user: user, date: end_date + 1.day)
+      create(:expense, vehicle: toyota_camry, user:, date: start_date - 1.day)
+      create(:expense, vehicle: toyota_camry, user:, date: end_date + 1.day)
     end
 
     it 'returns empty items array' do
@@ -262,7 +262,7 @@ RSpec.describe Queries::GroupedExpensesQuery do
     before do
       # Create 15 expenses across different dates to test pagination
       15.times do |i|
-        create(:expense, vehicle: vehicle1, user: user, date: start_date + i.days)
+        create(:expense, vehicle: toyota_camry, user:, date: start_date + i.days)
       end
     end
 
@@ -299,13 +299,13 @@ RSpec.describe Queries::GroupedExpensesQuery do
   describe 'when no date filters are provided' do
     let(:variables) do
       {
-        pagination: pagination
+        pagination:
       }
     end
 
     before do
-      create(:expense, vehicle: vehicle1, user: user, date: Date.current - 30.days)
-      create(:expense, vehicle: vehicle1, user: user, date: Date.current)
+      create(:expense, vehicle: toyota_camry, user:, date: Date.current - 30.days)
+      create(:expense, vehicle: toyota_camry, user:, date: Date.current)
     end
 
     it 'uses default date range (epoch to current date)' do
@@ -323,7 +323,7 @@ RSpec.describe Queries::GroupedExpensesQuery do
     let(:context) { {} }
 
     before do
-      create(:expense, vehicle: vehicle1, user: user, date: start_date + 1.day)
+      create(:expense, vehicle: toyota_camry, user:, date: start_date + 1.day)
     end
 
     it 'returns an authentication error' do
@@ -336,7 +336,7 @@ RSpec.describe Queries::GroupedExpensesQuery do
 
   describe 'expenses without vehicle' do
     let!(:expense_without_vehicle) do
-      create(:expense, :with_user, user: user, vehicle: nil, date: start_date + 1.day)
+      create(:expense, :with_user, user:, vehicle: nil, date: start_date + 1.day)
     end
 
     it 'groups expenses without vehicle correctly' do
@@ -353,4 +353,3 @@ RSpec.describe Queries::GroupedExpensesQuery do
     end
   end
 end
-

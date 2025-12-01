@@ -162,12 +162,14 @@ RSpec.describe PayrollService do
 
         result = described_class.calculate_driver_payroll(driver:, start_date:, end_date:)
 
-        expect(result[:daily_breakdown].count).to eq(2)
-        expect(result[:daily_breakdown].first[:revenue]).to eq(300.0)
-        expect(result[:daily_breakdown].first[:amount_due]).to eq(45.0)
-        expect(result[:daily_breakdown].second[:revenue]).to eq(600.0)
-        expect(result[:daily_breakdown].second[:amount_due]).to eq(105.0)
-        expect(result[:amount_due]).to eq(150.0) # Sum of both days
+        aggregate_failures do
+          expect(result[:daily_breakdown].count).to eq(2)
+          expect(result[:daily_breakdown].first[:revenue]).to eq(300.0)
+          expect(result[:daily_breakdown].first[:amount_due]).to eq(45.0)
+          expect(result[:daily_breakdown].second[:revenue]).to eq(600.0)
+          expect(result[:daily_breakdown].second[:amount_due]).to eq(105.0)
+          expect(result[:amount_due]).to eq(150.0) # Sum of both days
+        end
       end
 
       it 'sorts daily breakdown by date' do
