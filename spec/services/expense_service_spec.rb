@@ -160,7 +160,7 @@ RSpec.describe ExpenseService do
       end
     end
 
-    context 'edge cases' do
+    context 'when edge cases occur' do
       it 'handles expenses with zero amount (should not exist but tests robustness)' do
         # Note: This should not happen due to validations, but testing for robustness
         expense = build(:expense, amount: 0, date: start_date)

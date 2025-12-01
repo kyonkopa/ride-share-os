@@ -33,7 +33,8 @@ RSpec.describe Mutations::Auth::RefreshTokenMutation do
 
   describe 'successful token refresh' do
     # Skip: refreshToken mutation is not registered in MutationType
-    xit 'returns new tokens' do
+    # rubocop:disable RSpec/PendingWithoutReason
+    xit 'returns new tokens', skip: 'refreshToken mutation is not registered in MutationType' do
       expect(mutation).to execute_as_graphql
         .with_variables(variables)
         .with_no_errors
@@ -47,6 +48,7 @@ RSpec.describe Mutations::Auth::RefreshTokenMutation do
           errors: []
         }.with_indifferent_access)
     end
+    # rubocop:enable RSpec/PendingWithoutReason
   end
 
   describe 'error cases' do
@@ -58,7 +60,8 @@ RSpec.describe Mutations::Auth::RefreshTokenMutation do
       end
 
       # Skip: refreshToken mutation is not registered in MutationType
-      xit 'returns an error' do
+      # rubocop:disable RSpec/PendingWithoutReason
+      xit 'returns an error', skip: 'refreshToken mutation is not registered in MutationType' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
           .with_no_errors
@@ -71,6 +74,7 @@ RSpec.describe Mutations::Auth::RefreshTokenMutation do
             ]
           }.with_indifferent_access)
       end
+      # rubocop:enable RSpec/PendingWithoutReason
     end
 
     context 'with access token instead of refresh token' do
@@ -81,7 +85,8 @@ RSpec.describe Mutations::Auth::RefreshTokenMutation do
       end
 
       # Skip: refreshToken mutation is not registered in MutationType
-      xit 'returns an invalid refresh token error' do
+      # rubocop:disable RSpec/PendingWithoutReason
+      xit 'returns an invalid refresh token error', skip: 'refreshToken mutation is not registered in MutationType' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
           .with_no_errors
@@ -94,6 +99,7 @@ RSpec.describe Mutations::Auth::RefreshTokenMutation do
             ]
           }.with_indifferent_access)
       end
+      # rubocop:enable RSpec/PendingWithoutReason
     end
 
     context 'with expired refresh token' do
@@ -109,7 +115,8 @@ RSpec.describe Mutations::Auth::RefreshTokenMutation do
       end
 
       # Skip: refreshToken mutation is not registered in MutationType
-      xit 'returns an error' do
+      # rubocop:disable RSpec/PendingWithoutReason
+      xit 'returns an error', skip: 'refreshToken mutation is not registered in MutationType' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
           .with_no_errors
@@ -122,6 +129,7 @@ RSpec.describe Mutations::Auth::RefreshTokenMutation do
             ]
           }.with_indifferent_access)
       end
+      # rubocop:enable RSpec/PendingWithoutReason
     end
 
     context 'with non-existent user' do
@@ -137,7 +145,8 @@ RSpec.describe Mutations::Auth::RefreshTokenMutation do
       end
 
       # Skip: refreshToken mutation is not registered in MutationType
-      xit 'returns an error' do
+      # rubocop:disable RSpec/PendingWithoutReason
+      xit 'returns an error', skip: 'refreshToken mutation is not registered in MutationType' do
         expect(mutation).to execute_as_graphql
           .with_variables(variables)
           .with_no_errors
@@ -150,6 +159,7 @@ RSpec.describe Mutations::Auth::RefreshTokenMutation do
             ]
           }.with_indifferent_access)
       end
+      # rubocop:enable RSpec/PendingWithoutReason
     end
   end
 end

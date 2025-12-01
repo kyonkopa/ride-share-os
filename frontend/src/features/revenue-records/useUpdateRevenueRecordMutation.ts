@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { useMutation } from "@/hooks/useMutation"
 import {
   UpdateRevenueRecordMutationDocument,
@@ -6,6 +5,7 @@ import {
   type UpdateRevenueRecordMutationMutationVariables,
   type Error,
 } from "../../codegen/graphql"
+import { useNotification } from "@/hooks/useNotification"
 
 interface UseUpdateRevenueRecordMutationOptions {
   onSuccess?: (data: UpdateRevenueRecordMutationMutation) => void
@@ -16,19 +16,20 @@ export const useUpdateRevenueRecordMutation = (
   options: UseUpdateRevenueRecordMutationOptions = {}
 ) => {
   const { onSuccess, onError } = options
-  const [errors, setErrors] = useState<Error[]>([])
+  const { addError } = useNotification()
 
   const { mutate: updateRevenueRecord, loading } = useMutation<
     UpdateRevenueRecordMutationMutation,
     UpdateRevenueRecordMutationMutationVariables
   >(UpdateRevenueRecordMutationDocument, {
     onSuccess: (data: UpdateRevenueRecordMutationMutation) => {
-      setErrors([])
       onSuccess?.(data)
     },
-    onError: (error: Error[]) => {
-      setErrors(error)
-      onError?.(error)
+    onError: (errors: Error[]) => {
+      onError?.(errors as Error[])
+      errors.forEach((error) => {
+        addError(error.message || "Failed to update revenue record")
+      })
     },
   })
 
@@ -36,8 +37,6 @@ export const useUpdateRevenueRecordMutation = (
     revenueRecordId: string,
     reconciled: boolean
   ) => {
-    setErrors([])
-
     await updateRevenueRecord({
       variables: {
         revenueRecordId,
@@ -48,7 +47,6 @@ export const useUpdateRevenueRecordMutation = (
 
   return {
     handleUpdateRevenueRecord,
-    errors,
     loading,
   }
 }

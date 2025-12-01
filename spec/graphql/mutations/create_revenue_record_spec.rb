@@ -75,7 +75,7 @@ RSpec.describe Mutations::CreateRevenueRecord do
             expect(revenue_record).to be_present
             expect(revenue_record.total_revenue).to eq(150.50)
             expect(revenue_record.total_profit).to eq(0.0)
-            expect(revenue_record.reconciled).to eq(false)
+            expect(revenue_record.reconciled).to be(false)
             expect(revenue_record.source).to eq("bolt")
             expect(revenue_record.driver_id).to eq(driver.id)
             expect(revenue_record.shift_assignment_id).to eq(shift_assignment.id)
@@ -93,7 +93,7 @@ RSpec.describe Mutations::CreateRevenueRecord do
         .with_no_errors
         .with_effects do
           revenue_record = RevenueRecord.last
-          expect(revenue_record.reconciled).to eq(true)
+          expect(revenue_record.reconciled).to be(true)
         end
     end
 

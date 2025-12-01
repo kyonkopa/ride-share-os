@@ -7,11 +7,11 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
   let(:driver) { user.driver }
   let(:other_user) { create(:user, :confirmed, :with_driver) }
   let(:other_driver) { other_user.driver }
-  let(:vehicle1) { create(:vehicle, make: "Toyota", model: "Camry", license_plate: "ABC-123") }
-  let(:vehicle2) { create(:vehicle, make: "Honda", model: "Accord", license_plate: "XYZ-789") }
-  let(:shift_assignment1) { create(:shift_assignment, driver:, vehicle: vehicle1) }
-  let(:shift_assignment2) { create(:shift_assignment, driver:, vehicle: vehicle2) }
-  let(:other_shift_assignment) { create(:shift_assignment, driver: other_driver, vehicle: vehicle1) }
+  let(:toyota_camry) { create(:vehicle, make: "Toyota", model: "Camry", license_plate: "ABC-123") }
+  let(:honda_accord) { create(:vehicle, make: "Honda", model: "Accord", license_plate: "XYZ-789") }
+  let(:toyota_shift_assignment) { create(:shift_assignment, driver:, vehicle: toyota_camry) }
+  let(:honda_shift_assignment) { create(:shift_assignment, driver:, vehicle: honda_accord) }
+  let(:other_shift_assignment) { create(:shift_assignment, driver: other_driver, vehicle: toyota_camry) }
 
   let(:query) do
     <<~GQL
@@ -72,7 +72,7 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
     {
       startDate: start_date.iso8601,
       endDate: end_date.iso8601,
-      pagination: pagination
+      pagination:
     }
   end
 
@@ -80,27 +80,37 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
 
   describe 'when revenue records exist within the date range' do
     let!(:record1) do
-      create(:revenue_record, :bolt, shift_assignment: shift_assignment1, driver:,
-                                   total_revenue: 100.0, total_profit: 80.0,
-                                   created_at: start_date + 1.day)
+      create(
+        :revenue_record, :bolt, shift_assignment: toyota_shift_assignment, driver:,
+                                total_revenue: 100.0, total_profit: 80.0,
+                                created_at: start_date + 1.day
+)
     end
     let!(:record2) do
-      create(:revenue_record, :uber, shift_assignment: shift_assignment1, driver:,
-                                   total_revenue: 150.0, total_profit: 120.0,
-                                   created_at: start_date + 1.day)
+      create(
+        :revenue_record, :uber, shift_assignment: toyota_shift_assignment, driver:,
+                                total_revenue: 150.0, total_profit: 120.0,
+                                created_at: start_date + 1.day
+)
     end
     let!(:record3) do
-      create(:revenue_record, :bolt, shift_assignment: shift_assignment2, driver:,
-                                   total_revenue: 200.0, total_profit: 160.0,
-                                   created_at: start_date + 2.days)
+      create(
+        :revenue_record, :bolt, shift_assignment: honda_shift_assignment, driver:,
+                                total_revenue: 200.0, total_profit: 160.0,
+                                created_at: start_date + 2.days
+)
     end
 
     before do
       # Create records outside range to verify they're excluded
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             created_at: start_date - 1.day)
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             created_at: end_date + 1.day)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: start_date - 1.day
+)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: end_date + 1.day
+)
     end
 
     it 'returns grouped revenue records within the date range' do
@@ -110,24 +120,26 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
         .with_no_errors
         .with_effects do |result, _full_result|
           items = result["items"]
-          expect(items.length).to eq(2) # Two groups: driver on day1, driver on day2
+          aggregate_failures do
+            expect(items.length).to eq(2) # Two groups: driver on day1, driver on day2
 
-          # Check first group (driver, start_date + 1.day)
-          group1 = items.find { |g| g["date"] == (start_date + 1.day).iso8601 }
-          expect(group1).to be_present
-          expect(group1["driverId"]).to eq(driver.global_id)
-          expect(group1["driverName"]).to eq(driver.full_name)
-          expect(group1["revenueCount"]).to eq(2)
-          expect(group1["totalRevenue"]).to eq(250.0) # 100 + 150
-          expect(group1["totalProfit"]).to eq(200.0) # 80 + 120
-          expect(group1["revenueRecords"].length).to eq(2)
+            # Check first group (driver, start_date + 1.day)
+            group1 = items.find { |g| g["date"] == (start_date + 1.day).iso8601 }
+            expect(group1).to be_present
+            expect(group1["driverId"]).to eq(driver.global_id)
+            expect(group1["driverName"]).to eq(driver.full_name)
+            expect(group1["revenueCount"]).to eq(2)
+            expect(group1["totalRevenue"]).to eq(250.0) # 100 + 150
+            expect(group1["totalProfit"]).to eq(200.0) # 80 + 120
+            expect(group1["revenueRecords"].length).to eq(2)
 
-          # Check second group (driver, start_date + 2.days)
-          group2 = items.find { |g| g["date"] == (start_date + 2.days).iso8601 }
-          expect(group2).to be_present
-          expect(group2["revenueCount"]).to eq(1)
-          expect(group2["totalRevenue"]).to eq(200.0)
-          expect(group2["totalProfit"]).to eq(160.0)
+            # Check second group (driver, start_date + 2.days)
+            group2 = items.find { |g| g["date"] == (start_date + 2.days).iso8601 }
+            expect(group2).to be_present
+            expect(group2["revenueCount"]).to eq(1)
+            expect(group2["totalRevenue"]).to eq(200.0)
+            expect(group2["totalProfit"]).to eq(160.0)
+          end
         end
     end
 
@@ -197,19 +209,23 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
 
   describe 'filtering by driver_id' do
     let!(:record1) do
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             created_at: start_date + 1.day)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: start_date + 1.day
+)
     end
     let!(:record2) do
-      create(:revenue_record, shift_assignment: other_shift_assignment, driver: other_driver,
-                             created_at: start_date + 1.day)
+      create(
+        :revenue_record, shift_assignment: other_shift_assignment, driver: other_driver,
+                         created_at: start_date + 1.day
+)
     end
 
     let(:variables) do
       {
         startDate: start_date.iso8601,
         endDate: end_date.iso8601,
-        pagination: pagination,
+        pagination:,
         driverId: driver.global_id
       }
     end
@@ -230,20 +246,24 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
 
   describe 'filtering by vehicle_id' do
     let!(:record1) do
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             created_at: start_date + 1.day)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: start_date + 1.day
+)
     end
     let!(:record2) do
-      create(:revenue_record, shift_assignment: shift_assignment2, driver:,
-                             created_at: start_date + 1.day)
+      create(
+        :revenue_record, shift_assignment: honda_shift_assignment, driver:,
+                         created_at: start_date + 1.day
+)
     end
 
     let(:variables) do
       {
         startDate: start_date.iso8601,
         endDate: end_date.iso8601,
-        pagination: pagination,
-        vehicleId: vehicle1.global_id
+        pagination:,
+        vehicleId: toyota_camry.global_id
       }
     end
 
@@ -263,23 +283,29 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
 
   describe 'filtering by source' do
     let!(:record1) do
-      create(:revenue_record, :bolt, shift_assignment: shift_assignment1, driver:,
-                                   created_at: start_date + 1.day)
+      create(
+        :revenue_record, :bolt, shift_assignment: toyota_shift_assignment, driver:,
+                                created_at: start_date + 1.day
+)
     end
     let!(:record2) do
-      create(:revenue_record, :uber, shift_assignment: shift_assignment1, driver:,
-                                   created_at: start_date + 1.day)
+      create(
+        :revenue_record, :uber, shift_assignment: toyota_shift_assignment, driver:,
+                                created_at: start_date + 1.day
+)
     end
     let!(:record3) do
-      create(:revenue_record, source: :off_trip, shift_assignment: shift_assignment1, driver:,
-                             created_at: start_date + 1.day)
+      create(
+        :revenue_record, source: :off_trip, shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: start_date + 1.day
+)
     end
 
     let(:variables) do
       {
         startDate: start_date.iso8601,
         endDate: end_date.iso8601,
-        pagination: pagination,
+        pagination:,
         source: "bolt"
       }
     end
@@ -303,10 +329,14 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
 
   describe 'when no revenue records exist in the date range' do
     before do
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             created_at: start_date - 1.day)
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             created_at: end_date + 1.day)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: start_date - 1.day
+)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: end_date + 1.day
+)
     end
 
     it 'returns empty items array' do
@@ -328,8 +358,10 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
       # Create 15 revenue records across different dates to test pagination
       # Use off_trip source to avoid uniqueness validation (only bolt/uber have uniqueness constraint)
       15.times do |i|
-        create(:revenue_record, source: :off_trip, shift_assignment: shift_assignment1, driver:,
-                               created_at: start_date + i.days)
+        create(
+          :revenue_record, source: :off_trip, shift_assignment: toyota_shift_assignment, driver:,
+                           created_at: start_date + i.days
+)
       end
     end
 
@@ -366,15 +398,19 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
   describe 'when no date filters are provided' do
     let(:variables) do
       {
-        pagination: pagination
+        pagination:
       }
     end
 
     before do
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             created_at: Date.current - 30.days)
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             created_at: Date.current)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: Date.current - 30.days
+)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: Date.current
+)
     end
 
     it 'uses default date range (epoch to current date)' do
@@ -392,8 +428,10 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
     let(:context) { {} }
 
     before do
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             created_at: start_date + 1.day)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: start_date + 1.day
+)
     end
 
     it 'returns an authentication error' do
@@ -406,12 +444,16 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
 
   describe 'allReconciled status' do
     let!(:record1) do
-      create(:revenue_record, :reconciled, shift_assignment: shift_assignment1, driver:,
-                                           created_at: start_date + 1.day)
+      create(
+        :revenue_record, :reconciled, shift_assignment: toyota_shift_assignment, driver:,
+                                      created_at: start_date + 1.day
+)
     end
     let!(:record2) do
-      create(:revenue_record, :reconciled, shift_assignment: shift_assignment1, driver:,
-                                           created_at: start_date + 1.day)
+      create(
+        :revenue_record, :reconciled, shift_assignment: toyota_shift_assignment, driver:,
+                                      created_at: start_date + 1.day
+)
     end
 
     it 'returns true when all records are reconciled' do
@@ -428,9 +470,11 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
 
   describe 'vehicle name from shift assignment' do
     let!(:record) do
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             vehicle: nil, # No direct vehicle association
-                             created_at: start_date + 1.day)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         vehicle: nil, # No direct vehicle association
+                         created_at: start_date + 1.day
+)
     end
 
     it 'uses vehicle from shift assignment when record has no vehicle' do
@@ -447,19 +491,25 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
 
   describe 'sorting' do
     let!(:record1) do
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             total_revenue: 100.0,
-                             created_at: start_date + 1.day)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         total_revenue: 100.0,
+                         created_at: start_date + 1.day
+)
     end
     let!(:record2) do
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             total_revenue: 200.0,
-                             created_at: start_date + 2.days)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         total_revenue: 200.0,
+                         created_at: start_date + 2.days
+)
     end
     let!(:record3) do
-      create(:revenue_record, shift_assignment: shift_assignment1, driver:,
-                             total_revenue: 150.0,
-                             created_at: start_date + 3.days)
+      create(
+        :revenue_record, shift_assignment: toyota_shift_assignment, driver:,
+                         total_revenue: 150.0,
+                         created_at: start_date + 3.days
+)
     end
 
     it 'sorts groups by date descending' do
@@ -475,4 +525,3 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do
     end
   end
 end
-
