@@ -32,6 +32,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
 import { AlertCircleIcon, Calculator } from "lucide-react"
 import type { RevenueRecord } from "@/codegen/graphql"
+import { useNotification } from "@/hooks/useNotification"
 
 interface ReconcileFormValues {
   startDate: Date | null
@@ -115,9 +116,15 @@ export function ReconcileScreen() {
     return records
   }, [revenueGroups])
 
+  const { addSuccess } = useNotification()
+
   // Mutation for updating reconciled status
   const { handleUpdateRevenueRecord, loading: updateLoading } =
-    useUpdateRevenueRecordMutation()
+    useUpdateRevenueRecordMutation({
+      onSuccess: () => {
+        addSuccess("Record updated successfully")
+      },
+    })
 
   const onSubmit = () => {
     setSubmitted(true)

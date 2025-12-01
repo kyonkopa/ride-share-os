@@ -11,7 +11,7 @@
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  source               :integer         not null default(0)
-#  vehicle_id           :integer        
+#  vehicle_id           :integer
 #
 # Indexes
 #
@@ -46,7 +46,7 @@ class RevenueRecord < ApplicationRecord
   validates :total_profit, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :reconciled, inclusion: { in: [true, false] }
   validates :source, presence: true
-  validate :unique_driver_source_per_day, if: -> { bolt? || uber? }
+  validate :unique_driver_source_per_day, if: -> { bolt? || uber? }, on: :create
 
   private
 
