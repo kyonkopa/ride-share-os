@@ -1,0 +1,33 @@
+mutation CreatePayrollRecordMutation($input: CreatePayrollRecordInput!) {
+  createPayrollRecord(input: $input) {
+    payrollRecord {
+      id
+      globalId
+      amountPaid
+      periodStartDate
+      periodEndDate
+      paidAt
+      notes
+      createdAt
+      updatedAt
+      driver {
+        id
+        globalId
+        fullName
+        email
+      }
+      paidByUser {
+        id
+        globalId
+        firstName
+        lastName
+        email
+      }
+    }
+    errors {
+      message
+      field
+      code
+    }
+  }
+}

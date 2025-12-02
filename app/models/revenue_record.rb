@@ -55,13 +55,15 @@ class RevenueRecord < ApplicationRecord
     return unless shift_assignment_id.present?
 
     # Use the shift assignment's start_time date for uniqueness check
+    # Check for records with the same shift_assignment, driver, source, and date
     shift_date = shift_assignment.start_time
-    existing_record = RevenueRecord
-                      .where(driver_id:)
-                      .where(source:)
-                      .where(created_at: shift_date.beginning_of_day...shift_date.end_of_day)
+    existing_records = RevenueRecord
+                       .where(driver_id:)
+                       .where(source:)
+                       .where(shift_assignment_id:)
+                       .where(created_at: shift_date.beginning_of_day...shift_date.end_of_day)
 
-    if existing_record.exists?
+    if existing_records.exists?
       errors.add(:base, "A revenue record already exists for this driver, source (#{source}), and date")
     end
   end

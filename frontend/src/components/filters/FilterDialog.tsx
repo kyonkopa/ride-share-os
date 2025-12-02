@@ -140,7 +140,7 @@ export function FilterDialog({
                 <SelectValue
                   placeholder={
                     selectConfig.placeholder ||
-                    `All ${selectConfig.label.toLowerCase()}`
+                    `Any ${selectConfig.label.toLowerCase()}`
                   }
                 />
               </SelectTrigger>

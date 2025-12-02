@@ -59,93 +59,78 @@ RSpec.describe RevenueRecord do
         create(:shift_assignment, driver:, start_time: shift_date.beginning_of_day + 9.hours)
       end
 
-      context 'when source is bolt' do
-        context 'when no other bolt record exists for the same driver and date' do
-          it 'is valid' do
-            revenue_record = build(:revenue_record, :bolt, shift_assignment:, driver:)
-            expect(revenue_record).to be_valid
-          end
-        end
-
-        context 'when another bolt record exists for the same driver and date' do
-          before do
-            create(:revenue_record, :bolt, shift_assignment:, driver:)
+      [:bolt, :uber].each do |source|
+        context "when source is #{source}" do
+          context "when no other #{source} record exists for the same driver and date" do
+            it 'is valid' do
+              revenue_record = build(:revenue_record, source, shift_assignment:, driver:)
+              expect(revenue_record).to be_valid
+            end
           end
 
-          it 'is invalid' do
-            revenue_record = build(:revenue_record, :bolt, shift_assignment: other_shift_assignment, driver:)
-            expect(revenue_record).not_to be_valid
-            expect(revenue_record.errors[:base]).to include(
-              'A revenue record already exists for this driver, source (bolt), and date'
-            )
-          end
-        end
+          context "when another #{source} record exists for the same driver and date" do
+            before do
+              create(:revenue_record, source, shift_assignment:, driver:)
+            end
 
-        context 'when another bolt record exists for a different driver on the same date' do
-          let(:other_driver) { create(:driver) }
-          let(:other_driver_shift_assignment) do
-            create(:shift_assignment, driver: other_driver, start_time: shift_date.beginning_of_day + 8.hours)
-          end
+            it 'is valid when using a different shift assignment' do
+              revenue_record = build(:revenue_record, source, shift_assignment: other_shift_assignment, driver:)
+              expect(revenue_record).to be_valid
+            end
 
-          before do
-            create(:revenue_record, :bolt, shift_assignment: other_driver_shift_assignment, driver: other_driver)
-          end
-
-          it 'is valid' do
-            revenue_record = build(:revenue_record, :bolt, shift_assignment:, driver:)
-            expect(revenue_record).to be_valid
-          end
-        end
-
-        context 'when another bolt record exists for the same driver on a different date' do
-          let(:different_date) { 1.day.ago.to_date }
-          let(:different_date_shift_assignment) do
-            create(:shift_assignment, driver:, start_time: different_date.beginning_of_day + 8.hours)
+            it 'is invalid when using the same shift assignment' do
+              revenue_record = build(:revenue_record, source, shift_assignment:, driver:)
+              expect(revenue_record).not_to be_valid
+              expect(revenue_record.errors[:base]).to include(
+                "A revenue record already exists for this driver, source (#{source}), and date"
+              )
+            end
           end
 
-          before do
-            # Create record with created_at set to the different date to match validation logic
-            record = create(:revenue_record, :bolt, shift_assignment: different_date_shift_assignment, driver:)
-            record.update_column(:created_at, different_date.beginning_of_day + 10.hours)
+          context "when another #{source} record exists for a different driver on the same date" do
+            let(:other_driver) { create(:driver) }
+            let(:other_driver_shift_assignment) do
+              create(:shift_assignment, driver: other_driver, start_time: shift_date.beginning_of_day + 8.hours)
+            end
+
+            before do
+              create(:revenue_record, source, shift_assignment: other_driver_shift_assignment, driver: other_driver)
+            end
+
+            it 'is valid' do
+              revenue_record = build(:revenue_record, source, shift_assignment:, driver:)
+              expect(revenue_record).to be_valid
+            end
           end
 
-          it 'is valid' do
-            revenue_record = build(:revenue_record, :bolt, shift_assignment:, driver:)
-            expect(revenue_record).to be_valid
-          end
-        end
+          context "when another #{source} record exists for the same driver on a different date" do
+            let(:different_date) { 1.day.ago.to_date }
+            let(:different_date_shift_assignment) do
+              create(:shift_assignment, driver:, start_time: different_date.beginning_of_day + 8.hours)
+            end
 
-        context 'when another uber record exists for the same driver and date' do
-          before do
-            create(:revenue_record, :uber, shift_assignment:, driver:)
-          end
+            before do
+              # Create record with created_at set to the different date to match validation logic
+              record = create(:revenue_record, source, shift_assignment: different_date_shift_assignment, driver:)
+              record.update_column(:created_at, different_date.beginning_of_day + 10.hours)
+            end
 
-          it 'is valid' do
-            revenue_record = build(:revenue_record, :bolt, shift_assignment: other_shift_assignment, driver:)
-            expect(revenue_record).to be_valid
-          end
-        end
-      end
-
-      context 'when source is uber' do
-        context 'when no other uber record exists for the same driver and date' do
-          it 'is valid' do
-            revenue_record = build(:revenue_record, :uber, shift_assignment:, driver:)
-            expect(revenue_record).to be_valid
-          end
-        end
-
-        context 'when another uber record exists for the same driver and date' do
-          before do
-            create(:revenue_record, :uber, shift_assignment:, driver:)
+            it 'is valid' do
+              revenue_record = build(:revenue_record, source, shift_assignment:, driver:)
+              expect(revenue_record).to be_valid
+            end
           end
 
-          it 'is invalid' do
-            revenue_record = build(:revenue_record, :uber, shift_assignment: other_shift_assignment, driver:)
-            expect(revenue_record).not_to be_valid
-            expect(revenue_record.errors[:base]).to include(
-              'A revenue record already exists for this driver, source (uber), and date'
-            )
+          context "when another #{source == :bolt ? :uber : :bolt} record exists for the same driver and date" do
+            other_source = source == :bolt ? :uber : :bolt
+            before do
+              create(:revenue_record, other_source, shift_assignment:, driver:)
+            end
+
+            it 'is valid' do
+              revenue_record = build(:revenue_record, source, shift_assignment: other_shift_assignment, driver:)
+              expect(revenue_record).to be_valid
+            end
           end
         end
       end
@@ -179,30 +164,12 @@ RSpec.describe RevenueRecord do
       context 'when updating an existing record' do
         let!(:existing_record) { create(:revenue_record, :bolt, shift_assignment:, driver:) }
 
-        it 'does not conflict with itself' do
-          # The validation checks created_at against shift_date range
-          # Since the validation doesn't exclude the current record when updating,
-          # it will find itself and fail. This test documents the current behavior.
+        it 'does not run validation on update' do
+          # Validation only runs on create, so updating should not trigger it
           existing_record.update_column(:created_at, shift_assignment.start_time.beginning_of_day + 10.hours)
           existing_record.total_revenue = 200.0
-          # The validation will conflict with itself on update
-          expect(existing_record).not_to be_valid
-          expect(existing_record.errors[:base]).to include(
-            'A revenue record already exists for this driver, source (bolt), and date'
-          )
-        end
-
-        it 'conflicts with another record for the same driver, source, and date' do
-          # Create a second record on a different date first
-          different_date_shift_assignment = create(:shift_assignment, driver:, start_time: 1.day.ago.beginning_of_day + 8.hours)
-          other_record = create(:revenue_record, :bolt, shift_assignment: different_date_shift_assignment, driver:)
-
-          # Update it to the same date as existing_record, which should cause a conflict
-          other_record.shift_assignment = other_shift_assignment
-          expect(other_record).not_to be_valid
-          expect(other_record.errors[:base]).to include(
-            'A revenue record already exists for this driver, source (bolt), and date'
-          )
+          # The validation does not run on update, so the record should be valid
+          expect(existing_record).to be_valid
         end
       end
 

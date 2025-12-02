@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_29_224841) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_02_121507) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -84,6 +84,22 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_29_224841) do
     t.index ["user_id"], name: "index_expenses_on_user_id"
     t.index ["vehicle_id", "date"], name: "index_expenses_on_vehicle_id_and_date"
     t.index ["vehicle_id"], name: "index_expenses_on_vehicle_id"
+  end
+
+  create_table "payroll_records", force: :cascade do |t|
+    t.bigint "driver_id", null: false
+    t.bigint "paid_by_user_id", null: false
+    t.decimal "amount_paid", precision: 10, scale: 2, null: false
+    t.date "period_start_date", null: false
+    t.date "period_end_date", null: false
+    t.datetime "paid_at", null: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["driver_id", "period_start_date", "period_end_date"], name: "index_payroll_records_on_driver_and_period", unique: true
+    t.index ["driver_id"], name: "index_payroll_records_on_driver_id"
+    t.index ["paid_at"], name: "index_payroll_records_on_paid_at"
+    t.index ["paid_by_user_id"], name: "index_payroll_records_on_paid_by_user_id"
   end
 
   create_table "permissions", force: :cascade do |t|
@@ -245,6 +261,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_29_224841) do
   add_foreign_key "drivers", "users"
   add_foreign_key "expenses", "users"
   add_foreign_key "expenses", "vehicles"
+  add_foreign_key "payroll_records", "drivers"
+  add_foreign_key "payroll_records", "users", column: "paid_by_user_id"
   add_foreign_key "revenue_records", "drivers"
   add_foreign_key "revenue_records", "shift_assignments"
   add_foreign_key "revenue_records", "vehicles"

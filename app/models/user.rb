@@ -49,6 +49,7 @@ class User < ApplicationRecord
   has_many :expenses, dependent: :destroy
   has_many :user_permissions, dependent: :destroy
   has_many :permissions, through: :user_permissions
+  has_many :payroll_records_paid_by_user, class_name: "PayrollRecord", foreign_key: "paid_by_user_id", dependent: :destroy
 
   scope :active, -> { where(deleted_at: nil) }
   scope :deleted, -> { where.not(deleted_at: nil) }

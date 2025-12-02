@@ -9,7 +9,8 @@
     "dev": "cd frontend && yarn dev",
     "server": "rails s",
     "codegen": "bundle exec rake graphql:update_schema && cd frontend && yarn codegen",
-    "lint": "cd frontend && yarn lint"
+    "lint": "cd frontend && yarn lint",
+    "migrate": "rails db:migrate"
   },
   "engines": {
     "node": ">=18.0.0",

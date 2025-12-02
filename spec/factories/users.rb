@@ -8,6 +8,19 @@ FactoryBot.define do
     password { 'password123' }
     password_confirmation { 'password123' }
 
+    transient do
+      can { nil }
+    end
+
+    after(:create) do |user, evaluator|
+      if evaluator.can.present?
+        permission = Permission.find_or_create_by!(slug: evaluator.can) do |p|
+          p.name = evaluator.can.humanize
+        end
+        user.permissions << permission unless user.permissions.include?(permission)
+      end
+    end
+
     trait :confirmed do
       after(:create) do |user|
         user.confirm

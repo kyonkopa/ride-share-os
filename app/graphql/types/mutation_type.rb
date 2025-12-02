@@ -8,6 +8,7 @@ module Types
     field :clock_in, mutation: Mutations::ClockIn
     field :clock_out, mutation: Mutations::ClockOut
     field :create_expense, mutation: Mutations::CreateExpense
+    field :create_payroll_record, mutation: Mutations::CreatePayrollRecord
     field :create_revenue_record, mutation: Mutations::CreateRevenueRecord
     field :create_scheduled_trip_request, mutation: Mutations::CreateScheduledTripRequest
     field :create_session, mutation: Mutations::CreateSession

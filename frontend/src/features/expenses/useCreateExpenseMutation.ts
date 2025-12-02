@@ -19,6 +19,7 @@ export interface CreateExpenseFormData {
   vehicleId?: string
   receiptKey?: string
   description?: string
+  overrideWarnings?: boolean
 }
 
 interface UseCreateExpenseMutationOptions {
@@ -72,6 +73,7 @@ export const useCreateExpenseMutation = ({
       description: data.description,
       receiptKey: data.receiptKey,
       vehicleId: data.vehicleId,
+      overrideWarnings: data.overrideWarnings || false,
     }
 
     await createExpense({

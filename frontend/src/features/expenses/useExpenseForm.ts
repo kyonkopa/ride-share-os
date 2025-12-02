@@ -99,20 +99,30 @@ export const useExpenseForm = ({
     }
   }, [open, reset])
 
-  const onSubmitForm = async (data: ExpenseFormValues) => {
+  const onSubmitForm = async (
+    data: ExpenseFormValues,
+    { overrideWarnings = false }: { overrideWarnings?: boolean }
+  ) => {
     await handleCreateExpense({
       amount: data.amount ?? 0,
       category: data.category,
       date: data.date,
       vehicleId: data.vehicleId,
       description: data.description,
+      overrideWarnings,
     })
   }
+
+  // Check if there's a duplicate expense warning
+  const hasWarning = mutationErrors?.some(
+    (error) => error.code === "DUPLICATE_EXPENSE_WARNING"
+  )
 
   return {
     ...form,
     onSubmitForm,
     loading: creating,
     mutationErrors,
+    hasWarning,
   }
 }

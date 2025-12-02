@@ -27,7 +27,10 @@ import {
   ExpenseCategoryEnum,
   EXPENSE_CATEGORIES,
 } from "@/features/expenses/expenseCategoryEnum"
-import { useExpenseForm } from "@/features/expenses/useExpenseForm"
+import {
+  useExpenseForm,
+  type ExpenseFormValues,
+} from "@/features/expenses/useExpenseForm"
 import { ChevronDownIcon } from "lucide-react"
 import { Calendar } from "./ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
@@ -61,6 +64,7 @@ export function ExpenseForm({
     onSubmitForm,
     loading,
     mutationErrors,
+    hasWarning,
   } = useExpenseForm({
     open,
     onSuccess: () => {
@@ -70,6 +74,16 @@ export function ExpenseForm({
     expensesQueryVariables,
     groupedExpensesQueryVariables,
   })
+
+  const handleFormSubmit = async (data: ExpenseFormValues) => {
+    let overrideWarnings = false
+
+    if (hasWarning) {
+      overrideWarnings = true
+    }
+
+    await onSubmitForm(data, { overrideWarnings })
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -83,7 +97,7 @@ export function ExpenseForm({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* Amount */}
           <div className="space-y-2">
             <Label htmlFor="amount">Amount (GHS) *</Label>
@@ -185,7 +199,6 @@ export function ExpenseForm({
                     <Calendar
                       mode="single"
                       selected={field.value}
-                      captionLayout="dropdown"
                       disabled={(date) => date > new Date()}
                       onSelect={(date) => {
                         if (date) {
@@ -272,7 +285,11 @@ export function ExpenseForm({
             disabled={loading || isSubmitting}
           >
             {(loading || isSubmitting) && <Spinner className="mr-2" />}
-            {loading || isSubmitting ? "Creating..." : "Create Expense"}
+            {loading || isSubmitting
+              ? "Creating..."
+              : hasWarning
+                ? "Confirm"
+                : "Create Expense"}
           </Button>
         </form>
       </DialogContent>

@@ -20,90 +20,15 @@ import {
 } from "./ui/card"
 import { Users } from "lucide-react"
 import { MonthSelector } from "./MonthSelector"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "./ui/accordion"
+import { PayrollDriverCard } from "./PayrollDriverCard"
 import { useAuthorizer } from "@/hooks/useAuthorizer"
 import { PermissionEnum } from "@/codegen/graphql"
-import { formatDate } from "@/utils/dateUtils"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "GHS",
   }).format(amount)
-}
-
-interface DailyBreakdown {
-  date: string
-  revenue: number
-  amountDue: number
-}
-
-interface PayrollDriverCardProps {
-  driverName: string
-  amountDue: number
-  startDate: string
-  dailyBreakdown: DailyBreakdown[]
-}
-
-function PayrollDriverCard({
-  driverName,
-  amountDue,
-  startDate,
-  dailyBreakdown,
-}: PayrollDriverCardProps) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{driverName}</CardTitle>
-        <CardDescription>Started: {formatDate(startDate)}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-primary mb-4">
-          {formatCurrency(amountDue)}
-        </div>
-        {dailyBreakdown.length > 0 && (
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="breakdown" className="border-none">
-              <AccordionTrigger className="py-2 text-sm">
-                <span className="truncate underline text-primary">
-                  View Daily Breakdown ({dailyBreakdown.length} days)
-                </span>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-2 pt-2">
-                  {dailyBreakdown.map((day) => (
-                    <div
-                      key={day.date}
-                      className="flex items-center justify-between rounded-md border p-2"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm">
-                          {formatDate(day.date)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          Revenue: {formatCurrency(day.revenue)}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold">
-                          {formatCurrency(day.amountDue)}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        )}
-      </CardContent>
-    </Card>
-  )
 }
 
 function PayrollEmpty() {
@@ -145,13 +70,17 @@ export function PayrollScreen() {
     }
   }, [selectedMonth])
 
-  const { payroll, loading, error } = usePayroll(
+  const { payroll, loading, error, refetch } = usePayroll(
     dateRange.startDate,
     dateRange.endDate,
     {
       skip: !dateRange.startDate || !dateRange.endDate,
     }
   )
+
+  const handlePaymentSuccess = () => {
+    refetch()
+  }
 
   const driverPayrolls = payroll?.driverPayrolls || []
   const totalAmountDue = payroll?.totalAmountDue || 0
@@ -221,7 +150,7 @@ export function PayrollScreen() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">
-                  Total Amount Due
+                  Total amount due
                 </p>
                 <p className="text-3xl font-bold text-primary">
                   {formatCurrency(totalAmountDue)}
@@ -243,21 +172,21 @@ export function PayrollScreen() {
         <PayrollEmpty />
       ) : (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Driver Payroll</h2>
+          <h2 className="text-xl font-semibold">Driver payroll</h2>
           <div className="grid gap-4">
             {driverPayrolls.map((driverPayroll) => {
-              // Type assertion needed until GraphQL codegen is run
-              const payrollWithBreakdown =
-                driverPayroll as typeof driverPayroll & {
-                  dailyBreakdown?: DailyBreakdown[]
-                }
               return (
                 <PayrollDriverCard
                   key={driverPayroll.driver.id}
+                  driverId={driverPayroll.driver.globalId}
                   driverName={driverPayroll.driver.fullName}
                   amountDue={driverPayroll.amountDue}
                   startDate={driverPayroll.startDate}
-                  dailyBreakdown={payrollWithBreakdown.dailyBreakdown || []}
+                  dailyBreakdown={driverPayroll.dailyBreakdown || []}
+                  periodStartDate={dateRange.startDate}
+                  periodEndDate={dateRange.endDate}
+                  payrollRecord={driverPayroll.payrollRecord}
+                  onPaymentSuccess={handlePaymentSuccess}
                 />
               )
             })}

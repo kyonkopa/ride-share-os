@@ -17,6 +17,7 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { ChevronDownIcon } from "lucide-react"
 import { useDrivers } from "@/features/drivers/useDrivers"
+import { useVehicles } from "@/features/clock-in/useVehicles"
 import { useGroupedExpenses } from "@/features/expenses/useGroupedExpenses"
 import { useGroupedRevenueRecords } from "@/features/revenue-records/useGroupedRevenueRecords"
 import { useUpdateRevenueRecordMutation } from "@/features/revenue-records/useUpdateRevenueRecordMutation"
@@ -38,6 +39,7 @@ interface ReconcileFormValues {
   startDate: Date | null
   endDate: Date | null
   driverId: string
+  vehicleId: string
 }
 
 function formatCurrency(amount: number): string {
@@ -53,17 +55,20 @@ export function ReconcileScreen() {
   const [submitted, setSubmitted] = useState(false)
 
   const { drivers, loading: driversLoading } = useDrivers()
+  const { vehicles, loading: vehiclesLoading } = useVehicles()
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<ReconcileFormValues>({
     defaultValues: {
       startDate: null,
       endDate: null,
       driverId: "",
+      vehicleId: "",
     },
     mode: "onChange",
   })
@@ -71,6 +76,7 @@ export function ReconcileScreen() {
   const startDate = watch("startDate")
   const endDate = watch("endDate")
   const driverId = watch("driverId")
+  const vehicleId = watch("vehicleId")
 
   // Format dates for API calls
   const startDateString = startDate ? startDate.toISOString().split("T")[0] : ""
@@ -87,6 +93,7 @@ export function ReconcileScreen() {
     startDate: startDateString,
     endDate: endDateString,
     driverId: driverId || undefined,
+    vehicleId: vehicleId || undefined,
     pagination: { page: 1, perPage: 1 },
     skip: !shouldFetch,
   })
@@ -100,6 +107,7 @@ export function ReconcileScreen() {
     startDate: startDateString,
     endDate: endDateString,
     driverId: driverId || undefined,
+    vehicleId: vehicleId || undefined,
     pagination: { page: 1, perPage: 1000 }, // Get all records for the list
     skip: !shouldFetch,
   })
@@ -130,6 +138,32 @@ export function ReconcileScreen() {
     setSubmitted(true)
   }
 
+  // Helper functions to set dates
+  const setToday = () => {
+    const today = new Date()
+    // Set time to midnight UTC to match date picker behavior
+    const todayDate = new Date(
+      Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+    )
+    setValue("startDate", todayDate)
+    setValue("endDate", todayDate)
+  }
+
+  const setYesterday = () => {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    // Set time to midnight UTC to match date picker behavior
+    const yesterdayDate = new Date(
+      Date.UTC(
+        yesterday.getFullYear(),
+        yesterday.getMonth(),
+        yesterday.getDate()
+      )
+    )
+    setValue("startDate", yesterdayDate)
+    setValue("endDate", yesterdayDate)
+  }
+
   const loading = expensesLoading || revenueLoading
   const hasError = expensesError || revenueError
 
@@ -152,7 +186,8 @@ export function ReconcileScreen() {
         <CardHeader>
           <CardTitle>Filter Options</CardTitle>
           <CardDescription>
-            Select date range and optionally filter by driver
+            Select date range and optionally filter by driver or vehicle
+            (mutually exclusive)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -190,7 +225,6 @@ export function ReconcileScreen() {
                         <Calendar
                           mode="single"
                           selected={field.value || undefined}
-                          captionLayout="dropdown"
                           disabled={(date) => date > new Date()}
                           onSelect={(date) => {
                             if (date) {
@@ -265,7 +299,6 @@ export function ReconcileScreen() {
                         <Calendar
                           mode="single"
                           selected={field.value || undefined}
-                          captionLayout="dropdown"
                           disabled={(date) => date > new Date()}
                           onSelect={(date) => {
                             if (date) {
@@ -285,38 +318,114 @@ export function ReconcileScreen() {
                   </p>
                 )}
               </div>
+              {/* Quick Date Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={setToday}
+                  className="flex-1"
+                  size="sm"
+                >
+                  Today
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={setYesterday}
+                  className="flex-1"
+                  size="sm"
+                >
+                  Yesterday
+                </Button>
+              </div>
             </div>
 
-            {/* Driver Select */}
-            <div className="space-y-2">
-              <Label htmlFor="driverId">Driver (Optional)</Label>
-              <Controller
-                name="driverId"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={driversLoading}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a driver (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {drivers.length === 0 && !driversLoading && (
-                        <SelectItem value="" disabled>
-                          No drivers available
-                        </SelectItem>
-                      )}
-                      {drivers.map((driver) => (
-                        <SelectItem key={driver.id} value={driver.globalId}>
-                          {driver.fullName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+            {/* Driver and Vehicle Selects */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Driver Select */}
+              <div className="space-y-2">
+                <Label htmlFor="driverId">Driver (Optional)</Label>
+                <Controller
+                  name="driverId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || "__any__"}
+                      onValueChange={(value) => {
+                        // If "Any" is selected, clear the driver
+                        if (value === "__any__") {
+                          field.onChange("")
+                        } else {
+                          field.onChange(value)
+                          // Clear vehicle when driver is selected
+                          setValue("vehicleId", "")
+                        }
+                      }}
+                      disabled={driversLoading || !!vehicleId}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a driver (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__any__">Any</SelectItem>
+                        {drivers.length === 0 && !driversLoading && (
+                          <SelectItem value="__empty__" disabled>
+                            No drivers available
+                          </SelectItem>
+                        )}
+                        {drivers.map((driver) => (
+                          <SelectItem key={driver.id} value={driver.globalId}>
+                            {driver.fullName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+
+              {/* Vehicle Select */}
+              <div className="space-y-2">
+                <Label htmlFor="vehicleId">Vehicle (Optional)</Label>
+                <Controller
+                  name="vehicleId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || "__any__"}
+                      onValueChange={(value) => {
+                        // If "Any" is selected, clear the vehicle
+                        if (value === "__any__") {
+                          field.onChange("")
+                        } else {
+                          field.onChange(value)
+                          // Clear driver when vehicle is selected
+                          setValue("driverId", "")
+                        }
+                      }}
+                      disabled={vehiclesLoading || !!driverId}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a vehicle (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__any__">Any</SelectItem>
+                        {vehicles.length === 0 && !vehiclesLoading && (
+                          <SelectItem value="__empty__" disabled>
+                            No vehicles available
+                          </SelectItem>
+                        )}
+                        {vehicles.map((vehicle) => (
+                          <SelectItem key={vehicle.id} value={vehicle.globalId}>
+                            {vehicle.displayName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
             </div>
 
             {/* Submit Button */}
@@ -391,6 +500,13 @@ export function ReconcileScreen() {
                         formatCurrency(totalExpenses)
                       )}
                     </div>
+                    {(driverId || vehicleId) && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {driverId
+                          ? "Expenses may not tally as expenses not added by the selected driver are discounted in this total."
+                          : "Expenses filtered by selected vehicle."}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
 

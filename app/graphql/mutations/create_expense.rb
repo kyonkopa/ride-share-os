@@ -25,6 +25,17 @@ module Mutations
         Vehicle.find_by_global_id(input[:vehicle_id])&.id
       end
 
+      # Check for duplicate expense (unless category is "other" or override_warnings is true)
+      if expense_params[:category] != "other" && expense_params[:vehicle_id].present? && !input[:override_warnings]
+        if Expense.exists?(category: expense_params[:category], date: expense_params[:date], vehicle_id: expense_params[:vehicle_id])
+          error!(
+            "An expense with this category and date already exists for this vehicle, choose Confirm to add this expense anyway",
+            field: "base",
+            code: "DUPLICATE_EXPENSE_WARNING"
+)
+        end
+      end
+
       expense = Expense.create!(expense_params)
 
       { expense: }

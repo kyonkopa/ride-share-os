@@ -144,7 +144,6 @@ export function RevenueForm({
                     <Calendar
                       mode="single"
                       selected={field.value}
-                      captionLayout="dropdown"
                       disabled={(date) => date > new Date()}
                       onSelect={(date) => {
                         if (date) {

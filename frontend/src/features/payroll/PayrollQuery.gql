@@ -16,6 +16,21 @@ query PayrollQuery($startDate: ISO8601Date!, $endDate: ISO8601Date!) {
         email
         phoneNumber
       }
+      payrollRecord {
+        id
+        globalId
+        amountPaid
+        paidAt
+        periodStartDate
+        periodEndDate
+        notes
+        paidByUser {
+          id
+          globalId
+          fullName
+          email
+        }
+      }
     }
   }
 }

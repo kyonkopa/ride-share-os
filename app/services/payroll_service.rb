@@ -45,7 +45,7 @@ class PayrollService
     # @param start_date [Date] Start date of the payroll period
     # @param end_date [Date] End date of the payroll period
     # @param date_range [Range] Optional pre-calculated date range for performance
-    # @return [Hash] Hash containing driver, amount_due, start_date, and daily_breakdown
+    # @return [Hash] Hash containing driver, amount_due, start_date, daily_breakdown, and payroll_record
     def calculate_driver_payroll(driver:, start_date:, end_date:, date_range: nil)
       date_range ||= start_date.beginning_of_day..end_date.end_of_day
 
@@ -53,11 +53,19 @@ class PayrollService
       amount_due = daily_breakdown.sum { |day| day[:amount_due] }
       start_date_for_driver = find_driver_start_date(driver:, date_range:, fallback_date: start_date)
 
+      # Find existing payroll record for this driver and period
+      payroll_record = PayrollRecord.find_by(
+        driver_id: driver.id,
+        period_start_date: start_date,
+        period_end_date: end_date
+      )
+
       {
         driver:,
         amount_due:,
         start_date: start_date_for_driver,
-        daily_breakdown:
+        daily_breakdown:,
+        payroll_record:
       }
     end
 

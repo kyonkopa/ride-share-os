@@ -7,6 +7,7 @@ module Types
     field :amount_due, Float, null: false
     field :daily_breakdown, [Types::DailyPayrollBreakdownType], null: false
     field :driver, Types::DriverType, null: false
+    field :payroll_record, Types::PayrollRecordType, null: true, description: "Existing payroll record for this period, if any"
     field :start_date, GraphQL::Types::ISO8601Date, null: false
   end
 end

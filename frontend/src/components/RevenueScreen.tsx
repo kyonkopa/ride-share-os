@@ -98,7 +98,6 @@ function RevenueRecordCard({ group }: RevenueRecordCardProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-1 text-sm text-muted-foreground">
-          <div>Profit: {formatCurrency(group.totalProfit)}</div>
           <div>Driver: {group.driverName}</div>
           <div>Vehicle: {group.vehicleName || "N/A"}</div>
           <div>Date: {formatDate(group.date)}</div>
@@ -442,7 +441,7 @@ export function RevenueScreen() {
           <CardHeader className="p-2">
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Financial Breakdown
+              Finance Breakdown
             </CardTitle>
             <CardDescription>View monthly financial breakdown</CardDescription>
           </CardHeader>
