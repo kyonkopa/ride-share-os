@@ -1,0 +1,42 @@
+query RecentShiftEventsQuery($pagination: PaginationInput!) {
+  recentShiftEvents(pagination: $pagination) {
+    items {
+      id
+      globalId
+      eventType
+      odometer
+      vehicleRange
+      gpsLat
+      gpsLon
+      notes
+      createdAt
+      shiftAssignment {
+        id
+        globalId
+        driver {
+          id
+          fullName
+        }
+        vehicle {
+          id
+          displayName
+          licensePlate
+        }
+      }
+    }
+    pagination {
+      currentPage
+      pageSize
+      totalSize
+      pageCount
+      firstPage
+      lastPage
+      nextPage
+      prevPage
+    }
+    errors {
+      message
+      field
+    }
+  }
+}

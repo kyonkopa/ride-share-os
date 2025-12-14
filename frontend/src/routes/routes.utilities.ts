@@ -16,6 +16,7 @@ export const Routes = {
   settings: "/settings",
   scheduledTrips: "/scheduled-trips",
   scheduledTripRequest: "/scheduled-trips/request",
+  activity: "/activity",
 
   // Admin routes (if needed in the future)
   adminDashboard: "/admin/dashboard",

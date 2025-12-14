@@ -27,6 +27,7 @@ const ScheduledTripsPage = lazy(() => import("../pages/ScheduledTripsPage"))
 const ScheduledTripRequestPage = lazy(
   () => import("../pages/ScheduledTripRequestPage")
 )
+const RecentActivityPage = lazy(() => import("../pages/RecentActivityPage"))
 
 export const routes: RouteObject[] = [
   {
@@ -113,6 +114,10 @@ export const routes: RouteObject[] = [
           {
             path: Routes.scheduledTripRequest,
             element: <ScheduledTripRequestPage />,
+          },
+          {
+            path: Routes.activity,
+            element: <RecentActivityPage />,
           },
         ],
       },

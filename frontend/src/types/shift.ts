@@ -60,5 +60,4 @@ export interface ShiftSummary {
   totalRevenue: number
   totalDistance: number
   averageRangeUsage: number
-  todayShifts: Shift[]
 }

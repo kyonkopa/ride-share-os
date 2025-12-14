@@ -829,6 +829,15 @@ type PaginatedResultScheduledTrip {
 }
 
 """
+Represents a paginated list of results
+"""
+type PaginatedResultShiftEvent {
+  errors: [Error!]!
+  items: [ShiftEvent!]!
+  pagination: Pagination!
+}
+
+"""
 Represents pagination metadata for a result set
 """
 type Pagination {
@@ -1218,6 +1227,16 @@ type Query {
     """
     startDate: ISO8601Date!
   ): Payroll!
+
+  """
+  Get recent shift events for the authenticated driver with pagination
+  """
+  recentShiftEvents(
+    """
+    Pagination options
+    """
+    pagination: PaginationInput!
+  ): PaginatedResultShiftEvent!
 
   """
   Get all revenue records within a date range

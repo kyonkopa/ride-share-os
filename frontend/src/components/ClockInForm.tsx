@@ -17,18 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { MapPin, Gauge, AlertCircleIcon } from "lucide-react"
+import { MapPin, Gauge } from "lucide-react"
 import {
   useClockInMutation,
   type ClockInFormData,
 } from "@/features/clock-in/useClockInMutation"
 import { Spinner } from "./ui/spinner"
 import { useNotification } from "@/hooks/useNotification"
-import type {
-  ShiftAssignment,
-  VehicleFragmentFragment,
-} from "@/codegen/graphql"
-import { Alert, AlertDescription } from "./ui/alert"
+import type { VehicleFragmentFragment } from "@/codegen/graphql"
 import { InlineErrorAlert } from "./ui/inline-error-alert"
 
 interface ClockInFormProps {
@@ -36,7 +32,6 @@ interface ClockInFormProps {
   onClockInSuccess?: () => void
   open: boolean
   onOpenChange: (open: boolean) => void
-  todayShifts: ShiftAssignment[]
 }
 
 export function ClockInForm({
@@ -44,7 +39,6 @@ export function ClockInForm({
   onClockInSuccess,
   open,
   onOpenChange,
-  todayShifts,
 }: ClockInFormProps) {
   const { addSuccess } = useNotification()
   const {
@@ -137,11 +131,6 @@ export function ClockInForm({
     await handleClockIn(clockInData)
   }
 
-  // Check if there are any completed shifts for today
-  const hasCompletedShift = todayShifts.some(
-    (shift) => shift.status === "completed"
-  )
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -155,19 +144,6 @@ export function ClockInForm({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Alert for completed shift */}
-          {hasCompletedShift && (
-            <Alert variant="destructive">
-              <AlertCircleIcon />
-              <AlertDescription>
-                <p>
-                  You already have a completed shift for today. Are you sure you
-                  want to clock in again?
-                </p>
-              </AlertDescription>
-            </Alert>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Vehicle Selection */}
             <div className="space-y-2">
