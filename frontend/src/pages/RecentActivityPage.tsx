@@ -87,7 +87,7 @@ export default function RecentActivityPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container space-y-6">
       <h1 className="text-2xl font-bold">Recent Activity</h1>
 
       {groupedEvents.map((group) => (
