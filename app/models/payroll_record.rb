@@ -9,7 +9,7 @@
 #  period_start_date    :date            not null
 #  period_end_date      :date            not null
 #  paid_at              :datetime        not null
-#  notes                :text           
+#  notes                :text
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #

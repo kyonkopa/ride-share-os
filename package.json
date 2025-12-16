@@ -10,7 +10,8 @@
     "server": "rails s",
     "codegen": "bundle exec rake graphql:update_schema && cd frontend && yarn codegen",
     "lint": "cd frontend && yarn lint",
-    "migrate": "rails db:migrate"
+    "migrate": "rails db:migrate",
+    "build": "cd frontend && yarn build"
   },
   "engines": {
     "node": ">=18.0.0",

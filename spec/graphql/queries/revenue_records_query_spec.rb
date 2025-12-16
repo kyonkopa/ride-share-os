@@ -116,11 +116,12 @@ RSpec.describe Queries::RevenueRecordsQuery do
 
     before do
       create(
-        :revenue_record, shift_assignment:, driver:,
-                         created_at: start_date + 1.day
+        :revenue_record, :bolt, shift_assignment:, driver:,
+                                created_at: start_date + 1.day
 )
+      # Use different source to avoid uniqueness validation
       create(
-        :revenue_record, shift_assignment:, driver:,
+        :revenue_record, source: :off_trip, shift_assignment:, driver:,
                          created_at: start_date - 1.day
 )
     end
@@ -145,11 +146,12 @@ RSpec.describe Queries::RevenueRecordsQuery do
 
     before do
       create(
-        :revenue_record, shift_assignment:, driver:,
-                         created_at: end_date - 1.day
+        :revenue_record, :bolt, shift_assignment:, driver:,
+                                created_at: end_date - 1.day
 )
+      # Use different source to avoid uniqueness validation
       create(
-        :revenue_record, shift_assignment:, driver:,
+        :revenue_record, source: :off_trip, shift_assignment:, driver:,
                          created_at: end_date + 1.day
 )
     end
@@ -169,16 +171,17 @@ RSpec.describe Queries::RevenueRecordsQuery do
     let(:variables) { {} }
 
     before do
+      # Use different sources to avoid uniqueness validation
       create(
-        :revenue_record, shift_assignment:, driver:,
-                         created_at: start_date - 5.days
+        :revenue_record, :bolt, shift_assignment:, driver:,
+                                created_at: start_date - 5.days
 )
       create(
-        :revenue_record, shift_assignment:, driver:,
-                         created_at: start_date + 1.day
+        :revenue_record, :uber, shift_assignment:, driver:,
+                                created_at: start_date + 1.day
 )
       create(
-        :revenue_record, shift_assignment:, driver:,
+        :revenue_record, source: :off_trip, shift_assignment:, driver:,
                          created_at: end_date + 5.days
 )
     end
@@ -196,13 +199,14 @@ RSpec.describe Queries::RevenueRecordsQuery do
 
   describe 'when no revenue records exist in the date range' do
     before do
+      # Use different sources to avoid uniqueness validation
       create(
-        :revenue_record, shift_assignment:, driver:,
-                         created_at: start_date - 1.day
+        :revenue_record, :bolt, shift_assignment:, driver:,
+                                created_at: start_date - 1.day
 )
       create(
-        :revenue_record, shift_assignment:, driver:,
-                         created_at: end_date + 1.day
+        :revenue_record, :uber, shift_assignment:, driver:,
+                                created_at: end_date + 1.day
 )
     end
 
@@ -219,7 +223,7 @@ RSpec.describe Queries::RevenueRecordsQuery do
     let(:context) { {} }
 
     before do
-      create(:revenue_record, shift_assignment:, driver:)
+      create(:revenue_record, :bolt, shift_assignment:, driver:)
     end
 
     it 'returns an authentication error' do

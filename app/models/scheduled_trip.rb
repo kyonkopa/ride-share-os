@@ -10,16 +10,16 @@
 #  dropoff_location     :string          not null
 #  pickup_datetime      :datetime        not null
 #  recurrence_config    :jsonb           default({})
-#  price                :decimal        
+#  price                :decimal
 #  acceptance_token     :string          not null
 #  decline_token        :string          not null
-#  reviewed_by_id       :integer        
-#  reviewed_at          :datetime       
-#  notes                :text           
+#  reviewed_by_id       :integer
+#  reviewed_at          :datetime
+#  notes                :text
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  state                :string          not null default(pending)
-#  driver_id            :integer        
+#  driver_id            :integer
 #
 # Indexes
 #

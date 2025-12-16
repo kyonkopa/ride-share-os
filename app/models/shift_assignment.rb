@@ -5,7 +5,7 @@
 #  id                   :integer         not null primary key
 #  city                 :integer         not null
 #  driver_id            :integer         not null
-#  vehicle_id           :integer        
+#  vehicle_id           :integer
 #  start_time           :datetime        not null
 #  end_time             :datetime        not null
 #  status               :integer         not null default(0)

@@ -4,10 +4,10 @@
 #
 #  id                   :integer         not null primary key
 #  scheduled_trip_id    :integer         not null
-#  previous_state       :string         
+#  previous_state       :string
 #  new_state            :string          not null
-#  changed_by_id        :integer        
-#  change_reason        :string         
+#  changed_by_id        :integer
+#  change_reason        :string
 #  metadata             :jsonb           default({})
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null

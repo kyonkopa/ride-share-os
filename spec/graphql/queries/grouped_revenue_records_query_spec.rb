@@ -100,15 +100,16 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do # rubocop:disable RSpec/Mu
         created_at: start_date + 2.days
       )
       # Create records outside range to verify they're excluded
+      # Use off_trip source to avoid uniqueness validation
       create(
-        :revenue_record,
-        shift_assignment: toyota_shift_assignment, driver:,
-        created_at: start_date - 1.day
+        :revenue_record, source: :off_trip,
+                         shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: start_date - 1.day
       )
       create(
-        :revenue_record,
-        shift_assignment: toyota_shift_assignment, driver:,
-        created_at: end_date + 1.day
+        :revenue_record, source: :off_trip,
+                         shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: end_date + 1.day
       )
     end
 
@@ -242,12 +243,12 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do # rubocop:disable RSpec/Mu
 
     before do
       create(
-        :revenue_record,
+        :revenue_record, :bolt,
         shift_assignment: toyota_shift_assignment, driver:,
         created_at: start_date + 1.day
       )
       create(
-        :revenue_record,
+        :revenue_record, :bolt,
         shift_assignment: other_shift_assignment, driver: other_driver,
         created_at: start_date + 1.day
       )
@@ -279,12 +280,12 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do # rubocop:disable RSpec/Mu
 
     before do
       create(
-        :revenue_record,
+        :revenue_record, :bolt,
         shift_assignment: toyota_shift_assignment, driver:,
         created_at: start_date + 1.day
       )
       create(
-        :revenue_record,
+        :revenue_record, :uber,
         shift_assignment: honda_shift_assignment, driver:,
         created_at: start_date + 1.day
       )
@@ -351,15 +352,16 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do # rubocop:disable RSpec/Mu
 
   describe 'when no revenue records exist in the date range' do # rubocop:disable RSpec/MultipleMemoizedHelpers
     before do
+      # Use off_trip source to avoid uniqueness validation
       create(
-        :revenue_record,
-        shift_assignment: toyota_shift_assignment, driver:,
-        created_at: start_date - 1.day
+        :revenue_record, source: :off_trip,
+                         shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: start_date - 1.day
       )
       create(
-        :revenue_record,
-        shift_assignment: toyota_shift_assignment, driver:,
-        created_at: end_date + 1.day
+        :revenue_record, source: :off_trip,
+                         shift_assignment: toyota_shift_assignment, driver:,
+                         created_at: end_date + 1.day
       )
     end
 
@@ -428,13 +430,14 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do # rubocop:disable RSpec/Mu
     end
 
     before do
+      # Use different sources to avoid uniqueness validation
       create(
-        :revenue_record,
+        :revenue_record, :bolt,
         shift_assignment: toyota_shift_assignment, driver:,
         created_at: Date.current - 30.days
       )
       create(
-        :revenue_record,
+        :revenue_record, :uber,
         shift_assignment: toyota_shift_assignment, driver:,
         created_at: Date.current
       )
@@ -456,7 +459,7 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do # rubocop:disable RSpec/Mu
 
     before do
       create(
-        :revenue_record,
+        :revenue_record, :bolt,
         shift_assignment: toyota_shift_assignment, driver:,
         created_at: start_date + 1.day
       )
@@ -472,13 +475,14 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do # rubocop:disable RSpec/Mu
 
   describe 'allReconciled status' do # rubocop:disable RSpec/MultipleMemoizedHelpers
     before do
+      # Use different sources to avoid uniqueness validation
       create(
-        :revenue_record, :reconciled,
+        :revenue_record, :reconciled, :bolt,
         shift_assignment: toyota_shift_assignment, driver:,
         created_at: start_date + 1.day
       )
       create(
-        :revenue_record, :reconciled,
+        :revenue_record, :reconciled, :uber,
         shift_assignment: toyota_shift_assignment, driver:,
         created_at: start_date + 1.day
       )
@@ -499,7 +503,7 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do # rubocop:disable RSpec/Mu
   describe 'vehicle name from shift assignment' do # rubocop:disable RSpec/MultipleMemoizedHelpers
     before do
       create(
-        :revenue_record,
+        :revenue_record, :bolt,
         shift_assignment: toyota_shift_assignment, driver:,
         vehicle: nil, # No direct vehicle association
         created_at: start_date + 1.day
@@ -520,23 +524,24 @@ RSpec.describe Queries::GroupedRevenueRecordsQuery do # rubocop:disable RSpec/Mu
 
   describe 'sorting' do # rubocop:disable RSpec/MultipleMemoizedHelpers
     before do
+      # Use different sources to avoid uniqueness validation
       create(
-        :revenue_record,
+        :revenue_record, :bolt,
         shift_assignment: toyota_shift_assignment, driver:,
         total_revenue: 100.0,
         created_at: start_date + 1.day
       )
       create(
-        :revenue_record,
+        :revenue_record, :uber,
         shift_assignment: toyota_shift_assignment, driver:,
         total_revenue: 200.0,
         created_at: start_date + 2.days
       )
       create(
-        :revenue_record,
-        shift_assignment: toyota_shift_assignment, driver:,
-        total_revenue: 150.0,
-        created_at: start_date + 3.days
+        :revenue_record, source: :off_trip,
+                         shift_assignment: toyota_shift_assignment, driver:,
+                         total_revenue: 150.0,
+                         created_at: start_date + 3.days
       )
     end
 
