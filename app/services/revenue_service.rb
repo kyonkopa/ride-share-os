@@ -11,7 +11,7 @@ class RevenueService
     def aggregate_revenue(start_date:, end_date:, driver_id: nil)
       date_range = start_date.beginning_of_day..end_date.end_of_day
 
-      revenue_records = RevenueRecord.where(created_at: date_range)
+      revenue_records = RevenueRecord.where(realized_at: date_range)
 
       # Filter by driver if driver_id is provided
       if driver_id.present?

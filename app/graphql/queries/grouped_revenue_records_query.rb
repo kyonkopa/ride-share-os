@@ -19,7 +19,7 @@ module Queries
 
       revenue_records = RevenueRecord
                         .includes(:driver, :vehicle, :shift_assignment)
-                        .where(created_at: start_date.beginning_of_day..end_date.end_of_day)
+                        .where(realized_at: start_date.beginning_of_day..end_date.end_of_day)
 
       # Filter by driver if driver_id is provided
       if driver_id.present?
@@ -37,7 +37,6 @@ module Queries
         if vehicle
           revenue_records = revenue_records.where(vehicle_id: vehicle.id)
         else
-          # If vehicle not found, return empty result
           revenue_records = revenue_records.none
         end
       end
@@ -68,8 +67,8 @@ module Queries
       # Group revenue records by driver_id and date
       grouped_revenue_records = revenue_records.group_by do |record|
         driver_id = record.driver.global_id || "no-driver"
-        # Use created_at date for grouping (consistent with frontend behavior)
-        date = record.created_at.to_date
+        # Use realized_at date for grouping
+        date = record.realized_at.to_date
         [driver_id, date]
       end
 
@@ -91,7 +90,7 @@ module Queries
             source_breakdown[source_key] = {
               revenue: 0.0,
               profit: 0.0,
-              reconciled: true
+              reconciled: false
             }
           end
           source_breakdown[source_key][:revenue] += record.total_revenue.to_f
@@ -113,7 +112,7 @@ module Queries
           revenue_count: record_list.size,
           vehicle_name:,
           source_breakdown: source_breakdown.transform_keys(&:to_s),
-          revenue_records: record_list.sort_by { |r| [-r.created_at.to_i] }
+          revenue_records: record_list.sort_by { |r| [-r.realized_at.to_i] }
         }
       end
 

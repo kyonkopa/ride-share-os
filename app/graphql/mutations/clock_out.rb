@@ -42,15 +42,8 @@ module Mutations
         notes: input[:notes]
       )
 
-      # Determine created_at timestamp for revenue records
-      # If clocking out on a different calendar day than the shift's start day (past midnight),
-      # set to a minute before midnight of the shift's start day
-      clock_out_time = shift_event.created_at
-      revenue_created_at = if clock_out_time > shift_assignment.start_time.end_of_day
-        shift_assignment.start_time.end_of_day - 1.hour
-      else
-        clock_out_time
-      end
+      # Use shift assignment start_time date for realized_at
+      revenue_realized_at = shift_assignment.start_time.beginning_of_day
 
       # Create revenue record for Bolt if earnings provided
       if input[:bolt_earnings].present?
@@ -59,7 +52,8 @@ module Mutations
           driver: current_user.driver,
           total_revenue: input[:bolt_earnings],
           source: :bolt,
-          created_at: revenue_created_at
+          earnings_screenshot: normalize_base64_image(input[:bolt_earnings_screenshot]),
+          realized_at: revenue_realized_at
         )
       end
 
@@ -70,7 +64,8 @@ module Mutations
           driver: current_user.driver,
           total_revenue: input[:uber_earnings],
           source: :uber,
-          created_at: revenue_created_at
+          earnings_screenshot: normalize_base64_image(input[:uber_earnings_screenshot]),
+          realized_at: revenue_realized_at
         )
       end
 
@@ -91,6 +86,18 @@ module Mutations
 
     def clocked_in?(shift_assignment)
       shift_assignment.shift_events.exists?(event_type: :clock_in)
+    end
+
+    def normalize_base64_image(base64_image)
+      return nil if base64_image.blank?
+
+      # If it's a data URI (data:image/png;base64,...), extract just the base64 part
+      # Otherwise, assume it's already just base64
+      if base64_image.start_with?("data:")
+        base64_image.split(",").last
+      else
+        base64_image
+      end
     end
   end
 end

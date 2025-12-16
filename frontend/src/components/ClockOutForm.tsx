@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -11,18 +11,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MapPin, Battery, Gauge, Receipt, AlertCircleIcon } from "lucide-react"
+import { MapPin, Battery, Gauge, Receipt, Image } from "lucide-react"
 import type {
   CurrentShiftFragmentFragment,
   ShiftEvent,
 } from "@/codegen/graphql"
 import { formatDateTime, getShiftDuration } from "@/utils/dateUtils"
 import { Spinner } from "./ui/spinner"
-import {
-  useClockOutForm,
-  type ClockOutFormData,
-} from "@/features/clock-out/useClockOutForm"
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
+import { useClockOutForm } from "@/features/clock-out/useClockOutForm"
 import { useNotification } from "@/hooks/useNotification"
 
 const DAILY_REVENUE_TARGET = 500 // GHS
@@ -40,15 +36,23 @@ export function ClockOutForm({
   open,
   onOpenChange,
 }: ClockOutFormProps) {
-  const [formData, setFormData] = useState<ClockOutFormData>({
-    odometer: null,
-    gpsLat: null,
-    gpsLon: null,
-    range: null,
-    notes: "",
-    boltEarnings: null,
-    uberEarnings: null,
+  const { addSuccess } = useNotification()
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors: formErrors },
+    onSubmitForm,
+    loading,
+  } = useClockOutForm({
+    open,
     shiftAssignmentId: currentShift.id,
+    onSuccess: () => {
+      addSuccess("Shift clocked out successfully")
+      onOpenChange(false)
+    },
   })
 
   const [location, setLocation] = useState<{
@@ -57,6 +61,13 @@ export function ClockOutForm({
     address?: string
   } | null>(null)
   const [locationError, setLocationError] = useState<string | null>(null)
+
+  // Watch form values
+  const boltEarnings = watch("boltEarnings")
+  const uberEarnings = watch("uberEarnings")
+  const boltEarningsScreenshot = watch("boltEarningsScreenshot")
+  const uberEarningsScreenshot = watch("uberEarningsScreenshot")
+  const odometer = watch("odometer")
 
   // Get current location only when modal is opened
   useEffect(() => {
@@ -69,11 +80,8 @@ export function ClockOutForm({
             latitude: lat,
             longitude: lon,
           })
-          setFormData((prev) => ({
-            ...prev,
-            gpsLat: lat,
-            gpsLon: lon,
-          }))
+          setValue("gpsLat", lat)
+          setValue("gpsLon", lon)
           setLocationError(null)
         },
         (error) => {
@@ -86,73 +94,67 @@ export function ClockOutForm({
     } else if (open && !navigator.geolocation) {
       setLocationError("Geolocation is not supported by this browser.")
     } else if (!open) {
-      // Reset location state and form data when modal is closed
+      // Reset location state when modal is closed
       setLocation(null)
       setLocationError(null)
-      setFormData({
-        odometer: null,
-        gpsLat: null,
-        gpsLon: null,
-        range: null,
-        notes: "",
-        boltEarnings: null,
-        uberEarnings: null,
-        shiftAssignmentId: currentShift.id,
-      })
     }
-  }, [open])
+  }, [open, setValue])
 
-  const handleInputChange = (field: string, value: string) => {
-    // Convert empty strings to null, numeric strings to numbers
-    const numericFields = [
-      "odometer",
-      "gpsLat",
-      "gpsLon",
-      "range",
-      "boltEarnings",
-      "uberEarnings",
-    ]
-    if (numericFields.includes(field)) {
-      const numValue = value === "" ? null : Number(value)
-      setFormData((prev) => ({
-        ...prev,
-        [field]: isNaN(numValue as number) ? null : numValue,
-      }))
-    } else {
-      setFormData((prev) => ({ ...prev, [field]: value }))
-    }
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result as string
+        // Return as data URI format (data:image/png;base64,...)
+        resolve(result)
+      }
+      reader.onerror = (error) => reject(error)
+      reader.readAsDataURL(file)
+    })
   }
 
-  const { addSuccess } = useNotification()
-
-  const { onSubmit, loading, errors } = useClockOutForm({
-    onSuccess: () => {
-      addSuccess("Shift clocked out successfully")
-      onOpenChange(false)
-    },
-  })
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!formData.odometer || !formData.range) {
-      alert("Please fill in all required fields")
+  const handleFileChange = async (
+    field: "boltEarningsScreenshot" | "uberEarningsScreenshot",
+    file: File | null
+  ) => {
+    if (!file) {
+      setValue(field, null)
       return
     }
 
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file")
+      return
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      alert("Image size must be less than 5MB")
+      return
+    }
+
+    try {
+      // Convert file to base64
+      const base64 = await fileToBase64(file)
+      setValue(field, base64)
+    } catch (error) {
+      console.error("Error converting file to base64:", error)
+      alert("Failed to process image. Please try again.")
+    }
+  }
+
+  const onSubmit = async (data: Parameters<typeof onSubmitForm>[0]) => {
     if (!location) {
       alert("Location is required. Please enable location services.")
       return
     }
-
-    await onSubmit(formData)
+    await onSubmitForm(data)
   }
 
   const shiftDuration = getShiftDuration(clockInShiftEvent.createdAt)
-
-  const boltEarnings = Number(formData.boltEarnings) || 0
-  const uberEarnings = Number(formData.uberEarnings) || 0
-  const totalRevenue = boltEarnings + uberEarnings
+  const totalRevenue = (Number(boltEarnings) || 0) + (Number(uberEarnings) || 0)
   const hasHitTarget = totalRevenue >= DAILY_REVENUE_TARGET
 
   return (
@@ -197,7 +199,7 @@ export function ClockOutForm({
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* End Odometer */}
             <div className="space-y-2">
               <Label htmlFor="odometer" className="flex items-center gap-2">
@@ -208,18 +210,23 @@ export function ClockOutForm({
                 id="odometer"
                 type="number"
                 min={clockInShiftEvent?.odometer ?? 0}
-                value={formData.odometer ?? ""}
-                onChange={(e) => handleInputChange("odometer", e.target.value)}
+                {...register("odometer", {
+                  valueAsNumber: true,
+                  setValueAs: (value) => (value === "" ? null : Number(value)),
+                })}
                 placeholder="Enter final odometer reading"
-                required
               />
-              {formData.odometer !== null &&
-                !!currentShift?.vehicle?.latestOdometer && (
-                  <p className="text-sm text-muted-foreground">
-                    Distance driven:{" "}
-                    {formData.odometer - (clockInShiftEvent?.odometer ?? 0)} km
-                  </p>
-                )}
+              {formErrors.odometer && (
+                <p className="text-sm text-red-600">
+                  {formErrors.odometer.message}
+                </p>
+              )}
+              {odometer !== null && !!currentShift?.vehicle?.latestOdometer && (
+                <p className="text-sm text-muted-foreground">
+                  Distance driven:{" "}
+                  {odometer - (clockInShiftEvent?.odometer ?? 0)} km
+                </p>
+              )}
             </div>
 
             {/* End Range */}
@@ -231,11 +238,17 @@ export function ClockOutForm({
               <Input
                 id="range"
                 type="number"
-                value={formData.range ?? ""}
-                onChange={(e) => handleInputChange("range", e.target.value)}
+                {...register("range", {
+                  valueAsNumber: true,
+                  setValueAs: (value) => (value === "" ? null : Number(value)),
+                })}
                 placeholder="Enter final range in km"
-                required
               />
+              {formErrors.range && (
+                <p className="text-sm text-red-600">
+                  {formErrors.range.message}
+                </p>
+              )}
             </div>
 
             {/* Earnings Section */}
@@ -243,7 +256,7 @@ export function ClockOutForm({
               <h3 className="font-semibold text-sm">Earnings</h3>
 
               {/* Bolt Card */}
-              <Card className="border-dashed shadow-none">
+              <Card className="border-dashed shadow-none gap-3">
                 <CardHeader>
                   <CardTitle className="text-lg text-[#00D200]">Bolt</CardTitle>
                 </CardHeader>
@@ -261,41 +274,119 @@ export function ClockOutForm({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={formData.boltEarnings ?? ""}
-                      onChange={(e) =>
-                        handleInputChange("boltEarnings", e.target.value)
-                      }
+                      {...register("boltEarnings", {
+                        valueAsNumber: true,
+                        setValueAs: (value) =>
+                          value === "" ? null : Number(value),
+                      })}
                       placeholder="Enter Bolt earnings as indicated in the app"
                     />
+                    {formErrors.boltEarnings && (
+                      <p className="text-sm text-red-600">
+                        {formErrors.boltEarnings.message}
+                      </p>
+                    )}
                   </div>
+                  {boltEarnings && (
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="bolt_earnings_screenshot"
+                        className="flex items-center gap-2"
+                      >
+                        <Image className="h-4 w-4" />
+                        Screenshot of earnings *
+                      </Label>
+                      <Input
+                        id="bolt_earnings_screenshot"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleFileChange(
+                            "boltEarningsScreenshot",
+                            e.target.files?.[0] || null
+                          )
+                        }
+                      />
+                      {boltEarningsScreenshot && (
+                        <p className="text-sm text-green-600">
+                          ✓ Screenshot uploaded
+                        </p>
+                      )}
+                      {formErrors.boltEarningsScreenshot && (
+                        <p className="text-sm text-red-600">
+                          {formErrors.boltEarningsScreenshot.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
               {/* Uber Card */}
-              <Card className="border-dashed shadow-none">
+              <Card className="border-dashed shadow-none gap-2">
                 <CardHeader>
                   <CardTitle className="text-lg">Uber</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="uber_earnings"
-                      className="flex items-center gap-2"
-                    >
-                      <Receipt className="h-4 w-4" />
-                      Earnings (GHS)
-                    </Label>
-                    <Input
-                      id="uber_earnings"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.uberEarnings ?? ""}
-                      onChange={(e) =>
-                        handleInputChange("uberEarnings", e.target.value)
-                      }
-                      placeholder="Enter Uber earnings as indicated in the app"
-                    />
+                <CardContent className="space-y-6">
+                  <div className="grid space-y-5">
+                    <div>
+                      <Label
+                        htmlFor="uber_earnings"
+                        className="flex items-center gap-2 mb-2"
+                      >
+                        <Receipt className="h-4 w-4" />
+                        Earnings (GHS)
+                      </Label>
+                      <Input
+                        id="uber_earnings"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        {...register("uberEarnings", {
+                          valueAsNumber: true,
+                          setValueAs: (value) =>
+                            value === "" ? null : Number(value),
+                        })}
+                        placeholder="Enter Uber earnings as indicated in the app"
+                      />
+                      {formErrors.uberEarnings && (
+                        <p className="text-sm text-red-600">
+                          {formErrors.uberEarnings.message}
+                        </p>
+                      )}
+                    </div>
+                    {uberEarnings && (
+                      <div>
+                        <Label
+                          htmlFor="uber_earnings_screenshot"
+                          className="flex items-center gap-2 mb-2"
+                        >
+                          <Image className="h-4 w-4" />
+                          Screenshot of earnings *
+                        </Label>
+                        <Input
+                          id="uber_earnings_screenshot"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) =>
+                            handleFileChange(
+                              "uberEarningsScreenshot",
+                              e.target.files?.[0] || null
+                            )
+                          }
+                        />
+                        {uberEarningsScreenshot && (
+                          <p className="text-sm text-green-600 mt-1">
+                            ✓ Screenshot uploaded
+                          </p>
+                        )}
+                        {formErrors.uberEarningsScreenshot && (
+                          <p className="text-sm text-red-600 mt-1">
+                            {formErrors.uberEarningsScreenshot.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -324,6 +415,10 @@ export function ClockOutForm({
                 </p>
               ) : locationError ? (
                 <p className="text-sm text-red-600">✗ {locationError}</p>
+              ) : formErrors.gpsLat || formErrors.gpsLon ? (
+                <p className="text-sm text-red-600">
+                  ✗ {formErrors.gpsLat?.message || formErrors.gpsLon?.message}
+                </p>
               ) : (
                 <p className="text-sm text-yellow-600">
                   ⏳ Getting your location...
@@ -336,29 +431,16 @@ export function ClockOutForm({
               <Label htmlFor="notes">Notes (Optional)</Label>
               <Textarea
                 id="notes"
-                value={formData.notes}
-                onChange={(e) => handleInputChange("notes", e.target.value)}
+                {...register("notes")}
                 placeholder="Any additional notes about this shift..."
               />
             </div>
-
-            {errors.map((error) => (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircleIcon />
-                <AlertTitle>An error occurred</AlertTitle>
-                <AlertDescription>
-                  <p>{error.message}</p>
-                </AlertDescription>
-              </Alert>
-            ))}
 
             {/* Submit Button */}
             <Button
               type="submit"
               className="w-full"
-              disabled={
-                loading || !location || !formData.odometer || !formData.range
-              }
+              disabled={loading || !location}
             >
               {loading && <Spinner />}
               Clock Out

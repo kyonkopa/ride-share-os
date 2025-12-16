@@ -69,3 +69,4 @@ gem "devise", "~> 4.9"
 gem "ice_cube", "~> 0.16"
 gem "kaminari"
 gem "aasm", "~> 5.5"
+gem "aws-sdk-s3", require: false

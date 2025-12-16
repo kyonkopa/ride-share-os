@@ -78,11 +78,10 @@ class PayrollService
     # @param date_range [Range] Date range for filtering revenue records
     # @return [Array<Hash>] Array of hashes containing date, revenue, and amount_due
     def calculate_daily_breakdown(driver:, date_range:)
-      # Get revenue records grouped by day (using shift_assignment.start_time date)
       daily_revenues = RevenueRecord.joins(:shift_assignment)
                                     .where(driver_id: driver.id)
-                                    .where(shift_assignments: { start_time: date_range })
-                                    .group("DATE(shift_assignments.start_time)")
+                                    .where(realized_at: date_range)
+                                    .group("DATE(revenue_records.realized_at)")
                                     .sum(:total_revenue)
 
       # Convert to array of breakdowns sorted by date

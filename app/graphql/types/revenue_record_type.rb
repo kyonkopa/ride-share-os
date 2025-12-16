@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Types
   class RevenueRecordType < Types::BaseObject
     include Types::Concerns::BaseActiveRecordFields
@@ -5,6 +7,7 @@ module Types
     description "A revenue record for a shift"
 
     field :driver, Types::DriverType, null: false
+    field :earnings_screenshot, String, null: true, description: "Base64 encoded screenshot of platform earnings as proof of revenue"
     field :reconciled, Boolean, null: false
     field :shift_assignment, Types::ShiftAssignmentType, null: false
     field :source, Types::Enums::RevenueSourceEnum, null: false

@@ -41,7 +41,7 @@ module Mutations
         total_profit: 0.0,
         source: input[:source],
         reconciled: input[:reconciled] || false,
-        created_at: date.end_of_day
+        realized_at: date.beginning_of_day
       }
 
       begin

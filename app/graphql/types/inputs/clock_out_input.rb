@@ -6,11 +6,13 @@ module Types
       description "Input type for clocking out of a shift"
 
       argument :bolt_earnings, Float, required: false, description: "Bolt earnings for the shift"
+      argument :bolt_earnings_screenshot, String, required: false, description: "Base64 encoded screenshot of Bolt platform earnings as proof of revenue"
       argument :gps_lat, Float, required: false, description: "GPS latitude"
       argument :gps_lon, Float, required: false, description: "GPS longitude"
       argument :notes, String, required: false, description: "Additional notes for the clock out event"
       argument :odometer, Integer, required: false, description: "Current odometer reading"
       argument :uber_earnings, Float, required: false, description: "Uber earnings for the shift"
+      argument :uber_earnings_screenshot, String, required: false, description: "Base64 encoded screenshot of Uber platform earnings as proof of revenue"
       argument :vehicle_range, Integer, required: false, description: "Current vehicle range"
     end
   end

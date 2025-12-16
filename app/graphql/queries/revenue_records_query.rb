@@ -13,14 +13,14 @@ module Queries
       records = RevenueRecord.all
 
       if start_date && end_date
-        records = records.where(created_at: start_date.beginning_of_day..end_date.end_of_day)
+        records = records.where(realized_at: start_date.beginning_of_day..end_date.end_of_day)
       elsif start_date
-        records = records.where("created_at >= ?", start_date.beginning_of_day)
+        records = records.where("realized_at >= ?", start_date.beginning_of_day)
       elsif end_date
-        records = records.where("created_at <= ?", end_date.end_of_day)
+        records = records.where("realized_at <= ?", end_date.end_of_day)
       end
 
-      records.order(created_at: :desc)
+      records.order(realized_at: :desc)
     end
   end
 end

@@ -12,7 +12,7 @@
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  make                 :string          not null
-#  vehicle_image_path   :string
+#  vehicle_image_path   :string         
 #
 # Indexes
 #

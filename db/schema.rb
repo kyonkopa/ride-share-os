@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_02_121507) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_16_110633) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,8 +120,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_02_121507) do
     t.datetime "updated_at", null: false
     t.integer "source", default: 0, null: false
     t.bigint "vehicle_id"
+    t.text "earnings_screenshot"
+    t.datetime "realized_at"
     t.index ["driver_id", "created_at"], name: "index_revenue_records_on_driver_id_and_created_at"
     t.index ["driver_id"], name: "index_revenue_records_on_driver_id"
+    t.index ["realized_at"], name: "index_revenue_records_on_realized_at"
     t.index ["reconciled"], name: "index_revenue_records_on_reconciled"
     t.index ["shift_assignment_id"], name: "index_revenue_records_on_shift_assignment_id"
     t.index ["source"], name: "index_revenue_records_on_source"

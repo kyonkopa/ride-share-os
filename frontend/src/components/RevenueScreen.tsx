@@ -31,12 +31,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog"
 import { cn } from "@/lib/utils"
-import type {
-  RevenueRecord,
-  RevenueSourceEnum,
-  DriverDateRevenueGroup,
-} from "@/codegen/graphql"
+import type { RevenueRecord, DriverDateRevenueGroup } from "@/codegen/graphql"
 import { RevenueSourceEnum as RevenueSourceEnumValues } from "@/codegen/graphql"
 import NumberFlow from "@number-flow/react"
 import { RevenueForm } from "./RevenueForm"
@@ -69,19 +66,14 @@ interface RevenueRecordCardProps {
 }
 
 function RevenueRecordCard({ group }: RevenueRecordCardProps) {
-  // Convert sourceBreakdown from object to array for display
-  const sourceBreakdownArray = useMemo(() => {
-    const sourceBreakdown = (group.sourceBreakdown || {}) as Record<
-      string,
-      { revenue: number; profit: number; reconciled: boolean }
-    >
-    return Object.entries(sourceBreakdown).map(([source, data]) => ({
-      source: source as RevenueSourceEnum,
-      revenue: data.revenue || 0,
-      profit: data.profit || 0,
-      reconciled: data.reconciled !== false,
-    }))
-  }, [group.sourceBreakdown])
+  const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(
+    null
+  )
+
+  const sourceBreakdown = (group.sourceBreakdown || {}) as Record<
+    string,
+    { revenue: number; profit: number; reconciled: boolean }
+  >
 
   return (
     <Card className="gap-2">
@@ -102,7 +94,7 @@ function RevenueRecordCard({ group }: RevenueRecordCardProps) {
           <div>Vehicle: {group.vehicleName || "N/A"}</div>
           <div>Date: {formatDate(group.date)}</div>
 
-          {sourceBreakdownArray.length > 0 && (
+          {Object.keys(sourceBreakdown).length > 0 && (
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="breakdown" className="border-none">
                 <AccordionTrigger className="py-2 text-sm">
@@ -112,33 +104,59 @@ function RevenueRecordCard({ group }: RevenueRecordCardProps) {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-2 pt-2">
-                    {sourceBreakdownArray.map((item) => (
-                      <div
-                        key={item.source}
-                        className="flex items-center justify-between rounded-md border p-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium capitalize">
-                            {item.source.replace(/_/g, " ")}
-                          </span>
-                          <Badge
-                            className={cn(
-                              item.reconciled ? "bg-green-500" : "bg-amber-500"
+                    {Object.entries(sourceBreakdown).map(([source, data]) => {
+                      // Find the revenue record with this source that has a screenshot
+                      const revenueRecord = (group.revenueRecords || []).find(
+                        (record: RevenueRecord) =>
+                          record.source === source && record.earningsScreenshot
+                      )
+                      const screenshot =
+                        revenueRecord?.earningsScreenshot || null
+
+                      return (
+                        <div
+                          key={source}
+                          className="flex items-center justify-between rounded-md border p-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium capitalize">
+                              {source.replace(/_/g, " ")}
+                            </span>
+                            <Badge
+                              className={cn(
+                                data.reconciled !== false
+                                  ? "bg-green-500"
+                                  : "bg-amber-500"
+                              )}
+                            >
+                              {data.reconciled !== false
+                                ? "Reconciled"
+                                : "Unreconciled"}
+                            </Badge>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold">
+                              {formatCurrency(data.revenue || 0)}
+                            </div>
+                            {screenshot ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSelectedScreenshot(screenshot)
+                                }
+                                className="text-blue-500 hover:underline cursor-pointer"
+                              >
+                                Screenshot
+                              </button>
+                            ) : (
+                              <div className="text-xs text-muted-foreground">
+                                No screenshot
+                              </div>
                             )}
-                          >
-                            {item.reconciled ? "Reconciled" : "Unreconciled"}
-                          </Badge>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-semibold">
-                            {formatCurrency(item.revenue)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Profit: {formatCurrency(item.profit)}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -146,6 +164,31 @@ function RevenueRecordCard({ group }: RevenueRecordCardProps) {
           )}
         </div>
       </CardContent>
+
+      {/* Screenshot Modal */}
+      <Dialog
+        open={selectedScreenshot !== null}
+        onOpenChange={(open) => !open && setSelectedScreenshot(null)}
+      >
+        <DialogContent className="inset-0 w-full h-full max-w-none rounded-none translate-x-0 translate-y-0 md:max-w-4xl md:max-h-[90vh] md:rounded-lg md:translate-x-[-50%] md:translate-y-[-50%] md:top-[50%] md:left-[50%] overflow-auto p-4 md:p-6">
+          <DialogHeader className="mb-4">
+            <DialogTitle>Screenshot</DialogTitle>
+          </DialogHeader>
+          {selectedScreenshot && (
+            <div className="flex justify-center items-center min-h-0 flex-1">
+              <img
+                src={
+                  selectedScreenshot.startsWith("data:")
+                    ? selectedScreenshot
+                    : `data:image/png;base64,${selectedScreenshot}`
+                }
+                alt="Earnings screenshot"
+                className="max-w-full max-h-[calc(100vh-8rem)] md:max-h-[calc(90vh-8rem)] h-auto rounded-lg object-contain"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
@@ -692,7 +735,7 @@ export function RevenueScreen() {
       )}
 
       {/* Floating Action Buttons - Only on small screens */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 md:hidden">
+      <div className="fixed bottom-6 right-6 z-50 flex flex-row gap-3 md:hidden">
         <FilterButton
           onClick={() => setShowFilters(true)}
           filterConfigs={filterConfigs}

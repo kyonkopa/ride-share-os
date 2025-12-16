@@ -11,12 +11,15 @@
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  source               :integer         not null default(0)
-#  vehicle_id           :integer
+#  vehicle_id           :integer        
+#  earnings_screenshot  :text           
+#  realized_at          :datetime       
 #
 # Indexes
 #
 #  index_index_revenue_records_on_driver_id (driver_id)
 #  index_index_revenue_records_on_driver_id_and_created_at (driver_id, created_at)
+#  index_index_revenue_records_on_realized_at (realized_at)
 #  index_index_revenue_records_on_reconciled (reconciled)
 #  index_index_revenue_records_on_shift_assignment_id (shift_assignment_id)
 #  index_index_revenue_records_on_source (source)
@@ -48,7 +51,20 @@ class RevenueRecord < ApplicationRecord
   validates :source, presence: true
   validate :unique_driver_source_per_day, if: -> { bolt? || uber? }, on: :create
 
+  before_validation :set_realized_at, on: :create
+
   private
+
+  def set_realized_at
+    return if realized_at.present?
+
+    # Prefer shift_assignment start_time if available, otherwise use created_at or current time
+    if shift_assignment&.start_time.present?
+      self.realized_at = shift_assignment.start_time.beginning_of_day
+    else
+      self.realized_at = Time.current.beginning_of_day
+    end
+  end
 
   def unique_driver_source_per_day
     return if source == :off_trip
@@ -61,7 +77,7 @@ class RevenueRecord < ApplicationRecord
                        .where(driver_id:)
                        .where(source:)
                        .where(shift_assignment_id:)
-                       .where(created_at: shift_date.beginning_of_day...shift_date.end_of_day)
+                       .where(realized_at: shift_date.beginning_of_day...shift_date.end_of_day)
 
     if existing_records.exists?
       errors.add(:base, "A revenue record already exists for this driver, source (#{source}), and date")

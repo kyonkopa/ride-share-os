@@ -127,6 +127,11 @@ input ClockOutInput {
   boltEarnings: Float
 
   """
+  Base64 encoded screenshot of Bolt platform earnings as proof of revenue
+  """
+  boltEarningsScreenshot: String
+
+  """
   GPS latitude
   """
   gpsLat: Float
@@ -150,6 +155,11 @@ input ClockOutInput {
   Uber earnings for the shift
   """
   uberEarnings: Float
+
+  """
+  Base64 encoded screenshot of Uber platform earnings as proof of revenue
+  """
+  uberEarningsScreenshot: String
 
   """
   Current vehicle range
@@ -1269,11 +1279,6 @@ type Query {
   ): PaginatedResultScheduledTrip!
 
   """
-  Get today's shifts
-  """
-  todayShifts: [ShiftAssignment!]!
-
-  """
   Get today's shift events for the current driver
   """
   todaysShiftEvents: [ShiftEvent!]!
@@ -1331,6 +1336,11 @@ A revenue record for a shift
 type RevenueRecord {
   createdAt: ISO8601DateTime!
   driver: Driver!
+
+  """
+  Base64 encoded screenshot of platform earnings as proof of revenue
+  """
+  earningsScreenshot: String
   globalId: String!
   id: String!
   reconciled: Boolean!
