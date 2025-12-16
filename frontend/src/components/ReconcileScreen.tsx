@@ -34,6 +34,7 @@ import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
 import { AlertCircleIcon, Calculator } from "lucide-react"
 import type { RevenueRecord } from "@/codegen/graphql"
 import { useNotification } from "@/hooks/useNotification"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog"
 
 interface ReconcileFormValues {
   startDate: Date | null
@@ -53,6 +54,9 @@ export function ReconcileScreen() {
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false)
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(
+    null
+  )
 
   const { drivers, loading: driversLoading } = useDrivers()
   const { vehicles, loading: vehiclesLoading } = useVehicles()
@@ -564,6 +568,22 @@ export function ReconcileScreen() {
                             <div className="text-sm text-muted-foreground mt-1">
                               {new Date(record.createdAt).toLocaleDateString()}{" "}
                               • {record.source}
+                              {record.earningsScreenshot && (
+                                <>
+                                  {" • "}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedScreenshot(
+                                        record.earningsScreenshot || null
+                                      )
+                                    }
+                                    className="text-blue-500 hover:underline cursor-pointer"
+                                  >
+                                    Screenshot
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -605,6 +625,31 @@ export function ReconcileScreen() {
           )}
         </>
       )}
+
+      {/* Screenshot Modal */}
+      <Dialog
+        open={selectedScreenshot !== null}
+        onOpenChange={(open) => !open && setSelectedScreenshot(null)}
+      >
+        <DialogContent className="inset-0 w-full h-full max-w-none rounded-none translate-x-0 translate-y-0 md:max-w-4xl md:max-h-[90vh] md:rounded-lg md:translate-x-[-50%] md:translate-y-[-50%] md:top-[50%] md:left-[50%] overflow-auto p-4 md:p-6">
+          <DialogHeader className="mb-4">
+            <DialogTitle>Screenshot</DialogTitle>
+          </DialogHeader>
+          {selectedScreenshot && (
+            <div className="flex justify-center items-center min-h-0 flex-1">
+              <img
+                src={
+                  selectedScreenshot.startsWith("data:")
+                    ? selectedScreenshot
+                    : `data:image/png;base64,${selectedScreenshot}`
+                }
+                alt="Earnings screenshot"
+                className="max-w-full max-h-[calc(100vh-8rem)] md:max-h-[calc(90vh-8rem)] h-auto rounded-lg object-contain"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
