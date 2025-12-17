@@ -53,49 +53,57 @@ const clockOutValidationSchema = yup.object({
     .number()
     .nullable()
     .optional()
-    .min(0, "Bolt earnings must be greater than or equal to 0")
-    .test(
-      "screenshot-required",
-      "Screenshot is required when Bolt earnings are entered",
-      function (value) {
-        const { boltEarningsScreenshot } = this.parent
-        if (value !== null && value !== undefined && value > 0) {
-          return !!boltEarningsScreenshot
-        }
-        return true
-      }
-    ),
+    .min(0, "Bolt earnings must be greater than or equal to 0"),
   uberEarnings: yup
     .number()
     .nullable()
     .optional()
-    .min(0, "Uber earnings must be greater than or equal to 0")
-    .test(
-      "screenshot-required",
-      "Screenshot is required when Uber earnings are entered",
-      function (value) {
-        const { uberEarningsScreenshot } = this.parent
-        if (value !== null && value !== undefined && value > 0) {
-          return !!uberEarningsScreenshot
-        }
-        return true
-      }
-    ),
+    .min(0, "Uber earnings must be greater than or equal to 0"),
   boltEarningsScreenshot: yup
     .string()
     .nullable()
-    .optional()
+    .test(
+      "required-when-earnings",
+      "Screenshot is required when Bolt earnings are entered",
+      function (value) {
+        const { boltEarnings } = this.parent
+        // If earnings are provided, screenshot is required
+        if (
+          boltEarnings !== null &&
+          boltEarnings !== undefined &&
+          boltEarnings > 0
+        ) {
+          return value !== null && value !== undefined && value !== ""
+        }
+        return true // Optional if no earnings
+      }
+    )
     .test("is-base64", "Invalid image format", function (value) {
-      if (!value) return true // Optional if no earnings
+      if (!value) return true // Skip format check if no value
       // Check if it's a valid data URI
       return value.startsWith("data:image/")
     }),
   uberEarningsScreenshot: yup
     .string()
     .nullable()
-    .optional()
+    .test(
+      "required-when-earnings",
+      "Screenshot is required when Uber earnings are entered",
+      function (value) {
+        const { uberEarnings } = this.parent
+        // If earnings are provided, screenshot is required
+        if (
+          uberEarnings !== null &&
+          uberEarnings !== undefined &&
+          uberEarnings > 0
+        ) {
+          return value !== null && value !== undefined && value !== ""
+        }
+        return true // Optional if no earnings
+      }
+    )
     .test("is-base64", "Invalid image format", function (value) {
-      if (!value) return true // Optional if no earnings
+      if (!value) return true // Skip format check if no value
       // Check if it's a valid data URI
       return value.startsWith("data:image/")
     }),

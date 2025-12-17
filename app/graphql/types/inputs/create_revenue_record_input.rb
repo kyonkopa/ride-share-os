@@ -7,6 +7,7 @@ module Types
 
       argument :date, GraphQL::Types::ISO8601Date, required: true, description: "Date of the revenue record"
       argument :driver_id, ID, required: true, description: "ID of the driver"
+      argument :earnings_screenshot, String, required: false, description: "Base64 encoded screenshot of platform earnings"
       argument :reconciled, Boolean, required: false, description: "Whether the revenue is reconciled (default: false)"
       argument :source, Types::Enums::RevenueSourceEnum, required: true, description: "Revenue source (bolt, uber, or off_trip)"
       argument :total_revenue, Float, required: true, description: "Total revenue amount"

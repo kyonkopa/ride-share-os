@@ -1,6 +1,7 @@
-import { useState } from "react"
-import { Controller } from "react-hook-form"
+import { useState, useEffect, useRef } from "react"
+import { Controller, useWatch } from "react-hook-form"
 import { Button } from "@/components/ui/button"
+import { handleImageFileChange } from "@/utils/fileUtils"
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,7 @@ export function RevenueForm({
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors, isSubmitting },
     onSubmitForm,
     loading,
@@ -67,6 +69,25 @@ export function RevenueForm({
     revenueRecordsQueryVariables,
     groupedRevenueRecordsQueryVariables,
   })
+
+  const earningsScreenshot = useWatch({ control, name: "earningsScreenshot" })
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Reset file input when form is closed
+  useEffect(() => {
+    if (!open) {
+      setValue("earningsScreenshot", null)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
+  }, [open, setValue])
+
+  const handleFileChange = async (file: File | null) => {
+    await handleImageFileChange(file, (value) => {
+      setValue("earningsScreenshot", value)
+    })
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -233,6 +254,49 @@ export function RevenueForm({
             {errors.totalRevenue && (
               <p className="text-sm text-red-600">
                 {errors.totalRevenue.message}
+              </p>
+            )}
+          </div>
+
+          {/* Earnings Screenshot */}
+          <div className="space-y-2">
+            <Label htmlFor="earningsScreenshot">Earnings Screenshot *</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                ref={fileInputRef}
+                id="earningsScreenshot"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  handleFileChange(file)
+                }}
+                className="flex-1"
+              />
+              {earningsScreenshot && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setValue("earningsScreenshot", null)
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = ""
+                    }
+                  }}
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+            {earningsScreenshot && (
+              <p className="text-sm text-muted-foreground">
+                Screenshot selected
+              </p>
+            )}
+            {errors.earningsScreenshot && (
+              <p className="text-sm text-red-600">
+                {errors.earningsScreenshot.message}
               </p>
             )}
           </div>

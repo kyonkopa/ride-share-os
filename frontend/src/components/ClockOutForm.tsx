@@ -17,6 +17,7 @@ import type {
   ShiftEvent,
 } from "@/codegen/graphql"
 import { formatDateTime, getShiftDuration } from "@/utils/dateUtils"
+import { handleImageFileChange } from "@/utils/fileUtils"
 import { Spinner } from "./ui/spinner"
 import { useClockOutForm } from "@/features/clock-out/useClockOutForm"
 import { useNotification } from "@/hooks/useNotification"
@@ -100,49 +101,13 @@ export function ClockOutForm({
     }
   }, [open, setValue])
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const result = reader.result as string
-        // Return as data URI format (data:image/png;base64,...)
-        resolve(result)
-      }
-      reader.onerror = (error) => reject(error)
-      reader.readAsDataURL(file)
-    })
-  }
-
   const handleFileChange = async (
     field: "boltEarningsScreenshot" | "uberEarningsScreenshot",
     file: File | null
   ) => {
-    if (!file) {
-      setValue(field, null)
-      return
-    }
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      alert("Please select an image file")
-      return
-    }
-
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024 // 5MB
-    if (file.size > maxSize) {
-      alert("Image size must be less than 5MB")
-      return
-    }
-
-    try {
-      // Convert file to base64
-      const base64 = await fileToBase64(file)
-      setValue(field, base64)
-    } catch (error) {
-      console.error("Error converting file to base64:", error)
-      alert("Failed to process image. Please try again.")
-    }
+    await handleImageFileChange(file, (value) => {
+      setValue(field, value)
+    })
   }
 
   const onSubmit = async (data: Parameters<typeof onSubmitForm>[0]) => {

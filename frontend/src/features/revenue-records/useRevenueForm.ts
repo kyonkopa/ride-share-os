@@ -17,6 +17,7 @@ export interface RevenueFormValues {
   source: RevenueSourceEnum
   reconciled: boolean
   vehicleId?: string
+  earningsScreenshot: string | null
 }
 
 interface UseRevenueFormOptions {
@@ -63,6 +64,13 @@ export const useRevenueForm = ({
       .required("Source is required"),
     reconciled: yup.boolean().default(false),
     vehicleId: yup.string().required("Vehicle is required"),
+    earningsScreenshot: yup
+      .string()
+      .nullable()
+      .required("Earnings screenshot is required")
+      .test("is-not-empty", "Earnings screenshot is required", (value) => {
+        return value !== null && value !== undefined && value !== ""
+      }),
   }) as yup.ObjectSchema<RevenueFormValues>
 
   const form = useForm<RevenueFormValues>({
@@ -73,6 +81,7 @@ export const useRevenueForm = ({
       source: "bolt",
       reconciled: false,
       vehicleId: undefined,
+      earningsScreenshot: null,
     },
     resolver: yupResolver(validation),
   })
@@ -89,6 +98,7 @@ export const useRevenueForm = ({
         source: "bolt",
         reconciled: false,
         vehicleId: undefined,
+        earningsScreenshot: null,
       })
     }
   }, [open, reset])
@@ -101,6 +111,7 @@ export const useRevenueForm = ({
       source: data.source,
       reconciled: data.reconciled,
       vehicleId: data.vehicleId,
+      earningsScreenshot: data.earningsScreenshot || undefined,
     })
   }
 

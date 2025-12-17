@@ -19,6 +19,7 @@ export interface CreateRevenueRecordFormData {
   source: "bolt" | "uber" | "off_trip"
   reconciled?: boolean
   vehicleId?: string
+  earningsScreenshot?: string
 }
 
 interface UseCreateRevenueRecordMutationOptions {
@@ -81,6 +82,10 @@ export const useCreateRevenueRecordMutation = ({
 
     if (data.reconciled !== undefined) {
       input.reconciled = data.reconciled
+    }
+
+    if (data.earningsScreenshot) {
+      input.earningsScreenshot = data.earningsScreenshot
     }
 
     await createRevenueRecord({

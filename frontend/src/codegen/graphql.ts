@@ -182,6 +182,8 @@ export type CreateRevenueRecordInput = {
   date: Scalars['ISO8601Date']['input'];
   /** ID of the driver */
   driverId: Scalars['ID']['input'];
+  /** Base64 encoded screenshot of platform earnings */
+  earningsScreenshot?: InputMaybe<Scalars['String']['input']>;
   /** Whether the revenue is reconciled (default: false) */
   reconciled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Revenue source (bolt, uber, or off_trip) */

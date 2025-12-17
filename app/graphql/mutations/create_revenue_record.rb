@@ -41,7 +41,8 @@ module Mutations
         total_profit: 0.0,
         source: input[:source],
         reconciled: input[:reconciled] || false,
-        realized_at: date.beginning_of_day
+        realized_at: date.beginning_of_day,
+        earnings_screenshot: normalize_base64_image(input[:earnings_screenshot])
       }
 
       begin
@@ -51,6 +52,20 @@ module Mutations
       end
 
       { revenue_record: }
+    end
+
+    private
+
+    def normalize_base64_image(base64_image)
+      return nil if base64_image.blank?
+
+      # If it's a data URI (data:image/png;base64,...), extract just the base64 part
+      # Otherwise, assume it's already just base64
+      if base64_image.start_with?("data:")
+        base64_image.split(",").last
+      else
+        base64_image
+      end
     end
   end
 end
