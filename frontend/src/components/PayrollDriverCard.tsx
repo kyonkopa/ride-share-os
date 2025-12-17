@@ -22,8 +22,8 @@ import { formatDate } from "@/utils/dateUtils"
 import { useNotification } from "@/hooks/useNotification"
 
 type PayrollRecordFromQuery = NonNullable<
-  PayrollQueryQuery["payroll"]["driverPayrolls"][number]["payrollRecord"]
->
+  PayrollQueryQuery["payroll"]["driverPayrolls"][number]["payrollRecords"]
+>[number]
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -46,7 +46,7 @@ export interface PayrollDriverCardProps {
   dailyBreakdown: DailyBreakdown[]
   periodStartDate: string
   periodEndDate: string
-  payrollRecord?: PayrollRecordFromQuery | null
+  payrollRecords?: PayrollRecordFromQuery[] | null
   onPaymentSuccess?: () => void
 }
 
@@ -58,7 +58,7 @@ export function PayrollDriverCard({
   dailyBreakdown,
   periodStartDate,
   periodEndDate,
-  payrollRecord,
+  payrollRecords = [],
   onPaymentSuccess,
 }: PayrollDriverCardProps) {
   const { addSuccess } = useNotification()
@@ -92,6 +92,14 @@ export function PayrollDriverCard({
     await handleCreatePayrollRecord(data)
   }
 
+  // Calculate total amount paid
+  const totalPaid = (payrollRecords || []).reduce(
+    (sum, record) => sum + record.amountPaid,
+    0
+  )
+  const remainingAmount = amountDue - totalPaid
+  const isFullyPaid = totalPaid >= amountDue
+
   return (
     <Card>
       <CardHeader>
@@ -100,30 +108,55 @@ export function PayrollDriverCard({
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between mb-4">
-          <div className="text-2xl font-bold text-primary">
-            {formatCurrency(amountDue)}
+          <div>
+            <div className="text-2xl font-bold text-primary">
+              {formatCurrency(amountDue)}
+            </div>
+            {totalPaid > 0 && (
+              <div className="text-sm text-muted-foreground mt-1">
+                Paid: {formatCurrency(totalPaid)}
+                {!isFullyPaid && (
+                  <span className="ml-2">
+                    (Remaining: {formatCurrency(remainingAmount)})
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-          {payrollRecord && (
+          {isFullyPaid && (
             <Badge className="bg-green-500 hover:bg-green-600">
               <CheckCircle className="h-3 w-3" />
               Paid
             </Badge>
           )}
         </div>
-        {payrollRecord && (
-          <p className="text-sm text-muted-foreground">
-            Payment made on {formatDate(payrollRecord.paidAt)} by{" "}
-            {payrollRecord.paidByUser.fullName}
-          </p>
+        {payrollRecords && payrollRecords.length > 0 && (
+          <div className="mb-4 space-y-2">
+            <p className="text-sm font-medium">Payment History:</p>
+            {payrollRecords.map((record) => (
+              <div
+                key={record.id}
+                className="text-sm text-muted-foreground border-l-2 border-primary pl-2"
+              >
+                {formatCurrency(record.amountPaid)} paid on{" "}
+                {formatDate(record.paidAt)} by {record.paidByUser.fullName}
+                {record.notes && (
+                  <span className="block text-xs mt-1">
+                    Note: {record.notes}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         )}
-        {!payrollRecord && (
+        {!isFullyPaid && (
           <>
             <Button
               onClick={handlePayClick}
-              disabled={loading || amountDue <= 0}
+              disabled={loading || remainingAmount <= 0}
               className="w-full mb-4"
             >
-              Record Payment
+              {totalPaid > 0 ? "Record Additional Payment" : "Record Payment"}
             </Button>
 
             {/* Confirmation Dialog */}
@@ -131,7 +164,7 @@ export function PayrollDriverCard({
               open={showConfirmDialog}
               onOpenChange={setShowConfirmDialog}
               driverName={driverName}
-              amountDue={amountDue}
+              amountDue={remainingAmount}
               periodStartDate={periodStartDate}
               periodEndDate={periodEndDate}
               driverId={driverId}

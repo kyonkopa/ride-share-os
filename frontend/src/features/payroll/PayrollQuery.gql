@@ -16,7 +16,7 @@ query PayrollQuery($startDate: ISO8601Date!, $endDate: ISO8601Date!) {
         email
         phoneNumber
       }
-      payrollRecord {
+      payrollRecords {
         id
         globalId
         amountPaid

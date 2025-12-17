@@ -185,7 +185,7 @@ export function PayrollScreen() {
                   dailyBreakdown={driverPayroll.dailyBreakdown || []}
                   periodStartDate={dateRange.startDate}
                   periodEndDate={dateRange.endDate}
-                  payrollRecord={driverPayroll.payrollRecord}
+                  payrollRecords={driverPayroll.payrollRecords}
                   onPaymentSuccess={handlePaymentSuccess}
                 />
               )

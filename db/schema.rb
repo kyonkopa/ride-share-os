@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_16_110633) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_17_160008) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -96,7 +96,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_16_110633) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["driver_id", "period_start_date", "period_end_date"], name: "index_payroll_records_on_driver_and_period", unique: true
+    t.index ["driver_id", "period_start_date", "period_end_date"], name: "index_payroll_records_on_driver_and_period"
     t.index ["driver_id"], name: "index_payroll_records_on_driver_id"
     t.index ["paid_at"], name: "index_payroll_records_on_paid_at"
     t.index ["paid_by_user_id"], name: "index_payroll_records_on_paid_by_user_id"

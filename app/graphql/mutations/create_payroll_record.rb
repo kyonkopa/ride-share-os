@@ -43,20 +43,14 @@ module Mutations
         record = e.record
         errors = record.errors
 
-        # Check for duplicate driver/period record
-        duplicate_driver_error = errors.details[:driver_id]&.any? { |detail| detail[:error] == :taken }
-        if duplicate_driver_error
-          return error!("A payroll record already exists for this driver and period", code: "DUPLICATE_RECORD", field: "driverId")
-        end
-
         # Check for amount_paid validation errors
         amount_paid_errors = errors.details[:amount_paid]
         if amount_paid_errors&.any?
           amount_paid_messages = errors[:amount_paid]
-          exceeds_amount_due = amount_paid_messages&.any? { |msg| msg.include?("cannot exceed the amount due") }
+          exceeds_amount_due = amount_paid_messages&.any? { |msg| msg.include?("exceed the amount due") }
 
           if exceeds_amount_due
-            return error!("The amount paid cannot exceed the amount due to the driver, ensure this is not a mistake.", code: "VALIDATION_ERROR", field: "amountPaid")
+            return error!(amount_paid_messages.first, code: "VALIDATION_ERROR", field: "amountPaid")
           else
             return error!(amount_paid_messages.first, code: "VALIDATION_ERROR", field: "amountPaid")
           end

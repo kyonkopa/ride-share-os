@@ -9,13 +9,13 @@
 #  period_start_date    :date            not null
 #  period_end_date      :date            not null
 #  paid_at              :datetime        not null
-#  notes                :text
+#  notes                :text           
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #
 # Indexes
 #
-#  index_index_payroll_records_on_driver_and_period (driver_id, period_start_date, period_end_date) UNIQUE
+#  index_index_payroll_records_on_driver_and_period (driver_id, period_start_date, period_end_date)
 #  index_index_payroll_records_on_driver_id (driver_id)
 #  index_index_payroll_records_on_paid_at (paid_at)
 #  index_index_payroll_records_on_paid_by_user_id (paid_by_user_id)
@@ -34,12 +34,8 @@ class PayrollRecord < ApplicationRecord
   validates :period_start_date, presence: true
   validates :period_end_date, presence: true
   validates :paid_at, presence: true
-  validates :driver_id, uniqueness: {
-    scope: [:period_start_date, :period_end_date],
-    message: "has already been paid for this period"
-  }
   validate :period_end_date_after_start_date
-  validate :amount_paid_not_exceeding_amount_due
+  validate :total_amount_paid_not_exceeding_amount_due
 
   private
 
@@ -51,7 +47,7 @@ class PayrollRecord < ApplicationRecord
     end
   end
 
-  def amount_paid_not_exceeding_amount_due
+  def total_amount_paid_not_exceeding_amount_due
     return unless driver_id.present? && period_start_date.present? && period_end_date.present? && amount_paid.present?
 
     payroll_data = PayrollService.calculate_driver_payroll(
@@ -61,8 +57,17 @@ class PayrollRecord < ApplicationRecord
     )
     amount_due = payroll_data[:amount_due]
 
-    if amount_paid > amount_due
-      errors.add(:amount_paid, "cannot exceed the amount due (#{amount_due})")
+    # Calculate total amount already paid for this period (excluding this record if it's being updated)
+    existing_payments = PayrollRecord.where(
+      driver_id:,
+      period_start_date:,
+      period_end_date:
+    ).where.not(id: id || 0).sum(:amount_paid)
+
+    total_amount_paid = existing_payments + amount_paid
+
+    if total_amount_paid > amount_due
+      errors.add(:amount_paid, "would cause total payments (#{total_amount_paid}) to exceed the amount due (#{amount_due})")
     end
   end
 end

@@ -53,19 +53,19 @@ class PayrollService
       amount_due = daily_breakdown.sum { |day| day[:amount_due] }
       start_date_for_driver = find_driver_start_date(driver:, date_range:, fallback_date: start_date)
 
-      # Find existing payroll record for this driver and period
-      payroll_record = PayrollRecord.find_by(
+      # Find all existing payroll records for this driver and period
+      payroll_records = PayrollRecord.where(
         driver_id: driver.id,
         period_start_date: start_date,
         period_end_date: end_date
-      )
+      ).order(paid_at: :asc)
 
       {
         driver:,
         amount_due:,
         start_date: start_date_for_driver,
         daily_breakdown:,
-        payroll_record:
+        payroll_records: payroll_records.to_a
       }
     end
 
@@ -103,7 +103,7 @@ class PayrollService
     # @return [Float] Total amount due to the driver
     def calculate_amount_due_for_period(driver:, date_range:)
       daily_breakdown = calculate_daily_breakdown(driver:, date_range:)
-      daily_breakdown.sum { |day| day[:amount_due] }
+      daily_breakdown.sum { |day| day[:amount_due] }.ceil(2)
     end
 
     # Calculate amount due based on revenue for a single day

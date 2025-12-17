@@ -11,9 +11,9 @@
 #  created_at           :datetime        not null
 #  updated_at           :datetime        not null
 #  source               :integer         not null default(0)
-#  vehicle_id           :integer
-#  earnings_screenshot  :text
-#  realized_at          :datetime
+#  vehicle_id           :integer        
+#  earnings_screenshot  :text           
+#  realized_at          :datetime       
 #
 # Indexes
 #
