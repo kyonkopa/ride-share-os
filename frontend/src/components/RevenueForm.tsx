@@ -71,6 +71,7 @@ export function RevenueForm({
   })
 
   const earningsScreenshot = useWatch({ control, name: "earningsScreenshot" })
+  const source = useWatch({ control, name: "source" })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Reset file input when form is closed
@@ -260,7 +261,9 @@ export function RevenueForm({
 
           {/* Earnings Screenshot */}
           <div className="space-y-2">
-            <Label htmlFor="earningsScreenshot">Earnings Screenshot *</Label>
+            <Label htmlFor="earningsScreenshot">
+              Earnings Screenshot {source !== "off_trip" ? "*" : ""}
+            </Label>
             <div className="flex items-center gap-2">
               <Input
                 ref={fileInputRef}

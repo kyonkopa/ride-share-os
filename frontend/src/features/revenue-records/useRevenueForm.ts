@@ -67,10 +67,19 @@ export const useRevenueForm = ({
     earningsScreenshot: yup
       .string()
       .nullable()
-      .required("Earnings screenshot is required")
-      .test("is-not-empty", "Earnings screenshot is required", (value) => {
-        return value !== null && value !== undefined && value !== ""
-      }),
+      .test(
+        "required-unless-off-trip",
+        "Earnings screenshot is required",
+        function (value) {
+          const { source } = this.parent
+          // Screenshot is optional for off_trip, required for bolt and uber
+          if (source === "off_trip") {
+            return true
+          }
+          // For bolt and uber, screenshot is required
+          return value !== null && value !== undefined && value !== ""
+        }
+      ),
   }) as yup.ObjectSchema<RevenueFormValues>
 
   const form = useForm<RevenueFormValues>({
