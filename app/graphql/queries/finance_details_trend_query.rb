@@ -13,10 +13,12 @@ module Queries
       now = Time.current
       all_results = []
 
-      # Fetch 6 months of data for projection calculation (even if we only display 5)
+      # Fetch 6 months of data for projection calculation (5 past months + current month)
       months_for_calculation = 6
       months_for_calculation.times do |i|
-        month_start = (now - (months_for_calculation - i).months).beginning_of_month
+        # Go from (months_for_calculation - 1) months ago down to current month (0 months ago)
+        months_ago = months_for_calculation - 1 - i
+        month_start = (now - months_ago.months).beginning_of_month
         month_end = month_start.end_of_month
 
         finance_details = RevenueService.calculate_company_earnings(

@@ -137,12 +137,12 @@ export function FinanceDetailsBreakdownView({
                   tick={{ fontSize: 14 }}
                   interval={0}
                   padding={{ left: 10, right: 10 }}
+                  angle={-45}
+                  textAnchor="end"
                 />
                 <YAxis
                   tickFormatter={(value) =>
                     new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "GHS",
                       notation: "compact",
                     }).format(value)
                   }
