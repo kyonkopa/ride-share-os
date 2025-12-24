@@ -115,6 +115,119 @@ RSpec.describe RevenueService do
         expect(result).to eq(300.0)
       end
     end
+
+    context 'with driver filter' do
+      let(:other_driver) { create(:driver) }
+
+      it 'filters revenue records by driver' do
+        shift1 = create(:shift_assignment, driver:, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver:, shift_assignment: shift1, total_revenue: 300.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        shift2 = create(:shift_assignment, driver: other_driver, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver: other_driver, shift_assignment: shift2, total_revenue: 500.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        result = described_class.aggregate_revenue(start_date:, end_date:, driver:)
+
+        expect(result).to eq(300.0)
+      end
+
+      it 'excludes revenue records from other drivers' do
+        shift1 = create(:shift_assignment, driver:, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver:, shift_assignment: shift1, total_revenue: 200.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        shift2 = create(:shift_assignment, driver: other_driver, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver: other_driver, shift_assignment: shift2, total_revenue: 400.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        result = described_class.aggregate_revenue(start_date:, end_date:, driver: other_driver)
+
+        expect(result).to eq(400.0)
+      end
+
+      it 'returns zero when driver has no revenue records' do
+        other_driver_shift = create(:shift_assignment, driver: other_driver, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver: other_driver, shift_assignment: other_driver_shift, total_revenue: 500.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        result = described_class.aggregate_revenue(start_date:, end_date:, driver:)
+
+        expect(result).to eq(0.0)
+      end
+    end
+
+    context 'with vehicle filter' do
+      let(:vehicle) { create(:vehicle) }
+      let(:other_vehicle) { create(:vehicle) }
+
+      it 'filters revenue records by vehicle' do
+        shift1 = create(:shift_assignment, driver:, vehicle:, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver:, vehicle:, shift_assignment: shift1, total_revenue: 300.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        shift2 = create(:shift_assignment, driver:, vehicle: other_vehicle, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver:, vehicle: other_vehicle, shift_assignment: shift2, total_revenue: 500.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        result = described_class.aggregate_revenue(start_date:, end_date:, vehicle:)
+
+        expect(result).to eq(300.0)
+      end
+
+      it 'excludes revenue records from other vehicles' do
+        shift1 = create(:shift_assignment, driver:, vehicle:, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver:, vehicle:, shift_assignment: shift1, total_revenue: 200.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        shift2 = create(:shift_assignment, driver:, vehicle: other_vehicle, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver:, vehicle: other_vehicle, shift_assignment: shift2, total_revenue: 400.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        result = described_class.aggregate_revenue(start_date:, end_date:, vehicle: other_vehicle)
+
+        expect(result).to eq(400.0)
+      end
+
+      it 'returns zero when vehicle has no revenue records' do
+        other_vehicle_shift = create(:shift_assignment, driver:, vehicle: other_vehicle, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver:, vehicle: other_vehicle, shift_assignment: other_vehicle_shift, total_revenue: 500.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        result = described_class.aggregate_revenue(start_date:, end_date:, vehicle:)
+
+        expect(result).to eq(0.0)
+      end
+    end
+
+    context 'with driver and vehicle filters' do
+      let(:other_driver) { create(:driver) }
+      let(:vehicle) { create(:vehicle) }
+      let(:other_vehicle) { create(:vehicle) }
+
+      it 'filters revenue records by both driver and vehicle' do
+        # Matching driver and vehicle
+        shift1 = create(:shift_assignment, driver:, vehicle:, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver:, vehicle:, shift_assignment: shift1, total_revenue: 300.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        # Same driver, different vehicle
+        shift2 = create(:shift_assignment, driver:, vehicle: other_vehicle, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver:, vehicle: other_vehicle, shift_assignment: shift2, total_revenue: 200.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        # Different driver, same vehicle
+        shift3 = create(:shift_assignment, driver: other_driver, vehicle:, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver: other_driver, vehicle:, shift_assignment: shift3, total_revenue: 400.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        result = described_class.aggregate_revenue(start_date:, end_date:, driver:, vehicle:)
+
+        expect(result).to eq(300.0)
+      end
+
+      it 'returns zero when no records match both driver and vehicle' do
+        # Different driver and vehicle
+        shift1 = create(:shift_assignment, driver: other_driver, vehicle: other_vehicle, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver: other_driver, vehicle: other_vehicle, shift_assignment: shift1, total_revenue: 500.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        # Same driver, different vehicle
+        shift2 = create(:shift_assignment, driver:, vehicle: other_vehicle, start_time: start_date.beginning_of_day + 8.hours)
+        create(:revenue_record, driver:, vehicle: other_vehicle, shift_assignment: shift2, total_revenue: 200.0, realized_at: start_date.beginning_of_day + 10.hours)
+
+        result = described_class.aggregate_revenue(start_date:, end_date:, driver:, vehicle:)
+
+        expect(result).to eq(0.0)
+      end
+    end
   end
 
   describe '.calculate_company_earnings' do

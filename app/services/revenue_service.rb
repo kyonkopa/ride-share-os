@@ -6,22 +6,20 @@ class RevenueService
     #
     # @param start_date [Date] Start date of the period
     # @param end_date [Date] End date of the period
-    # @param driver_id [String, nil] Optional driver global ID to filter revenue records
+    # @param driver [Driver, nil] Optional driver object to filter revenue records
+    # @param vehicle [Vehicle, nil] Optional vehicle object to filter revenue records
     # @return [Float] Total revenue for the period
-    def aggregate_revenue(start_date:, end_date:, driver_id: nil)
+    def aggregate_revenue(start_date:, end_date:, driver: nil, vehicle: nil)
       date_range = start_date.beginning_of_day..end_date.end_of_day
 
       revenue_records = RevenueRecord.where(realized_at: date_range)
 
-      # Filter by driver if driver_id is provided
-      if driver_id.present?
-        driver = Driver.find_by_global_id(driver_id)
-        if driver
-          revenue_records = revenue_records.where(driver_id: driver.id)
-        else
-          # If driver not found, return 0
-          return 0.0
-        end
+      if driver.present?
+        revenue_records = revenue_records.where(driver_id: driver.id)
+      end
+
+      if vehicle.present?
+        revenue_records = revenue_records.where(vehicle_id: vehicle.id)
       end
 
       revenue_records.sum(:total_revenue).to_f

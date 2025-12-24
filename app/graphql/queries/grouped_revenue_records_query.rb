@@ -21,7 +21,8 @@ module Queries
                         .includes(:driver, :vehicle, :shift_assignment)
                         .where(realized_at: start_date.beginning_of_day..end_date.end_of_day)
 
-      # Filter by driver if driver_id is provided
+      # Find driver if driver_id is provided
+      driver = nil
       if driver_id.present?
         driver = Driver.find_by_global_id(driver_id)
         if driver
@@ -32,6 +33,8 @@ module Queries
         end
       end
 
+      # Find vehicle if vehicle_id is provided
+      vehicle = nil
       if vehicle_id.present?
         vehicle = Vehicle.find_by_global_id(vehicle_id)
         if vehicle
@@ -49,7 +52,8 @@ module Queries
       grouped_revenue_total = RevenueService.aggregate_revenue(
         start_date:,
         end_date:,
-        driver_id:
+        driver:,
+        vehicle:
       )
       grouped_profit_total = revenue_records.sum(:total_profit).to_f
 
