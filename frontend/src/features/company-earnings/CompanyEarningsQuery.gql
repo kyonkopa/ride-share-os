@@ -4,5 +4,8 @@ query FinanceDetailsQuery($startDate: ISO8601Date!, $endDate: ISO8601Date!) {
     totalPayrollDue
     totalExpenses
     earnings
+    totalRevenueAllTime
+    averageRevenuePerMonth
+    averageRevenuePerCar
   }
 }

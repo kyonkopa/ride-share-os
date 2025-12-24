@@ -10,7 +10,10 @@ module Queries
     type Types::FinanceDetailsType, null: false
 
     def resolve(start_date:, end_date:)
-      RevenueService.calculate_company_earnings(start_date:, end_date:)
+      earnings_data = RevenueService.calculate_company_earnings(start_date:, end_date:)
+      statistics = RevenueService.calculate_revenue_statistics
+
+      earnings_data.merge(statistics)
     end
   end
 end

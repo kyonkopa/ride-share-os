@@ -1,0 +1,17 @@
+query FinanceDetailsTrendQuery($monthsBack: Int, $includeProjection: Boolean) {
+  financeDetailsTrend(
+    monthsBack: $monthsBack
+    includeProjection: $includeProjection
+  ) {
+    month
+    startDate
+    endDate
+    isProjection
+    financeDetails {
+      totalRevenue
+      totalPayrollDue
+      totalExpenses
+      earnings
+    }
+  }
+}

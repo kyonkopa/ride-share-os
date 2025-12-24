@@ -23,6 +23,22 @@ import {
   Receipt,
 } from "lucide-react"
 import { MonthSelector } from "./MonthSelector"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts"
+import { useQuery } from "@apollo/client/react"
+import {
+  FinanceDetailsTrendQueryDocument,
+  type FinanceDetailsTrendQueryQuery,
+  type FinanceDetailsTrendQueryQueryVariables,
+} from "../codegen/graphql"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -67,6 +83,19 @@ export function FinanceDetailsBreakdownView({
     }
   )
 
+  // Fetch trend data using single GraphQL query
+  const { data: trendQueryData, loading: trendLoading } = useQuery<
+    FinanceDetailsTrendQueryQuery,
+    FinanceDetailsTrendQueryQueryVariables
+  >(FinanceDetailsTrendQueryDocument, {
+    variables: {
+      monthsBack: 5,
+      includeProjection: true,
+    },
+    fetchPolicy: "cache-and-network",
+    errorPolicy: "all",
+  })
+
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
@@ -76,12 +105,112 @@ export function FinanceDetailsBreakdownView({
       </Button>
       <div className="flex items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Finance Details Breakdown</h1>
+          <h1 className="text-2xl font-bold">Finance Insights</h1>
           <p className="text-sm text-muted-foreground">
-            View monthly company earnings breakdown
+            View company earnings insights
           </p>
         </div>
       </div>
+
+      {/* Revenue Trend Chart */}
+      <Card className="p-0 shadow-none border-none">
+        <CardHeader className="px-0">
+          <CardTitle>Revenue Trend</CardTitle>
+          <CardDescription>
+            Monthly revenue trend for the past 5 months with next month
+            projection
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {trendLoading ? (
+            <div className="flex items-center justify-center min-h-[300px]">
+              <Spinner />
+              <span className="ml-2">Loading trend data...</span>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={trendQueryData?.financeDetailsTrend || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="month"
+                  height={80}
+                  tick={{ fontSize: 14 }}
+                  interval={0}
+                  padding={{ left: 10, right: 10 }}
+                />
+                <YAxis
+                  tickFormatter={(value) =>
+                    new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "GHS",
+                      notation: "compact",
+                    }).format(value)
+                  }
+                />
+                <Tooltip
+                  formatter={(value: number) => formatCurrency(value as number)}
+                />
+                <Bar dataKey="financeDetails.totalRevenue" name="Revenue">
+                  {(trendQueryData?.financeDetailsTrend || []).map(
+                    (entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.isProjection ? "transparent" : "#8884d8"}
+                        stroke={entry.isProjection ? "#82ca9d" : undefined}
+                        strokeWidth={entry.isProjection ? 2 : 0}
+                      />
+                    )
+                  )}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Revenue Statistics Cards */}
+      {financeDetails && (
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-medium">
+                Average Revenue per Month
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">
+                {formatCurrency(financeDetails.averageRevenuePerMonth)}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-medium">
+                Average Revenue per Car
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">
+                {formatCurrency(financeDetails.averageRevenuePerCar)}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-medium">
+                Total Revenue All Time
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-primary">
+                {formatCurrency(financeDetails.totalRevenueAllTime)}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Month Selector Card */}
       <Card>
@@ -153,9 +282,10 @@ export function FinanceDetailsBreakdownView({
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                {financeDetails.earnings >= 0 ? (
+                {financeDetails.earnings > 0 && (
                   <TrendingUp className="h-12 w-12 text-green-500" />
-                ) : (
+                )}
+                {financeDetails.earnings < 0 && (
                   <TrendingDown className="h-12 w-12 text-red-500" />
                 )}
                 <div>

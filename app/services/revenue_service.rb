@@ -34,14 +34,11 @@ class RevenueService
     def calculate_company_earnings(start_date:, end_date:)
       total_revenue = aggregate_revenue(start_date:, end_date:)
 
-      # Get total payroll due from PayrollService
       payroll_result = PayrollService.calculate_payroll(start_date:, end_date:)
       total_payroll_due = payroll_result[:total_amount_due].to_f
 
-      # Get total expenses from ExpenseService
       total_expenses = ExpenseService.aggregate_expenses(start_date:, end_date:)
 
-      # Calculate earnings
       earnings = total_revenue - total_payroll_due - total_expenses
 
       {
@@ -49,6 +46,30 @@ class RevenueService
         total_payroll_due:,
         total_expenses:,
         earnings:
+      }
+    end
+
+    # Calculate overall revenue statistics
+    # @return [Hash] Hash containing total_revenue_all_time, average_revenue_per_month, average_revenue_per_car
+    def calculate_revenue_statistics
+      total_revenue_all_time = RevenueRecord.sum(:total_revenue).to_f
+
+      first_revenue = RevenueRecord.order(realized_at: :asc).first
+      if first_revenue&.realized_at.present?
+        months_count = ((Time.current - first_revenue.realized_at) / 1.month.to_f).ceil
+        months_count = [months_count, 1].max # Ensure at least 1 month
+        average_revenue_per_month = total_revenue_all_time / months_count.to_f
+      else
+        average_revenue_per_month = 0.0
+      end
+
+      vehicle_count = Vehicle.count
+      average_revenue_per_car = vehicle_count > 0 ? total_revenue_all_time / vehicle_count.to_f : 0.0
+
+      {
+        total_revenue_all_time:,
+        average_revenue_per_month:,
+        average_revenue_per_car:
       }
     end
   end

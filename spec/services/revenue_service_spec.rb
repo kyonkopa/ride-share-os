@@ -356,4 +356,156 @@ RSpec.describe RevenueService do
       end
     end
   end
+
+  describe '.calculate_revenue_statistics' do
+    let(:vehicle1) { create(:vehicle) }
+    let(:vehicle2) { create(:vehicle) }
+    let(:vehicle3) { create(:vehicle) }
+
+    context 'with revenue records and vehicles' do
+      it 'calculates total revenue all time correctly' do
+        # Create revenue records across different months
+        first_month = 3.months.ago.beginning_of_month
+        shift1 = create(:shift_assignment, driver:, vehicle: vehicle1, start_time: first_month + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle1, shift_assignment: shift1, total_revenue: 1000.0, realized_at: first_month + 10.hours)
+
+        second_month = 2.months.ago.beginning_of_month
+        shift2 = create(:shift_assignment, driver:, vehicle: vehicle2, start_time: second_month + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle2, shift_assignment: shift2, total_revenue: 2000.0, realized_at: second_month + 10.hours)
+
+        third_month = 1.month.ago.beginning_of_month
+        shift3 = create(:shift_assignment, driver:, vehicle: vehicle3, start_time: third_month + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle3, shift_assignment: shift3, total_revenue: 3000.0, realized_at: third_month + 10.hours)
+
+        result = described_class.calculate_revenue_statistics
+
+        expect(result[:total_revenue_all_time]).to eq(6000.0)
+      end
+
+      it 'calculates average revenue per month correctly' do
+        # Create revenue records 3 months ago
+        first_month = 3.months.ago.beginning_of_month
+        shift1 = create(:shift_assignment, driver:, vehicle: vehicle1, start_time: first_month + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle1, shift_assignment: shift1, total_revenue: 3000.0, realized_at: first_month + 10.hours)
+
+        # Total revenue: 3000, months: 3 (from 3 months ago to now)
+        # Average: 3000 / 3 = 1000
+        result = described_class.calculate_revenue_statistics
+
+        expect(result[:average_revenue_per_month]).to be_within(0.01).of(1000.0)
+      end
+
+      it 'calculates average revenue per car correctly' do
+        # Create revenue records
+        first_month = 2.months.ago.beginning_of_month
+        shift1 = create(:shift_assignment, driver:, vehicle: vehicle1, start_time: first_month + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle1, shift_assignment: shift1, total_revenue: 6000.0, realized_at: first_month + 10.hours)
+
+        # Total revenue: 6000, vehicles: 3
+        # Average: 6000 / 3 = 2000
+        result = described_class.calculate_revenue_statistics
+
+        expect(result[:average_revenue_per_car]).to eq(2000.0)
+      end
+
+      it 'returns all three statistics' do
+        first_month = 2.months.ago.beginning_of_month
+        shift = create(:shift_assignment, driver:, vehicle: vehicle1, start_time: first_month + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle1, shift_assignment: shift, total_revenue: 5000.0, realized_at: first_month + 10.hours)
+
+        result = described_class.calculate_revenue_statistics
+
+        expect(result).to have_key(:total_revenue_all_time)
+        expect(result).to have_key(:average_revenue_per_month)
+        expect(result).to have_key(:average_revenue_per_car)
+      end
+    end
+
+    context 'with no revenue records' do
+      it 'returns zero for all statistics' do
+        result = described_class.calculate_revenue_statistics
+
+        expect(result[:total_revenue_all_time]).to eq(0.0)
+        expect(result[:average_revenue_per_month]).to eq(0.0)
+        expect(result[:average_revenue_per_car]).to eq(0.0)
+      end
+    end
+
+    context 'with no vehicles' do
+      before do
+        Vehicle.destroy_all
+      end
+
+      it 'returns zero for average revenue per car' do
+        first_month = 2.months.ago.beginning_of_month
+        shift = create(:shift_assignment, driver:, start_time: first_month + 8.hours)
+        create(:revenue_record, driver:, shift_assignment: shift, total_revenue: 5000.0, realized_at: first_month + 10.hours)
+
+        result = described_class.calculate_revenue_statistics
+
+        expect(result[:average_revenue_per_car]).to eq(0.0)
+        expect(result[:total_revenue_all_time]).to eq(5000.0)
+      end
+    end
+
+    context 'with revenue record without realized_at' do
+      it 'handles missing realized_at gracefully' do
+        # Create a revenue record without realized_at (shouldn't happen in practice but test edge case)
+        shift = create(:shift_assignment, driver:, vehicle: vehicle1, start_time: 2.months.ago + 8.hours)
+        revenue_record = create(:revenue_record, driver:, vehicle: vehicle1, shift_assignment: shift, total_revenue: 5000.0, realized_at: 2.months.ago + 10.hours)
+
+        # Manually set realized_at to nil to test edge case
+        revenue_record.update_column(:realized_at, nil)
+
+        result = described_class.calculate_revenue_statistics
+
+        # Should still calculate total revenue but average per month should be 0
+        expect(result[:total_revenue_all_time]).to eq(5000.0)
+        expect(result[:average_revenue_per_month]).to eq(0.0)
+      end
+    end
+
+    context 'with single month of data' do
+      it 'ensures at least 1 month is used for calculation' do
+        # Create revenue record very recently (less than 1 month ago)
+        recent_date = 10.days.ago
+        shift = create(:shift_assignment, driver:, vehicle: vehicle1, start_time: recent_date + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle1, shift_assignment: shift, total_revenue: 1000.0, realized_at: recent_date + 10.hours)
+
+        result = described_class.calculate_revenue_statistics
+
+        # Should use at least 1 month, so average should be 1000 / 1 = 1000
+        expect(result[:average_revenue_per_month]).to be_within(0.01).of(1000.0)
+      end
+    end
+
+    context 'with multiple revenue records across different months' do
+      it 'calculates statistics correctly with varied data' do
+        # Create revenue records spanning 4 months
+        month1 = 4.months.ago.beginning_of_month
+        shift1 = create(:shift_assignment, driver:, vehicle: vehicle1, start_time: month1 + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle1, shift_assignment: shift1, total_revenue: 1000.0, realized_at: month1 + 10.hours)
+
+        month2 = 3.months.ago.beginning_of_month
+        shift2 = create(:shift_assignment, driver:, vehicle: vehicle2, start_time: month2 + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle2, shift_assignment: shift2, total_revenue: 2000.0, realized_at: month2 + 10.hours)
+
+        month3 = 2.months.ago.beginning_of_month
+        shift3 = create(:shift_assignment, driver:, vehicle: vehicle3, start_time: month3 + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle3, shift_assignment: shift3, total_revenue: 3000.0, realized_at: month3 + 10.hours)
+
+        month4 = 1.month.ago.beginning_of_month
+        shift4 = create(:shift_assignment, driver:, vehicle: vehicle1, start_time: month4 + 8.hours)
+        create(:revenue_record, driver:, vehicle: vehicle1, shift_assignment: shift4, total_revenue: 4000.0, realized_at: month4 + 10.hours)
+
+        result = described_class.calculate_revenue_statistics
+
+        expect(result[:total_revenue_all_time]).to eq(10000.0)
+        # Average per month: 10000 / 4 = 2500
+        expect(result[:average_revenue_per_month]).to be_within(0.01).of(2500.0)
+        # Average per car: 10000 / 3 = 3333.33
+        expect(result[:average_revenue_per_car]).to be_within(0.01).of(3333.33)
+      end
+    end
+  end
 end

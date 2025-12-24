@@ -6,6 +6,7 @@ module Types
     field :current_user, resolver: Queries::CurrentUserQuery, description: "Get the current authenticated user"
     field :drivers, resolver: Queries::DriversQuery, description: "Get all drivers in the system"
     field :finance_details, resolver: Queries::FinanceDetailsQuery, description: "Get finance details breakdown for a date range"
+    field :finance_details_trend, resolver: Queries::FinanceDetailsTrendQuery, description: "Get finance details trend for multiple months with projection"
     field :grouped_expenses, Types::GroupedExpensesResultType, resolver: Queries::GroupedExpensesQuery, description: "Get expenses grouped by vehicle and date within a date range"
     field :grouped_revenue_records, Types::GroupedRevenueRecordsResultType, resolver: Queries::GroupedRevenueRecordsQuery, description: "Get revenue records grouped by driver and date within a date range" do
       argument :pagination, Types::Inputs::PaginationInput, required: true, description: "Pagination options"

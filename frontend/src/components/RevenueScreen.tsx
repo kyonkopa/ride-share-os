@@ -484,7 +484,7 @@ export function RevenueScreen() {
           <CardHeader className="p-2">
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Finance Breakdown
+              Finance Insights
             </CardTitle>
             <CardDescription>View monthly financial breakdown</CardDescription>
           </CardHeader>
