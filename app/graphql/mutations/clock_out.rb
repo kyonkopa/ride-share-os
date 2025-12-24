@@ -50,6 +50,7 @@ module Mutations
         RevenueRecord.create!(
           shift_assignment:,
           driver: current_user.driver,
+          vehicle: shift_assignment.vehicle,
           total_revenue: input[:bolt_earnings],
           source: :bolt,
           earnings_screenshot: normalize_base64_image(input[:bolt_earnings_screenshot]),
@@ -62,6 +63,7 @@ module Mutations
         RevenueRecord.create!(
           shift_assignment:,
           driver: current_user.driver,
+          vehicle: shift_assignment.vehicle,
           total_revenue: input[:uber_earnings],
           source: :uber,
           earnings_screenshot: normalize_base64_image(input[:uber_earnings_screenshot]),
