@@ -128,7 +128,7 @@ export function FinanceDetailsBreakdownView({
               <span className="ml-2">Loading trend data...</span>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={trendQueryData?.financeDetailsTrend || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
@@ -178,7 +178,7 @@ export function FinanceDetailsBreakdownView({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">
+              <p className="text-2xl font-bold text-primary truncate">
                 {formatCurrency(financeDetails.averageRevenuePerMonth)}
               </p>
             </CardContent>
@@ -191,7 +191,7 @@ export function FinanceDetailsBreakdownView({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">
+              <p className="text-2xl font-bold text-primary truncate">
                 {formatCurrency(financeDetails.averageRevenuePerCar)}
               </p>
             </CardContent>
@@ -204,7 +204,7 @@ export function FinanceDetailsBreakdownView({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">
+              <p className="text-2xl font-bold text-primary truncate">
                 {formatCurrency(financeDetails.totalRevenueAllTime)}
               </p>
             </CardContent>
@@ -317,7 +317,7 @@ export function FinanceDetailsBreakdownView({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-primary">
+                <p className="text-2xl font-bold text-primary truncate">
                   {formatCurrency(financeDetails.totalRevenue)}
                 </p>
               </CardContent>
@@ -332,7 +332,7 @@ export function FinanceDetailsBreakdownView({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-destructive">
+                <p className="text-2xl font-bold text-destructive truncate">
                   {formatCurrency(financeDetails.totalPayrollDue)}
                 </p>
               </CardContent>
@@ -347,7 +347,7 @@ export function FinanceDetailsBreakdownView({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-destructive">
+                <p className="text-2xl font-bold text-destructive truncate">
                   {formatCurrency(financeDetails.totalExpenses)}
                 </p>
               </CardContent>
