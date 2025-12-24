@@ -27,10 +27,9 @@ import { DollarSign } from "lucide-react"
 import type { RevenueRecord } from "@/codegen/graphql"
 import { formatDate } from "@/utils/dateUtils"
 
-type DailyBreakdown = {
-  date: string
+type VehicleBreakdown = {
+  vehicleName: string
   revenue: number
-  profit: number
   count: number
 }
 
@@ -75,33 +74,32 @@ export function BreakdownView({
   sourceTotals: sourceTotalsProp,
   totalRevenue: totalRevenueProp,
 }: BreakdownViewProps) {
-  // Calculate daily breakdown
-  const dailyBreakdown = useMemo(() => {
+  // Calculate vehicle breakdown
+  const vehicleBreakdown = useMemo(() => {
     if (!revenueRecords.length) return []
 
-    const breakdownMap = new Map<string, DailyBreakdown>()
+    const breakdownMap = new Map<string, VehicleBreakdown>()
 
     revenueRecords.forEach((record) => {
-      const date = new Date(record.createdAt).toISOString().split("T")[0]
-      const existing = breakdownMap.get(date)
+      const vehicleName =
+        record.shiftAssignment?.vehicle?.displayName || "No Vehicle"
+      const existing = breakdownMap.get(vehicleName)
 
       if (existing) {
         existing.revenue += record.totalRevenue
-        existing.profit += record.totalProfit
         existing.count += 1
       } else {
-        breakdownMap.set(date, {
-          date,
+        breakdownMap.set(vehicleName, {
+          vehicleName,
           revenue: record.totalRevenue,
-          profit: record.totalProfit,
           count: 1,
         })
       }
     })
 
-    // Sort by date descending
+    // Sort by revenue descending
     return Array.from(breakdownMap.values()).sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) => b.revenue - a.revenue
     )
   }, [revenueRecords])
 
@@ -203,7 +201,7 @@ export function BreakdownView({
         <div>
           <h1 className="text-2xl font-bold">Revenue Breakdown</h1>
           <p className="text-sm text-muted-foreground">
-            Daily revenue breakdown
+            Revenue breakdown by source and vehicle
             {startDate && endDate && (
               <>
                 {" "}
@@ -215,7 +213,8 @@ export function BreakdownView({
       </div>
 
       {/* Breakdown Content */}
-      {dailyBreakdown.length === 0 && sourceBreakdown.chartData.length === 0 ? (
+      {vehicleBreakdown.length === 0 &&
+      sourceBreakdown.chartData.length === 0 ? (
         <Empty className="border border-dashed">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -316,13 +315,13 @@ export function BreakdownView({
             </Card>
           )}
 
-          {/* Daily Breakdown */}
-          {dailyBreakdown.length > 0 && (
+          {/* Distribution by Car */}
+          {vehicleBreakdown.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Daily Breakdown</CardTitle>
+                <CardTitle>Distribution by Car</CardTitle>
                 <CardDescription>
-                  Revenue breakdown by day
+                  Revenue breakdown by vehicle
                   {startDate && endDate && (
                     <>
                       {" "}
@@ -333,23 +332,20 @@ export function BreakdownView({
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {dailyBreakdown.map((day) => (
+                  {vehicleBreakdown.map((vehicle) => (
                     <div
-                      key={day.date}
+                      key={vehicle.vehicleName}
                       className="flex items-center justify-between p-3 border rounded-lg"
                     >
                       <div className="flex-1">
-                        <p className="font-medium">{formatDate(day.date)}</p>
+                        <p className="font-medium">{vehicle.vehicleName}</p>
                         <p className="text-sm text-muted-foreground">
-                          {day.count} record{day.count !== 1 ? "s" : ""}
+                          {vehicle.count} record{vehicle.count !== 1 ? "s" : ""}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">
-                          {formatCurrency(day.revenue)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Profit: {formatCurrency(day.profit)}
+                          {formatCurrency(vehicle.revenue)}
                         </p>
                       </div>
                     </div>
