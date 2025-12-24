@@ -35,15 +35,25 @@ module Queries
         }
       end
 
-      # Calculate and add projection if requested (based on all 6 months)
       if include_projection
-        # Calculate average revenue from all 6 months
-        average_revenue = all_results.sum { |r| r[:finance_details][:total_revenue] } / all_results.size.to_f
-        projected_revenue = average_revenue * 1.1
+        # Filter to only months with meaningful data (revenue > 0) for revenue projection
+        months_with_data = all_results.select { |r| r[:finance_details][:total_revenue] > 0 }
 
-        # Calculate average expenses and payroll for projection
-        average_expenses = all_results.sum { |r| r[:finance_details][:total_expenses] } / all_results.size.to_f
-        average_payroll = all_results.sum { |r| r[:finance_details][:total_payroll_due] } / all_results.size.to_f
+        # Calculate revenue projection only from months with actual revenue
+        if months_with_data.any?
+          data_points_count = months_with_data.size.to_f
+          average_revenue = months_with_data.sum { |r| r[:finance_details][:total_revenue] } / data_points_count
+          projected_revenue = average_revenue * 1.1
+        else
+          average_revenue = 0.0
+          projected_revenue = 0.0
+        end
+
+        # Calculate expenses and payroll averages from ALL months (not just months with revenue)
+        # This accounts for expenses/payroll that may exist even in months with no revenue
+        all_data_points_count = all_results.size.to_f
+        average_expenses = all_results.sum { |r| r[:finance_details][:total_expenses] } / all_data_points_count
+        average_payroll = all_results.sum { |r| r[:finance_details][:total_payroll_due] } / all_data_points_count
 
         projection_month_start = (now + 1.month).beginning_of_month
         projection_month_end = projection_month_start.end_of_month
@@ -65,7 +75,6 @@ module Queries
       end
 
       # Return only the most recent months_back months + projection (skip the oldest month)
-      # This ensures we show 5 months + projection while using 6 months for calculation
       display_results = all_results.select { |r| !r[:is_projection] }.last(months_back)
       display_results << all_results.find { |r| r[:is_projection] } if include_projection
 
