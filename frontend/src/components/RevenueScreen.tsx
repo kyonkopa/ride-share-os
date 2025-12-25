@@ -1,5 +1,6 @@
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { useGroupedRevenueRecords } from "@/features/revenue-records/useGroupedRevenueRecords"
+import { PullToRefresh } from "./PullToRefresh"
 import { BreakdownView } from "@/features/revenue-records/BreakdownView"
 import { useDateParams, type DateTab } from "@/hooks/useDateParams"
 import { useVehicles } from "@/features/clock-in/useVehicles"
@@ -390,6 +391,7 @@ export function RevenueScreen() {
     stats: groupedStats,
     loading: groupedLoading,
     error: groupedError,
+    refetch: refetchRevenueRecords,
   } = useGroupedRevenueRecords({
     startDate: dateParams.startDate,
     endDate: dateParams.endDate,
@@ -399,6 +401,10 @@ export function RevenueScreen() {
     pagination: { page: 1, perPage: 100 },
     skip: false,
   })
+
+  const handleRefresh = useCallback(async () => {
+    await refetchRevenueRecords()
+  }, [refetchRevenueRecords])
 
   const loading = groupedLoading
   const error = groupedError
@@ -449,318 +455,325 @@ export function RevenueScreen() {
 
   // Show default view
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Revenue</h1>
-          <p className="text-sm text-muted-foreground">
-            View all your revenue records
-          </p>
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Revenue</h1>
+            <p className="text-sm text-muted-foreground">
+              View all your revenue records
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <FilterButton
+              onClick={() => setShowFilters(true)}
+              filterConfigs={filterConfigs}
+              filters={filters}
+              className="hidden md:flex"
+            />
+            <Button
+              onClick={() => setShowAddRevenue(true)}
+              className="hidden md:flex"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Revenue
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Finance Details Button */}
+        {can(PermissionEnum.RevenueReadAccess) && (
+          <Card
+            className="cursor-pointer bg-blue-100 hover:bg-muted/80 border-blue-400 p-2"
+            onClick={() => setShowFinanceDetails(true)}
+          >
+            <CardHeader className="p-2">
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Finance Insights
+              </CardTitle>
+              <CardDescription>
+                View monthly financial breakdown
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
+        {/* Filter Switch - Only show if user has a driver profile and no driver filter is active */}
+        {currentDriverId && !filters.driverId && (
+          <Card className="border-dashed py-3">
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="show-only-my-revenue"
+                  className="cursor-pointer"
+                >
+                  Show only my revenue
+                </Label>
+                <Switch
+                  id="show-only-my-revenue"
+                  checked={showOnlyMyRevenue}
+                  onCheckedChange={setShowOnlyMyRevenue}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Stats Bar */}
+        <RevenueStatsBar
+          stats={stats}
+          loading={loading}
+          onBreakdownClick={() => setShowBreakdown(true)}
+          periodLabel={(() => {
+            if (hasActiveFilters) {
+              return "Summary for filters applied"
+            }
+            switch (activeTab) {
+              case "this-week":
+                return "Revenue for this week"
+              case "last-week":
+                return "Revenue for last week"
+              case "this-month":
+                return "Revenue for this month"
+              default:
+                return "All-time revenue"
+            }
+          })()}
+        />
+
+        {/* Tabs or Clear Filters Button */}
+        {hasActiveFilters ? (
+          <>
+            <ActiveFilters
+              filterConfigs={filterConfigs}
+              filters={filters}
+              onFilterChange={setFilters}
+              onClearAll={clearFilters}
+            />
+            {/* Loading State */}
+            {loading && (
+              <div className="flex items-center justify-center py-8">
+                <Spinner />
+                <span className="ml-2">Loading revenue records...</span>
+              </div>
+            )}
+            {/* Error State */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircleIcon />
+                <AlertTitle>Error loading revenue records</AlertTitle>
+                <AlertDescription>
+                  <p>
+                    Error:{" "}
+                    {(error as { message?: string })?.message ||
+                      "An error occurred"}
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+            {/* Filtered Revenue Records List */}
+            {!loading && !error && (
+              <div className="mt-3">
+                {dateParams.startDate && dateParams.endDate && (
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Showing revenue from {formatDate(dateParams.startDate)} to{" "}
+                    {formatDate(dateParams.endDate)}
+                  </p>
+                )}
+                {revenueGroups.length === 0 ? (
+                  <RevenueRecordsEmpty />
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {revenueGroups.map((group, index) => (
+                      <RevenueRecordCard
+                        key={`${group.driverId}-${group.date}-${index}`}
+                        group={group}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as DateTab)}
+          >
+            <TabsList>
+              <TabsTrigger value="this-week">This Week</TabsTrigger>
+              <TabsTrigger value="last-week">Last Week</TabsTrigger>
+              <TabsTrigger value="this-month">This Month</TabsTrigger>
+              <TabsTrigger value="all-time">All Time</TabsTrigger>
+            </TabsList>
+            {/* Loading State */}
+            {loading && (
+              <div className="flex items-center justify-center py-8">
+                <Spinner />
+                <span className="ml-2">Loading revenue records...</span>
+              </div>
+            )}
+            {/* Error State */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircleIcon />
+                <AlertTitle>Error loading revenue records</AlertTitle>
+                <AlertDescription>
+                  <p>
+                    Error:{" "}
+                    {(error as { message?: string })?.message ||
+                      "An error occurred"}
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+            {!loading && !error && (
+              <>
+                <TabsContent value="this-week" className="mt-3">
+                  {dateParams.startDate && dateParams.endDate && (
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Showing revenue from {formatDate(dateParams.startDate)} to{" "}
+                      {formatDate(dateParams.endDate)} grouped by driver
+                    </p>
+                  )}
+                  {/* Revenue Records List */}
+                  {revenueGroups.length === 0 ? (
+                    <RevenueRecordsEmpty />
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {revenueGroups.map((group, index) => (
+                        <RevenueRecordCard
+                          key={`${group.driverId}-${group.date}-${index}`}
+                          group={group}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+                <TabsContent value="last-week" className="mt-3">
+                  {dateParams.startDate && dateParams.endDate && (
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Showing revenue records for{" "}
+                      {formatDate(dateParams.startDate)} to{" "}
+                      {formatDate(dateParams.endDate)}
+                    </p>
+                  )}
+                  {/* Revenue Records List */}
+                  {revenueGroups.length === 0 ? (
+                    <RevenueRecordsEmpty />
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {revenueGroups.map((group, index) => (
+                        <RevenueRecordCard
+                          key={`${group.driverId}-${group.date}-${index}`}
+                          group={group}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+                <TabsContent value="this-month" className="mt-3">
+                  {dateParams.startDate && dateParams.endDate && (
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Showing revenue from {formatDate(dateParams.startDate)} to{" "}
+                      {formatDate(dateParams.endDate)} grouped by driver
+                    </p>
+                  )}
+                  {/* Revenue Records List */}
+                  {revenueGroups.length === 0 ? (
+                    <RevenueRecordsEmpty />
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {revenueGroups.map((group, index) => (
+                        <RevenueRecordCard
+                          key={`${group.driverId}-${group.date}-${index}`}
+                          group={group}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+                <TabsContent value="all-time" className="mt-3">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Showing all revenue records
+                  </p>
+                  {/* Revenue Records List */}
+                  {revenueGroups.length === 0 ? (
+                    <RevenueRecordsEmpty />
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {revenueGroups.map((group, index) => (
+                        <RevenueRecordCard
+                          key={`${group.driverId}-${group.date}-${index}`}
+                          group={group}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </>
+            )}
+          </Tabs>
+        )}
+
+        {/* Filters Dialog */}
+        <FilterDialog
+          open={showFilters}
+          onOpenChange={setShowFilters}
+          title="Filter Revenue Records"
+          description="Filter revenue records by driver, vehicle, source, and date range"
+          filterConfigs={filterConfigs}
+          appliedFilters={filters}
+          onChange={setFilters}
+        />
+
+        {/* Add Revenue Modal */}
+        {showAddRevenue && (
+          <RevenueForm
+            open={true}
+            onOpenChange={setShowAddRevenue}
+            revenueRecordsQueryVariables={{
+              startDate: dateParams.startDate,
+              endDate: dateParams.endDate,
+            }}
+            groupedRevenueRecordsQueryVariables={{
+              startDate: dateParams.startDate,
+              endDate: dateParams.endDate,
+              pagination: { page: 1, perPage: 100 },
+            }}
+          />
+        )}
+
+        {/* Floating Action Buttons - Only on small screens */}
+        <div className="fixed bottom-6 right-6 z-50 flex flex-row gap-3 md:hidden">
           <FilterButton
             onClick={() => setShowFilters(true)}
             filterConfigs={filterConfigs}
             filters={filters}
-            className="hidden md:flex"
+            variant="outline"
+            size="lg"
+            className="shadow-2xl"
+            style={{
+              boxShadow:
+                "0 10px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.3)",
+            }}
           />
           <Button
             onClick={() => setShowAddRevenue(true)}
-            className="hidden md:flex"
+            className="shadow-2xl"
+            style={{
+              boxShadow:
+                "0 10px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.3)",
+            }}
+            size="lg"
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Revenue
           </Button>
         </div>
       </div>
-
-      {/* Finance Details Button */}
-      {can(PermissionEnum.RevenueReadAccess) && (
-        <Card
-          className="cursor-pointer bg-blue-100 hover:bg-muted/80 border-blue-400 p-2"
-          onClick={() => setShowFinanceDetails(true)}
-        >
-          <CardHeader className="p-2">
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Finance Insights
-            </CardTitle>
-            <CardDescription>View monthly financial breakdown</CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-
-      {/* Filter Switch - Only show if user has a driver profile and no driver filter is active */}
-      {currentDriverId && !filters.driverId && (
-        <Card className="border-dashed py-3">
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-only-my-revenue" className="cursor-pointer">
-                Show only my revenue
-              </Label>
-              <Switch
-                id="show-only-my-revenue"
-                checked={showOnlyMyRevenue}
-                onCheckedChange={setShowOnlyMyRevenue}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Stats Bar */}
-      <RevenueStatsBar
-        stats={stats}
-        loading={loading}
-        onBreakdownClick={() => setShowBreakdown(true)}
-        periodLabel={(() => {
-          if (hasActiveFilters) {
-            return "Summary for filters applied"
-          }
-          switch (activeTab) {
-            case "this-week":
-              return "Revenue for this week"
-            case "last-week":
-              return "Revenue for last week"
-            case "this-month":
-              return "Revenue for this month"
-            default:
-              return "All-time revenue"
-          }
-        })()}
-      />
-
-      {/* Tabs or Clear Filters Button */}
-      {hasActiveFilters ? (
-        <>
-          <ActiveFilters
-            filterConfigs={filterConfigs}
-            filters={filters}
-            onFilterChange={setFilters}
-            onClearAll={clearFilters}
-          />
-          {/* Loading State */}
-          {loading && (
-            <div className="flex items-center justify-center py-8">
-              <Spinner />
-              <span className="ml-2">Loading revenue records...</span>
-            </div>
-          )}
-          {/* Error State */}
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircleIcon />
-              <AlertTitle>Error loading revenue records</AlertTitle>
-              <AlertDescription>
-                <p>
-                  Error:{" "}
-                  {(error as { message?: string })?.message ||
-                    "An error occurred"}
-                </p>
-              </AlertDescription>
-            </Alert>
-          )}
-          {/* Filtered Revenue Records List */}
-          {!loading && !error && (
-            <div className="mt-3">
-              {dateParams.startDate && dateParams.endDate && (
-                <p className="text-sm text-muted-foreground mb-4">
-                  Showing revenue from {formatDate(dateParams.startDate)} to{" "}
-                  {formatDate(dateParams.endDate)}
-                </p>
-              )}
-              {revenueGroups.length === 0 ? (
-                <RevenueRecordsEmpty />
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {revenueGroups.map((group, index) => (
-                    <RevenueRecordCard
-                      key={`${group.driverId}-${group.date}-${index}`}
-                      group={group}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </>
-      ) : (
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => setActiveTab(value as DateTab)}
-        >
-          <TabsList>
-            <TabsTrigger value="this-week">This Week</TabsTrigger>
-            <TabsTrigger value="last-week">Last Week</TabsTrigger>
-            <TabsTrigger value="this-month">This Month</TabsTrigger>
-            <TabsTrigger value="all-time">All Time</TabsTrigger>
-          </TabsList>
-          {/* Loading State */}
-          {loading && (
-            <div className="flex items-center justify-center py-8">
-              <Spinner />
-              <span className="ml-2">Loading revenue records...</span>
-            </div>
-          )}
-          {/* Error State */}
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircleIcon />
-              <AlertTitle>Error loading revenue records</AlertTitle>
-              <AlertDescription>
-                <p>
-                  Error:{" "}
-                  {(error as { message?: string })?.message ||
-                    "An error occurred"}
-                </p>
-              </AlertDescription>
-            </Alert>
-          )}
-          {!loading && !error && (
-            <>
-              <TabsContent value="this-week" className="mt-3">
-                {dateParams.startDate && dateParams.endDate && (
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Showing revenue from {formatDate(dateParams.startDate)} to{" "}
-                    {formatDate(dateParams.endDate)} grouped by driver
-                  </p>
-                )}
-                {/* Revenue Records List */}
-                {revenueGroups.length === 0 ? (
-                  <RevenueRecordsEmpty />
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    {revenueGroups.map((group, index) => (
-                      <RevenueRecordCard
-                        key={`${group.driverId}-${group.date}-${index}`}
-                        group={group}
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="last-week" className="mt-3">
-                {dateParams.startDate && dateParams.endDate && (
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Showing revenue records for{" "}
-                    {formatDate(dateParams.startDate)} to{" "}
-                    {formatDate(dateParams.endDate)}
-                  </p>
-                )}
-                {/* Revenue Records List */}
-                {revenueGroups.length === 0 ? (
-                  <RevenueRecordsEmpty />
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    {revenueGroups.map((group, index) => (
-                      <RevenueRecordCard
-                        key={`${group.driverId}-${group.date}-${index}`}
-                        group={group}
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="this-month" className="mt-3">
-                {dateParams.startDate && dateParams.endDate && (
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Showing revenue from {formatDate(dateParams.startDate)} to{" "}
-                    {formatDate(dateParams.endDate)} grouped by driver
-                  </p>
-                )}
-                {/* Revenue Records List */}
-                {revenueGroups.length === 0 ? (
-                  <RevenueRecordsEmpty />
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    {revenueGroups.map((group, index) => (
-                      <RevenueRecordCard
-                        key={`${group.driverId}-${group.date}-${index}`}
-                        group={group}
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="all-time" className="mt-3">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Showing all revenue records
-                </p>
-                {/* Revenue Records List */}
-                {revenueGroups.length === 0 ? (
-                  <RevenueRecordsEmpty />
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    {revenueGroups.map((group, index) => (
-                      <RevenueRecordCard
-                        key={`${group.driverId}-${group.date}-${index}`}
-                        group={group}
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </>
-          )}
-        </Tabs>
-      )}
-
-      {/* Filters Dialog */}
-      <FilterDialog
-        open={showFilters}
-        onOpenChange={setShowFilters}
-        title="Filter Revenue Records"
-        description="Filter revenue records by driver, vehicle, source, and date range"
-        filterConfigs={filterConfigs}
-        appliedFilters={filters}
-        onChange={setFilters}
-      />
-
-      {/* Add Revenue Modal */}
-      {showAddRevenue && (
-        <RevenueForm
-          open={true}
-          onOpenChange={setShowAddRevenue}
-          revenueRecordsQueryVariables={{
-            startDate: dateParams.startDate,
-            endDate: dateParams.endDate,
-          }}
-          groupedRevenueRecordsQueryVariables={{
-            startDate: dateParams.startDate,
-            endDate: dateParams.endDate,
-            pagination: { page: 1, perPage: 100 },
-          }}
-        />
-      )}
-
-      {/* Floating Action Buttons - Only on small screens */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-row gap-3 md:hidden">
-        <FilterButton
-          onClick={() => setShowFilters(true)}
-          filterConfigs={filterConfigs}
-          filters={filters}
-          variant="outline"
-          size="lg"
-          className="shadow-2xl"
-          style={{
-            boxShadow:
-              "0 10px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.3)",
-          }}
-        />
-        <Button
-          onClick={() => setShowAddRevenue(true)}
-          className="shadow-2xl"
-          style={{
-            boxShadow:
-              "0 10px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.3)",
-          }}
-          size="lg"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Revenue
-        </Button>
-      </div>
-    </div>
+    </PullToRefresh>
   )
 }

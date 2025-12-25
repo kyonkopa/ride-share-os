@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useScheduledTrips } from "@/features/scheduled-trips/useScheduledTrips"
 import { useDrivers } from "@/features/drivers/useDrivers"
+import { PullToRefresh } from "./PullToRefresh"
 import { useAssignDriverToScheduledTrip } from "@/features/scheduled-trips/useAssignDriverToScheduledTrip"
 import { useCancelScheduledTrip } from "@/features/scheduled-trips/useCancelScheduledTrip"
 import { toast } from "sonner"
@@ -405,12 +406,17 @@ export function ScheduledTripsScreen() {
   const [page, setPage] = useState(1)
   const perPage = 20
 
-  const { scheduledTrips, pagination, loading, error } = useScheduledTrips({
-    pagination: {
-      page,
-      perPage,
-    },
-  })
+  const { scheduledTrips, pagination, loading, error, refetch } =
+    useScheduledTrips({
+      pagination: {
+        page,
+        perPage,
+      },
+    })
+
+  const handleRefresh = useCallback(async () => {
+    await refetch()
+  }, [refetch])
 
   if (loading && !scheduledTrips.length) {
     return (
@@ -434,72 +440,74 @@ export function ScheduledTripsScreen() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Scheduled Trips</h1>
-          <p className="text-muted-foreground">
-            View and manage scheduled trip requests
-          </p>
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Scheduled Trips</h1>
+            <p className="text-muted-foreground">
+              View and manage scheduled trip requests
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Schedule a Trip Entry Point */}
-      <Card>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CalendarClock className="h-6 w-6 text-primary" />
-              <div>
-                <h3 className="font-semibold text-lg">Schedule a Trip</h3>
-                <p className="text-sm text-muted-foreground">
-                  Request a future or recurring ride
-                </p>
+        {/* Schedule a Trip Entry Point */}
+        <Card>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CalendarClock className="h-6 w-6 text-primary" />
+                <div>
+                  <h3 className="font-semibold text-lg">Schedule a Trip</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Request a future or recurring ride
+                  </p>
+                </div>
               </div>
+              <Button
+                onClick={() => navigate(Routes.scheduledTripRequest)}
+                variant="default"
+              >
+                Schedule Trip
+              </Button>
             </div>
-            <Button
-              onClick={() => navigate(Routes.scheduledTripRequest)}
-              variant="default"
-            >
-              Schedule Trip
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {scheduledTrips.length === 0 ? (
-        <ScheduledTripsEmpty />
-      ) : (
-        <>
-          <div className="grid gap-4">
-            {scheduledTrips.map((trip) => (
-              <ScheduledTripCard
-                key={trip.id}
-                trip={trip}
-                scheduledTripsQueryVariables={{
-                  pagination: {
-                    page,
-                    perPage,
-                  },
-                }}
-                onDriverAssigned={() => {
-                  // Refetch is handled by refetchQueries in the mutation hook
-                }}
-              />
-            ))}
-          </div>
+        {scheduledTrips.length === 0 ? (
+          <ScheduledTripsEmpty />
+        ) : (
+          <>
+            <div className="grid gap-4">
+              {scheduledTrips.map((trip) => (
+                <ScheduledTripCard
+                  key={trip.id}
+                  trip={trip}
+                  scheduledTripsQueryVariables={{
+                    pagination: {
+                      page,
+                      perPage,
+                    },
+                  }}
+                  onDriverAssigned={() => {
+                    // Refetch is handled by refetchQueries in the mutation hook
+                  }}
+                />
+              ))}
+            </div>
 
-          {pagination &&
-            pagination.pageCount != null &&
-            pagination.pageCount > 1 && (
-              <Paginator
-                currentPage={pagination.currentPage}
-                totalPages={pagination.pageCount}
-                onPageChange={setPage}
-              />
-            )}
-        </>
-      )}
-    </div>
+            {pagination &&
+              pagination.pageCount != null &&
+              pagination.pageCount > 1 && (
+                <Paginator
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.pageCount}
+                  onPageChange={setPage}
+                />
+              )}
+          </>
+        )}
+      </div>
+    </PullToRefresh>
   )
 }
