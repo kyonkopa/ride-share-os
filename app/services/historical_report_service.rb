@@ -161,9 +161,14 @@ class HistoricalReportService
     by_source = revenue_data[:by_source]
 
     if by_source.empty?
-      growth_text = growth.positive? ? "an increase" : growth.negative? ? "a decrease" : "no change"
-      growth_text += " of #{growth.abs.round(2)}%" unless growth.zero?
-      return "Total revenue was GHS #{format_currency(total)} with #{growth_text} compared to the previous day."
+      if growth.zero?
+        growth_text = "no change"
+      elsif growth.positive?
+        growth_text = "an increase of <span style=\"color: #16a34a;\">#{growth.round(2)}%</span>"
+      else
+        growth_text = "a decrease of <span style=\"color: #dc2626;\">#{growth.abs.round(2)}%</span>"
+      end
+      return "Total revenue was <strong>GHS #{format_currency(total)}</strong> with #{growth_text} compared to the previous day."
     end
 
     # Calculate percentages
@@ -174,19 +179,19 @@ class HistoricalReportService
     end.join(", ")
 
     growth_text = if growth.positive?
-      "an increase of #{growth.round(2)}%"
+      "an increase of <span style=\"color: #16a34a;\">#{growth.round(2)}%</span>"
     elsif growth.negative?
-      "a decrease of #{growth.abs.round(2)}%"
+      "a decrease of <span style=\"color: #dc2626;\">#{growth.abs.round(2)}%</span>"
     else
       "no change"
     end
 
-    "Total revenue was GHS #{format_currency(total)} with #{growth_text} compared to the previous day, with revenue breakdown: #{source_breakdown}."
+    "Total revenue was <strong>GHS #{format_currency(total)}</strong> with #{growth_text} compared to the previous day, with revenue breakdown: #{source_breakdown}."
   end
 
   def self.format_expenses_text(total_expenses, vehicle_with_most_expenses)
     if vehicle_with_most_expenses
-      "Total expenses were GHS #{format_currency(total_expenses)}, with #{vehicle_with_most_expenses[:display_name]} having the highest expenses at GHS #{format_currency(vehicle_with_most_expenses[:total_expenses])}."
+      "Total expenses were GHS #{format_currency(total_expenses)}, with <strong>#{vehicle_with_most_expenses[:display_name]}</strong> having the highest expenses at <strong>GHS #{format_currency(vehicle_with_most_expenses[:total_expenses])}</strong>."
     else
       "Total expenses were GHS #{format_currency(total_expenses)}."
     end
@@ -201,7 +206,7 @@ class HistoricalReportService
   end
 
   def self.format_distance_text(total_distance)
-    "A total of #{total_distance} km was driven across all vehicles."
+    "A total of <strong>#{total_distance} km</strong> was driven across all vehicles."
   end
 
   def self.format_shift_time_text(total_seconds)

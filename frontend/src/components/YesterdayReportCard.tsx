@@ -78,9 +78,12 @@ export function YesterdayReportCard() {
           </CardHeader>
           <AccordionContent>
             <CardContent className="pt-0">
-              <p className="text-sm leading-relaxed">
-                {report.humanReadableText}
-              </p>
+              <p
+                className="text-sm leading-relaxed"
+                dangerouslySetInnerHTML={{
+                  __html: report.humanReadableText,
+                }}
+              />
             </CardContent>
           </AccordionContent>
         </AccordionItem>
