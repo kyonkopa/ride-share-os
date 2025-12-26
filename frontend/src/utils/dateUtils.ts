@@ -119,3 +119,13 @@ export function getShiftDuration(startTime: string, endTime?: string): string {
 
   return `${hours}h ${minutes}m`
 }
+
+/**
+ * Format a currency amount for display (GHS)
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "GHS",
+  }).format(amount)
+}

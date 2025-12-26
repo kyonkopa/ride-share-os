@@ -1,0 +1,5 @@
+query YesterdayReportQuery {
+  yesterdayReport {
+    humanReadableText
+  }
+}

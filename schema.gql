@@ -1352,6 +1352,11 @@ type Query {
   Get all vehicles in the system
   """
   vehicles: [Vehicle!]!
+
+  """
+  Get yesterday's operational report
+  """
+  yesterdayReport: YesterdayReport!
 }
 
 """
@@ -1800,4 +1805,14 @@ type VehicleDateExpenseGroup {
   Vehicle display name (or 'No Vehicle' if no vehicle)
   """
   vehicleName: String!
+}
+
+"""
+Yesterday's operational report
+"""
+type YesterdayReport {
+  """
+  Human-readable summary of the report
+  """
+  humanReadableText: String!
 }

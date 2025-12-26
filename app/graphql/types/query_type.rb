@@ -17,6 +17,7 @@ module Types
     field :revenue_records, resolver: Queries::RevenueRecordsQuery, description: "Get all revenue records within a date range"
     field :todays_shift_events, resolver: Queries::TodaysShiftEventsQuery, description: "Get today's shift events for the current driver"
     field :vehicles, resolver: Queries::VehiclesQuery, description: "Get all vehicles in the system"
+    field :yesterday_report, resolver: Queries::YesterdayReportQuery, description: "Get yesterday's operational report"
 
     pagination_field :scheduled_trips, Types::ScheduledTripType, resolver: Queries::ScheduledTripsQuery, description: "Get scheduled trips with pagination and filters"
     pagination_field :expenses, Types::ExpenseType, resolver: Queries::ExpensesQuery, description: "Get all expenses within a date range"

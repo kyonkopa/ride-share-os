@@ -45,6 +45,7 @@ type Documents = {
     "mutation ResumeShiftMutation {\n  resumeShift {\n    shiftEvent {\n      id\n      eventType\n      shiftAssignment {\n        id\n        status\n        driver {\n          id\n          fullName\n        }\n        vehicle {\n          id\n          licensePlate\n          model\n        }\n      }\n    }\n    errors {\n      message\n      field\n      code\n    }\n  }\n}": typeof types.ResumeShiftMutationDocument,
     "query TodaysShiftEventsQuery {\n  todaysShiftEvents {\n    id\n    globalId\n    eventType\n    odometer\n    vehicleRange\n    gpsLat\n    gpsLon\n    notes\n    createdAt\n    shiftAssignment {\n      id\n      globalId\n      driver {\n        id\n        fullName\n      }\n      vehicle {\n        id\n        displayName\n        licensePlate\n      }\n    }\n  }\n}": typeof types.TodaysShiftEventsQueryDocument,
     "mutation UpdateVehicleMutation($input: UpdateVehicleInput!, $vehicleId: ID!) {\n  updateVehicle(input: $input, vehicleId: $vehicleId) {\n    vehicle {\n      ...VehicleFragment\n    }\n    errors {\n      message\n      field\n      code\n    }\n  }\n}": typeof types.UpdateVehicleMutationDocument,
+    "query YesterdayReportQuery {\n  yesterdayReport {\n    humanReadableText\n  }\n}": typeof types.YesterdayReportQueryDocument,
 };
 const documents: Documents = {
     "mutation ClockInMutation($input: ClockInInput!, $vehicleId: ID!) {\n  clockIn(input: $input, vehicleId: $vehicleId) {\n    shiftEvent {\n      id\n      eventType\n      odometer\n      vehicleRange\n      gpsLat\n      gpsLon\n      notes\n      shiftAssignment {\n        id\n        status\n        driver {\n          id\n          fullName\n        }\n        vehicle {\n          id\n          licensePlate\n          model\n        }\n      }\n    }\n    errors {\n      message\n      field\n      code\n    }\n  }\n}": types.ClockInMutationDocument,
@@ -78,6 +79,7 @@ const documents: Documents = {
     "mutation ResumeShiftMutation {\n  resumeShift {\n    shiftEvent {\n      id\n      eventType\n      shiftAssignment {\n        id\n        status\n        driver {\n          id\n          fullName\n        }\n        vehicle {\n          id\n          licensePlate\n          model\n        }\n      }\n    }\n    errors {\n      message\n      field\n      code\n    }\n  }\n}": types.ResumeShiftMutationDocument,
     "query TodaysShiftEventsQuery {\n  todaysShiftEvents {\n    id\n    globalId\n    eventType\n    odometer\n    vehicleRange\n    gpsLat\n    gpsLon\n    notes\n    createdAt\n    shiftAssignment {\n      id\n      globalId\n      driver {\n        id\n        fullName\n      }\n      vehicle {\n        id\n        displayName\n        licensePlate\n      }\n    }\n  }\n}": types.TodaysShiftEventsQueryDocument,
     "mutation UpdateVehicleMutation($input: UpdateVehicleInput!, $vehicleId: ID!) {\n  updateVehicle(input: $input, vehicleId: $vehicleId) {\n    vehicle {\n      ...VehicleFragment\n    }\n    errors {\n      message\n      field\n      code\n    }\n  }\n}": types.UpdateVehicleMutationDocument,
+    "query YesterdayReportQuery {\n  yesterdayReport {\n    humanReadableText\n  }\n}": types.YesterdayReportQueryDocument,
 };
 
 /**
@@ -218,6 +220,10 @@ export function graphql(source: "query TodaysShiftEventsQuery {\n  todaysShiftEv
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "mutation UpdateVehicleMutation($input: UpdateVehicleInput!, $vehicleId: ID!) {\n  updateVehicle(input: $input, vehicleId: $vehicleId) {\n    vehicle {\n      ...VehicleFragment\n    }\n    errors {\n      message\n      field\n      code\n    }\n  }\n}"): (typeof documents)["mutation UpdateVehicleMutation($input: UpdateVehicleInput!, $vehicleId: ID!) {\n  updateVehicle(input: $input, vehicleId: $vehicleId) {\n    vehicle {\n      ...VehicleFragment\n    }\n    errors {\n      message\n      field\n      code\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query YesterdayReportQuery {\n  yesterdayReport {\n    humanReadableText\n  }\n}"): (typeof documents)["query YesterdayReportQuery {\n  yesterdayReport {\n    humanReadableText\n  }\n}"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};
